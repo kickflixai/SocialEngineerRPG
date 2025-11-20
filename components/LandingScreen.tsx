@@ -1,23 +1,13 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Key, Shield, ExternalLink, Play, Terminal, Bot, UserCheck } from 'lucide-react';
+import { Play, Terminal, Bot, UserCheck } from 'lucide-react';
 
 interface Props {
-  onStart: (apiKey: string) => void;
+  onStart: () => void;
 }
 
 const LandingScreen: React.FC<Props> = ({ onStart }) => {
-  const [key, setKey] = useState('');
-  const [error, setError] = useState('');
-
-  const handleSubmit = () => {
-    if (!key.trim() || key.length < 10) {
-      setError('INVALID_KEY_FORMAT_DETECTED');
-      return;
-    }
-    onStart(key);
-  };
 
   return (
     <div className="min-h-screen w-full bg-black text-white relative overflow-hidden flex items-center justify-center p-4 font-sans">
@@ -96,43 +86,14 @@ const LandingScreen: React.FC<Props> = ({ onStart }) => {
               </div>
 
               <div className="space-y-4">
-                <div className="space-y-2">
-                    <label className="text-xs font-bold text-zinc-400 uppercase flex items-center gap-2">
-                        <Key size={12} /> Google Gemini API Key
-                    </label>
-                    <input 
-                        type="password" 
-                        value={key}
-                        onChange={(e) => { setKey(e.target.value); setError(''); }}
-                        className="w-full bg-black border border-zinc-700 rounded-lg p-4 text-white font-mono focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition-all placeholder-zinc-700"
-                        placeholder="Paste your API key here..."
-                    />
-                    {error && <p className="text-red-500 text-xs font-mono font-bold flex items-center gap-1"><Shield size={10}/> {error}</p>}
-                </div>
-
                 <button 
-                    onClick={handleSubmit}
+                    onClick={onStart}
                     className="w-full py-4 bg-green-600 hover:bg-green-500 text-black font-bold rounded-lg transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] hover:scale-[1.02]"
                 >
                     <Play size={18} fill="currentColor" /> INITIALIZE SYSTEM
                 </button>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-zinc-800">
-                 <p className="text-zinc-500 text-xs mb-3">Don't have an API Key?</p>
-                 <a 
-                    href="https://aistudio.google.com/app/apikey" 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors group/link"
-                 >
-                    <span>Get one from Google AI Studio</span>
-                    <ExternalLink size={14} className="group-hover/link:translate-x-1 transition-transform"/>
-                 </a>
-                 <p className="text-[10px] text-zinc-600 mt-4 leading-relaxed">
-                    This key is stored only in your browser's memory for the duration of this session. It is used exclusively to communicate with Google's Generative AI services for gameplay generation.
-                 </p>
-              </div>
             </div>
           </div>
         </motion.div>

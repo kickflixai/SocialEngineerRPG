@@ -2,17 +2,9 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim } from "../types";
 
-let userApiKey: string | null = null;
-
-export const setApiKey = (key: string) => {
-    userApiKey = key;
-};
-
 const getClient = () => {
-    if (!userApiKey) {
-        throw new Error("API Key not configured. Please enter your key in the settings.");
-    }
-    return new GoogleGenAI({ apiKey: userApiKey });
+    // API Key must be obtained exclusively from process.env.API_KEY
+    return new GoogleGenAI({ apiKey: process.env.API_KEY });
 };
 
 // Helper to extract JSON from potential markdown code blocks
@@ -28,7 +20,7 @@ const parseJSON = (text: string) => {
 
 export const generatePlayerAvatar = async (attrs: PlayerAttributes): Promise<string> => {
     const ai = getClient();
-    // Enhanced prompt for photorealism using Imagen 3 (via imagen-4.0-generate-001 model)
+    // Enhanced prompt for photorealism
     const prompt = `
         RAW candid photograph of a person, 8k resolution, highly detailed.
         Subject: ${attrs.age} year old ${attrs.gender}, ${attrs.archetype} archetype.
@@ -44,17 +36,24 @@ export const generatePlayerAvatar = async (attrs: PlayerAttributes): Promise<str
     `;
 
     try {
-        const response = await ai.models.generateImages({
-            model: 'imagen-4.0-generate-001',
-            prompt: prompt,
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-image-preview',
+            contents: { parts: [{ text: prompt }] },
             config: {
-                numberOfImages: 1,
-                aspectRatio: '1:1',
-                outputMimeType: 'image/jpeg'
+                imageConfig: {
+                    aspectRatio: '1:1',
+                    imageSize: '1K'
+                }
             }
         });
-        const base64 = response.generatedImages[0].image.imageBytes;
-        return `data:image/jpeg;base64,${base64}`;
+        
+        const parts = response.candidates?.[0]?.content?.parts || [];
+        for (const part of parts) {
+            if (part.inlineData) {
+                return `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${part.inlineData.data}`;
+            }
+        }
+        return "https://picsum.photos/400/400";
     } catch (e) {
         console.error("Avatar gen failed", e);
         return "https://picsum.photos/400/400"; // Fallback
@@ -112,17 +111,29 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
     // Generate avatar for victim with photorealism focus
     let avatarUrl = "https://picsum.photos/400/400";
     try {
-         const imageResponse = await ai.models.generateImages({
-            model: 'imagen-4.0-generate-001',
-            prompt: `
+        const imageResponse = await ai.models.generateContent({
+            model: 'gemini-3-pro-image-preview',
+            contents: { parts: [{ text: `
                 Raw, photorealistic portrait of ${data.name}, a ${data.age} year old ${data.gender} ${data.occupation}.
                 Expression: ${data.personality}, candid shot, natural lighting.
                 Style: National Geographic portrait style, shallow depth of field, real skin texture, imperfections.
                 Do NOT generate: CGI, 3D, cartoon, illustration, smooth skin.
-            `,
-            config: { numberOfImages: 1, aspectRatio: '1:1', outputMimeType: 'image/jpeg' }
+            ` }] },
+            config: {
+                imageConfig: {
+                    aspectRatio: '1:1',
+                    imageSize: '1K'
+                }
+            }
         });
-        avatarUrl = `data:image/jpeg;base64,${imageResponse.generatedImages[0].image.imageBytes}`;
+        
+        const parts = imageResponse.candidates?.[0]?.content?.parts || [];
+        for (const part of parts) {
+            if (part.inlineData) {
+                avatarUrl = `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${part.inlineData.data}`;
+                break;
+            }
+        }
     } catch (e) {
         console.error("Victim avatar failed", e);
     }

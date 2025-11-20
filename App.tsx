@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { GameView, PlayerState, ScamState, PlayerAttributes, Skill } from './types';
 import { INITIAL_MONEY, INITIAL_THREAT, SCAM_CATEGORIES, MAX_THREAT, SKILLS, SHOP_ITEMS, COUNTRY_DATA } from './constants';
-import { generateVictim, generateOpener, setApiKey } from './services/geminiService';
+import { generateVictim, generateOpener } from './services/geminiService';
 
 import CharacterCreator from './components/CharacterCreator';
 import Dashboard from './components/Dashboard';
@@ -27,9 +27,8 @@ const App: React.FC = () => {
   const [loadingScam, setLoadingScam] = useState(false);
   const [generatingOpener, setGeneratingOpener] = useState(false);
 
-  // Handle API Key from Landing Screen
-  const handleApiKeySubmit = (key: string) => {
-      setApiKey(key);
+  // Handle Start from Landing Screen
+  const handleStart = () => {
       setView(GameView.CHARACTER_CREATION);
   };
 
@@ -269,7 +268,7 @@ const App: React.FC = () => {
         <main className="flex-1 overflow-y-auto relative z-40 custom-scrollbar">
             
             {view === GameView.LANDING && (
-                <LandingScreen onStart={handleApiKeySubmit} />
+                <LandingScreen onStart={handleStart} />
             )}
 
             {view === GameView.CHARACTER_CREATION && (
