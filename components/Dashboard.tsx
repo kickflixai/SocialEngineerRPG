@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { PlayerState, GameView } from '../types';
-import { ShieldAlert, ShoppingBag, BrainCircuit, MessageSquareWarning, User, Activity, Crosshair, Globe } from 'lucide-react';
+import { ShieldAlert, ShoppingBag, BrainCircuit, MessageSquare, User, Activity, Crosshair, Globe } from 'lucide-react';
 
 interface Props {
   player: PlayerState;
@@ -78,7 +79,7 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView }) => {
           
           <div className="relative z-10">
             <div className="w-12 h-12 bg-zinc-900 rounded-lg flex items-center justify-center border border-zinc-700 mb-6 group-hover:border-green-500 group-hover:text-green-500 transition-colors">
-                <MessageSquareWarning size={24} />
+                <MessageSquare size={24} />
             </div>
             <h3 className="text-3xl font-bold text-white mb-2 font-mono">ACQUIRE TARGET</h3>
             <p className="text-zinc-400 text-sm leading-relaxed">Access the directory. Select a mark based on risk profile and potential payout.</p>
