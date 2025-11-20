@@ -2,18 +2,12 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim } from "../types";
 
-let userApiKey: string | undefined = undefined;
-
-export const setApiKey = (key: string) => {
-    userApiKey = key;
-};
-
 const getClient = () => {
-    // Check user-provided key first, then build-time env var
-    const key = userApiKey || process.env.API_KEY;
+    // In Vite, process.env.API_KEY is replaced by the define plugin in vite.config.ts
+    const key = process.env.API_KEY;
     
     if (!key) {
-        throw new Error("API Key is missing. Please provide a valid API Key.");
+        throw new Error("API Key is missing. Please configure API_KEY in your environment variables.");
     }
     
     return new GoogleGenAI({ apiKey: key });

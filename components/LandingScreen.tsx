@@ -1,15 +1,13 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Play, Terminal, Bot, UserCheck, Key } from 'lucide-react';
+import { Play, Terminal, Bot, UserCheck } from 'lucide-react';
 
 interface Props {
-  onStart: (apiKey: string) => void;
+  onStart: () => void;
 }
 
 const LandingScreen: React.FC<Props> = ({ onStart }) => {
-  const [apiKey, setApiKey] = useState('');
-
   return (
     <div className="min-h-screen w-full bg-black text-white relative overflow-hidden flex items-center justify-center p-4 font-sans">
       {/* Background Grid and Scanlines */}
@@ -82,34 +80,17 @@ const LandingScreen: React.FC<Props> = ({ onStart }) => {
                 </div>
                 <div>
                     <h2 className="text-xl font-bold text-white font-mono">ACCESS CONTROL</h2>
-                    <p className="text-xs text-zinc-500 uppercase tracking-widest">Authentication Required</p>
+                    <p className="text-xs text-zinc-500 uppercase tracking-widest">Identity Verification</p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-zinc-500 uppercase mb-2 flex items-center gap-2">
-                    <Key size={12}/> Enter Gemini API Key
-                  </label>
-                  <input 
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="sk-..."
-                    className="w-full bg-black border border-zinc-700 rounded-lg p-3 text-white font-mono text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500/50 outline-none transition-all"
-                  />
-                  <a 
-                    href="https://aistudio.google.com/app/apikey" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-[10px] text-zinc-500 hover:text-green-400 mt-2 block text-right transition-colors"
-                  >
-                    [ GET API KEY HERE ]
-                  </a>
-                </div>
+                <p className="text-zinc-400 text-sm mb-4">
+                   Establish secure uplink to the Dark Web mainframe. 
+                </p>
 
                 <button 
-                    onClick={() => onStart(apiKey)}
+                    onClick={onStart}
                     className="w-full py-4 bg-green-600 hover:bg-green-500 text-black font-bold rounded-lg transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] hover:scale-[1.02]"
                 >
                     <Play size={18} fill="currentColor" /> INITIALIZE SYSTEM
