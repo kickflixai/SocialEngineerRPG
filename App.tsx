@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { GameView, PlayerState, ScamState, PlayerAttributes, Skill } from './types';
 import { INITIAL_MONEY, INITIAL_THREAT, SCAM_CATEGORIES, MAX_THREAT, SKILLS, SHOP_ITEMS, COUNTRY_DATA } from './constants';
-import { generateVictim, generateOpener } from './services/geminiService';
+import { generateVictim, generateOpener, setApiKey } from './services/geminiService';
 
 import CharacterCreator from './components/CharacterCreator';
 import Dashboard from './components/Dashboard';
@@ -27,7 +28,10 @@ const App: React.FC = () => {
   const [generatingOpener, setGeneratingOpener] = useState(false);
 
   // Handle Start from Landing Screen
-  const handleStart = () => {
+  const handleStart = (key: string) => {
+      if (key && key.trim() !== "") {
+          setApiKey(key);
+      }
       setView(GameView.CHARACTER_CREATION);
   };
 

@@ -2,10 +2,21 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim } from "../types";
 
+let userApiKey: string | undefined = undefined;
+
+export const setApiKey = (key: string) => {
+    userApiKey = key;
+};
+
 const getClient = () => {
-    // API Key must be obtained exclusively from process.env.API_KEY
-    // We rely on the try/catch blocks in the functions to handle missing keys gracefully
-    return new GoogleGenAI({ apiKey: process.env.API_KEY });
+    // Check user-provided key first, then build-time env var
+    const key = userApiKey || process.env.API_KEY;
+    
+    if (!key) {
+        throw new Error("API Key is missing. Please provide a valid API Key.");
+    }
+    
+    return new GoogleGenAI({ apiKey: key });
 };
 
 // Helper to extract JSON from potential markdown code blocks
