@@ -26,14 +26,14 @@ const parseJSON = (text: string) => {
 
 // Visual descriptors to enforce country origin in AI generation
 const COUNTRY_VISUALS: Record<string, string> = {
-    'North Korea': 'East Asian ethnicity, austere style, military-inspired or very plain civilian clothing, slightly malnourished look, pyongyang background vibe',
-    'Iran': 'Persian ethnicity, modest but modern fashion, urban tehran background, sharp features',
-    'Bangladesh': 'South Asian/Bengali ethnicity, tropical climate lighting, casual lightweight clothing, busy dhaka atmosphere',
-    'India': 'South Asian/Indian ethnicity, vibrant colors or tech-casual attire, warm lighting, distinct facial features',
-    'Russia': 'Slavic/Eastern European ethnicity, cold weather attire, heavy jackets, stern expression, utilitarian brutalist background',
-    'USA': 'North American diversity, corporate casual or western streetwear, high production value lighting, confident posture',
-    'Nigeria': 'West African ethnicity, distinct regional fashion or sharp business suit, vibrant atmosphere, confident expression',
-    'China': 'East Asian/Chinese ethnicity, modern tech-focused look or industrial workwear, neon or office lighting'
+    'North Korea': 'Pyongyang distinctive architecture background, very modest darker clothing, military influence, East Asian Korean ethnicity, serious expression, low saturation, grainy film look',
+    'Iran': 'Tehran cityscape background, modern but modest fashion, Persian ethnicity, distinct sharp facial features, warm sunset lighting, cinematic realism',
+    'Bangladesh': 'Dhaka crowded street background, South Asian Bengali ethnicity, humidity visible on skin, colorful casual patterned shirt, vibrant warm lighting, distinct regional features',
+    'India': 'Mumbai tech office or busy street background, South Asian Indian ethnicity, smart casual attire, vibrant colors, high contrast, sharp focus',
+    'Russia': 'Moscow brutalist concrete background, Slavic Eastern European ethnicity, pale skin tone, heavy winter coat or leather jacket, cold blue lighting, serious stoic expression',
+    'USA': 'New York or LA skyline background, diverse North American look, expensive streetwear or business suit, confident posture, high production value studio lighting',
+    'Nigeria': 'Lagos vibrant city background, West African ethnicity, deep skin tone, sharp tailored suit or bright traditional Ankara print patterns, golden hour lighting, confident gaze',
+    'China': 'Shanghai neon skyline or Shenzhen tech lab background, East Asian Chinese ethnicity, futuristic modern clothing or industrial workwear, cool cyberpunk lighting tones'
 };
 
 export const generatePlayerAvatar = async (attrs: PlayerAttributes): Promise<string> => {
@@ -48,7 +48,7 @@ export const generatePlayerAvatar = async (attrs: PlayerAttributes): Promise<str
             RAW candid photograph of a person, 8k resolution, highly detailed.
             Subject: ${attrs.age} year old ${attrs.gender}, ${attrs.archetype} archetype.
             Origin: ${attrs.country}.
-            Visual Traits: ${countryVisuals}.
+            CRITICAL VISUAL TRAITS: ${countryVisuals}.
             Clothing: ${attrs.clothing}.
             Facial Features: ${attrs.facialFeatures}.
             Accessories: ${attrs.accessories}.
@@ -106,7 +106,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
 
     // Tailored prompts based on difficulty to ensure personality matches mechanics
     const difficultyPrompts = {
-        easy: "Target is an elderly senior citizen (70+ years old). Personality: Trusting, lonely, confused by technology, polite. Resistance Style: 'Apologetic confusion', 'Asks for help', 'Slow to understand'.",
+        easy: "Target is an elderly senior citizen (70+ years old). Personality: Very Trusting, lonely, bad with technology, polite, confused. Resistance Style: 'Apologetic confusion', 'Asks for help', 'Slow to understand'.",
         medium: "Target is a working professional (30-50 years old). Personality: Busy, transactional, moderately skeptical. Resistance Style: 'Asks for verification', 'Too busy to talk', 'Professional skepticism'.",
         hard: "Target is a C-Level Executive or High Net Worth Individual. Personality: Arrogant, paranoid, ruthless, highly intelligent. Resistance Style: 'Legal threats', 'Aggressive counter-interrogation', 'Demands immediate proof', 'Mocking intelligence'."
     };
@@ -276,25 +276,24 @@ export const arbitrateChat = async (
     try {
         const ai = getClient();
 
-        // Logic modifiers based on difficulty
+        // Logic modifiers based on difficulty - EXTREME TUNING
         const difficultyInstructions = {
             easy: `
-                MODE: EASY (The Target is Elderly/Vulnerable).
-                - TRUST: Increases rapidly (x1.5 multiplier). Emotional appeals work 100% of the time.
-                - SUSPICION: Increases slowly (x0.5 multiplier). Ignore minor logic holes or generic scripts.
-                - They should accept standard scam lines like "I am your grandson" or "You won the lottery" easily.
+                MODE: EASY (Target is Vulnerable Senior).
+                - TRUST GAIN: EXTREMELY HIGH (x2.0). They want to believe you.
+                - SUSPICION GAIN: VERY LOW (x0.2). They ignore mistakes.
+                - EMOTIONAL APPEALS: 100% Effective.
             `,
             medium: `
-                MODE: MEDIUM (The Target is a Professional).
-                - Standard scoring.
-                - Emotional appeals work only if logical.
-                - Generic scripts increase Suspicion slightly.
+                MODE: MEDIUM (Target is Business Owner).
+                - TRUST GAIN: NORMAL (x1.0). Requires logic.
+                - SUSPICION GAIN: NORMAL (x1.0). Skeptical of big promises.
             `,
             hard: `
-                MODE: HARD (The Target is an Executive/Paranoid).
-                - TRUST: Increases very slowly (x0.5 multiplier). Needs high creativity or precise intel (using Hidden Fact).
-                - SUSPICION: Increases rapidly (x2.0 multiplier). Any generic script or slight logic error causes massive suspicion.
-                - They will only cooperate if the player sounds extremely authoritative or has specific private info.
+                MODE: HARD (Target is Paranoid Executive).
+                - TRUST GAIN: VERY LOW (x0.2). Almost impossible without specific Doxxing Intel.
+                - SUSPICION GAIN: EXTREMELY HIGH (x3.0). One wrong word ends the call.
+                - They are looking for a reason to bust you.
             `
         };
 
@@ -410,3 +409,23 @@ export const generateSpeech = async (text: string, gender: 'male' | 'female'): P
         return null;
     }
 };
+
+// --- SPEECH TO TEXT VIA GEMINI (Network Error Fix) ---
+export const transcribeAudio = async (audioBase64: string): Promise<string> => {
+    try {
+        const ai = getClient();
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: {
+                parts: [
+                    { inlineData: { mimeType: "audio/webm", data: audioBase64 } }, 
+                    { text: "Transcribe this audio exactly. Do not add any other text. Return only the spoken words." }
+                ]
+            }
+        });
+        return response.text || "";
+    } catch (e) {
+        console.error("Transcription failed", e);
+        return "";
+    }
+}

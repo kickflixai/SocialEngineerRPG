@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { ScamState, PlayerState, ChatMessage } from '../types';
-import { getVictimResponse, arbitrateChat, generateSpeech } from '../services/geminiService';
-import { Send, Terminal, Wifi, Radio, Mic, MicOff, Volume2, VolumeX, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Unlock, ChevronDown, ChevronUp } from 'lucide-react';
+import { getVictimResponse, arbitrateChat, generateSpeech, transcribeAudio } from '../services/geminiService';
+import { Send, Terminal, Wifi, Radio, Mic, MicOff, Volume2, VolumeX, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Unlock, ChevronDown, ChevronUp, Square } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
@@ -29,12 +29,32 @@ const decodePCM = (buffer: ArrayBuffer, ctx: AudioContext): AudioBuffer => {
     return audioBuffer;
 };
 
+// Helper to convert Blob to Base64
+const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64String = reader.result as string;
+            // Remove data url prefix (e.g. "data:audio/webm;base64,")
+            resolve(base64String.split(',')[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+};
+
 const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd, onAbort }) => {
   const [input, setInput] = useState('');
   const [processing, setProcessing] = useState(false);
   const [lastThought, setLastThought] = useState<string | null>(null);
   const [ttsEnabled, setTtsEnabled] = useState(false);
-  const [listening, setListening] = useState(false);
+  
+  // Recording State
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [speechError, setSpeechError] = useState<string | null>(null);
   const [showAbortConfirm, setShowAbortConfirm] = useState(false);
@@ -43,7 +63,6 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   const chatEndRef = useRef<HTMLDivElement>(null);
   const initRef = useRef(false);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const recognitionRef = useRef<any>(null);
 
   const scrollToBottom = () => chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
@@ -70,7 +89,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       }
   }, []);
 
-  // Handle TTS toggling (User Interaction Required for Audio)
+  // Handle TTS toggling
   const toggleTts = async () => {
       const newState = !ttsEnabled;
       setTtsEnabled(newState);
@@ -87,7 +106,6 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       const lastMsg = scam.history[scam.history.length - 1];
       const playVoice = async () => {
           if (ttsEnabled && lastMsg.sender === 'victim' && !initRef.current) { 
-              
               setIsPlayingAudio(true);
               try {
                   const audioData = await generateSpeech(lastMsg.text, scam.victim.gender);
@@ -97,10 +115,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                       if (ctx.state === 'suspended') {
                           await ctx.resume();
                       }
-                      
-                      // Decode Gemini 2.5 Linear16 PCM
                       const buffer = decodePCM(audioData, ctx);
-                      
                       const source = ctx.createBufferSource();
                       source.buffer = buffer;
                       source.connect(ctx.destination);
@@ -115,8 +130,6 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
               }
           }
       };
-      
-      // Small delay to ensure state updates are clean
       if (scam.history.length > 0) {
         const t = setTimeout(playVoice, 100);
         return () => clearTimeout(t);
@@ -154,7 +167,6 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
     setProcessing(true);
     setLastThought("ANALYZING RESPONSE VECTORS...");
 
-    // Ensure AudioContext is running on user interaction (send)
     const ctx = getAudioContext();
     if (ctx && ctx.state === 'suspended') {
         ctx.resume();
@@ -206,66 +218,62 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
     }
   };
 
-  const toggleListening = () => {
+  // --- NEW AUDIO RECORDING LOGIC (MediaRecorder) ---
+  const startRecording = async () => {
       setSpeechError(null);
-      if (listening || recognitionRef.current) {
-          if (recognitionRef.current) try { recognitionRef.current.stop(); } catch (e) {}
-          setListening(false);
-          recognitionRef.current = null;
-          return;
-      }
-
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-          setSpeechError("Unsupported Browser");
-          return;
-      }
-
       try {
-          const recognition = new SpeechRecognition();
-          recognition.continuous = false;
-          recognition.interimResults = false;
-          recognition.lang = 'en-US';
-          recognition.maxAlternatives = 1;
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const mediaRecorder = new MediaRecorder(stream);
+          mediaRecorderRef.current = mediaRecorder;
+          audioChunksRef.current = [];
 
-          recognition.onstart = () => setListening(true);
-          
-          recognition.onend = () => { 
-              setListening(false); 
-              recognitionRef.current = null; 
-          };
-          
-          recognition.onerror = (e: any) => {
-              const errorMsg = e.error || 'unknown';
-              console.log("Speech Error Debug:", errorMsg);
-              setListening(false);
-              recognitionRef.current = null;
-              
-              if (errorMsg === 'network') {
-                  setSpeechError("Net Error");
-                  // Don't alert immediately, just show label to prevent spamming user
-              } else if (errorMsg === 'not-allowed') {
-                  setSpeechError("Mic Blocked");
-              } else if (errorMsg === 'no-speech') {
-                  setSpeechError("No Audio");
-              } else {
-                  setSpeechError("Failed");
+          mediaRecorder.ondataavailable = (event) => {
+              if (event.data.size > 0) {
+                  audioChunksRef.current.push(event.data);
               }
           };
-          
-          recognition.onresult = (e: any) => {
-              if (e.results && e.results[0]) {
-                  const transcript = e.results[0][0].transcript;
-                  setInput(prev => prev + (prev ? ' ' : '') + transcript);
+
+          mediaRecorder.onstop = async () => {
+              setIsTranscribing(true);
+              const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+              const tracks = stream.getTracks();
+              tracks.forEach(track => track.stop()); // Stop mic
+
+              try {
+                  const base64Audio = await blobToBase64(audioBlob);
+                  const text = await transcribeAudio(base64Audio);
+                  if (text) {
+                      setInput(prev => prev + (prev ? ' ' : '') + text.trim());
+                  } else {
+                      setSpeechError("No speech detected");
+                  }
+              } catch (e) {
+                  setSpeechError("Transcription Failed");
+              } finally {
+                  setIsTranscribing(false);
               }
           };
-          
-          recognitionRef.current = recognition;
-          recognition.start();
-      } catch (e) {
-          console.error("Speech init failed", e);
-          setSpeechError("Init Failed");
-          setListening(false);
+
+          mediaRecorder.start();
+          setIsRecording(true);
+      } catch (err) {
+          console.error("Mic Error:", err);
+          setSpeechError("Mic Access Denied");
+      }
+  };
+
+  const stopRecording = () => {
+      if (mediaRecorderRef.current && isRecording) {
+          mediaRecorderRef.current.stop();
+          setIsRecording(false);
+      }
+  };
+
+  const toggleRecording = () => {
+      if (isRecording) {
+          stopRecording();
+      } else {
+          startRecording();
       }
   };
 
@@ -498,15 +506,22 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                  <div className="relative">
                     {speechError && (
                         <div className="absolute -top-8 left-0 bg-red-900/90 text-white text-[10px] px-2 py-1 rounded border border-red-500 whitespace-nowrap z-50">
-                            {speechError === 'Net Error' ? 'Offline / Browser Blocked' : speechError}
+                            {speechError}
                         </div>
                     )}
+                    
                     <button 
-                        onClick={toggleListening}
-                        className={`p-4 rounded-lg border transition-all ${listening ? 'bg-red-900/20 border-red-500 text-red-500 animate-pulse shadow-[0_0_10px_red]' : speechError ? 'bg-zinc-900 border-red-900 text-red-500' : 'bg-black border-zinc-700 text-zinc-400 hover:text-white'}`}
-                        title="Voice Input"
+                        onClick={toggleRecording}
+                        className={`p-4 rounded-lg border transition-all ${
+                            isRecording 
+                            ? 'bg-red-900/20 border-red-500 text-red-500 animate-pulse shadow-[0_0_10px_red]' 
+                            : isTranscribing
+                                ? 'bg-yellow-900/20 border-yellow-500 text-yellow-500'
+                                : 'bg-black border-zinc-700 text-zinc-400 hover:text-white'
+                        }`}
+                        title={isRecording ? "Stop & Transcribe" : "Hold to Record"}
                     >
-                        {listening ? <MicOff size={18}/> : <Mic size={18}/>}
+                        {isTranscribing ? <Loader2 size={18} className="animate-spin"/> : isRecording ? <Square size={18} fill="currentColor"/> : <Mic size={18}/>}
                     </button>
                  </div>
 
@@ -516,7 +531,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                     disabled={processing}
-                    placeholder={listening ? "LISTENING..." : "Inject social engineering payload..."}
+                    placeholder={isRecording ? "Recording Audio..." : isTranscribing ? "Transcribing via Gemini..." : "Inject social engineering payload..."}
                     className="flex-1 bg-black border border-zinc-700 rounded-lg p-4 text-white placeholder-zinc-600 focus:border-green-500 focus:ring-1 focus:ring-green-500/20 outline-none transition-all font-mono text-sm"
                  />
                  <button 
