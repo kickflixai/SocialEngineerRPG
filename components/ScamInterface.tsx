@@ -227,6 +227,15 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   };
 
   const requestHints = async () => {
+      // Cost check: 20 Trust
+      if (scam.trust < 20) return;
+
+      // Deduct Trust immediately
+      onUpdateScam({
+          ...scam,
+          trust: Math.max(0, scam.trust - 20)
+      });
+
       setLoadingHints(true);
       try {
           const suggestions = await generateScamHint(scam.history, scam.winCondition, scam.victim);
@@ -579,13 +588,16 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                     {/* NEW: Hint Button */}
                     <button
                         onClick={requestHints}
-                        disabled={loadingHints || processing}
-                        className="p-4 rounded-lg border bg-black border-zinc-700 text-zinc-400 hover:text-blue-400 hover:border-blue-500 transition-all relative group"
-                        title="Ask AI for a Hint"
+                        disabled={loadingHints || processing || scam.trust < 20}
+                        className={`p-4 rounded-lg border bg-black border-zinc-700 text-zinc-400 transition-all relative group ${
+                            scam.trust >= 20 ? 'hover:text-blue-400 hover:border-blue-500' : 'opacity-30 cursor-not-allowed'
+                        }`}
                     >
                          {loadingHints ? <Loader2 size={18} className="animate-spin"/> : <Lightbulb size={18}/>}
-                         <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-zinc-800 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                             Suggestion Engine
+                         
+                         <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-zinc-900 border border-zinc-700 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 flex items-center gap-2 shadow-xl">
+                             <span className="text-zinc-300">Suggestion Engine</span>
+                             <span className={`${scam.trust >= 20 ? "text-red-500" : "text-zinc-600"} font-mono font-bold`}>[-20 TRUST]</span>
                          </span>
                     </button>
                  </div>
