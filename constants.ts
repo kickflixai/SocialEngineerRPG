@@ -1,5 +1,5 @@
 
-import { Skill, ShopItem, CountryStats } from './types';
+import { Skill, ShopItem, CountryStats, Achievement } from './types';
 
 export const INITIAL_MONEY = 1000;
 export const INITIAL_THREAT = 0;
@@ -195,6 +195,29 @@ export const SCAM_OBJECTIVES: Record<string, string[]> = {
     "Convince target to purchase office equipment from a 'Certified Vendor'"
   ]
 };
+
+// --- ACHIEVEMENTS ---
+export const ACHIEVEMENTS: Achievement[] = [
+    // General
+    { id: 'first_blood', title: 'First Blood', description: 'Successfully complete your first scam.', icon: 'Award' },
+    { id: 'high_roller', title: 'High Roller', description: 'Accumulate over $20,000 in funds.', icon: 'Banknote' },
+    { id: 'untouchable', title: 'Untouchable', description: 'Complete a scam with 0% Suspicion.', icon: 'Ghost' },
+    { id: 'close_call', title: 'Close Call', description: 'Complete a scam with >90% Suspicion.', icon: 'Zap' },
+    
+    // Specific Scams
+    { id: 'ach_grandson', title: 'Nana\'s Boy', description: 'Success: Grandson in Trouble', icon: 'User' },
+    { id: 'ach_irs', title: 'The Taxman', description: 'Success: IRS Tax Audit', icon: 'FileText' },
+    { id: 'ach_tech', title: 'Hello Sir', description: 'Success: Tech Support Virus', icon: 'Monitor' },
+    { id: 'ach_lotto', title: 'Jackpot', description: 'Success: Lottery Winner', icon: 'Ticket' },
+    { id: 'ach_crypto', title: 'Rug Pull', description: 'Success: Crypto Investment', icon: 'Bitcoin' },
+    { id: 'ach_romance', title: 'Heartbreaker', description: 'Success: Romance Scam', icon: 'Heart' },
+    { id: 'ach_bec', title: 'CEO Fraud', description: 'Success: Business Email Compromise', icon: 'Building' },
+    { id: 'ach_kidnap', title: 'Ransom King', description: 'Success: Kidnapping Hoax', icon: 'Siren' },
+    { id: 'ach_charity', title: 'Cold Hearted', description: 'Success: Charity Fraud', icon: 'HeartOff' },
+    { id: 'ach_inherit', title: 'The Prince', description: 'Success: Inheritance Advance Fee', icon: 'Crown' },
+    { id: 'ach_mule', title: 'Job Creator', description: 'Success: Employment Mule Scam', icon: 'Briefcase' },
+];
+
 
 export const SKILLS: Skill[] = [
   // --- Social Engineering (Charisma) ---

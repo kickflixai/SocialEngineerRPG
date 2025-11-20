@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Victim, PlayerState } from '../types';
-import { User, Briefcase, Lock, Unlock, Fingerprint, ArrowRight, Database, AlertTriangle, Siren, Loader2 } from 'lucide-react';
+import { User, Briefcase, Lock, Unlock, Fingerprint, Database, Siren, Loader2 } from 'lucide-react';
 import { SCAM_CATEGORIES } from '../constants';
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
   loading: boolean;
 }
 
-const VictimDossier: React.FC<Props> = ({ victim, player, onExecute, onAbort, loading }) => {
+const VictimDossier: React.FC<Props> = ({ victim, player, onExecute, loading }) => {
   const hasDoxxing = player.skills.includes('doxxing_suite');
   const hasScraper = player.skills.includes('social_scraper');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -124,14 +124,7 @@ const VictimDossier: React.FC<Props> = ({ victim, player, onExecute, onAbort, lo
            </div>
 
            {/* Footer Actions */}
-           <div className="mt-6 pt-6 border-t border-zinc-800 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0 relative z-20 pb-8 md:pb-0">
-               <button 
-                onClick={onAbort}
-                className="w-full md:w-auto px-6 py-3 border border-red-900/30 text-red-500 hover:bg-red-950/50 hover:border-red-500/50 rounded font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all uppercase tracking-wider order-2 md:order-1"
-               >
-                   <AlertTriangle size={14}/> Abort
-               </button>
-
+           <div className="mt-6 pt-6 border-t border-zinc-800 flex flex-col md:flex-row justify-end items-center gap-4 shrink-0 relative z-20 pb-8 md:pb-0">
                <div className="w-full md:w-auto flex items-center gap-4 order-1 md:order-2">
                    {loading && <span className="text-green-500 font-mono text-xs animate-pulse hidden md:inline">ESTABLISHING UPLINK...</span>}
                    <button 

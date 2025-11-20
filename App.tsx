@@ -1,14 +1,14 @@
 
 import React, { useState } from 'react';
 import { GameView, PlayerState, ScamState, PlayerAttributes, Skill } from './types';
-import { INITIAL_MONEY, INITIAL_THREAT, SCAM_CATEGORIES, MAX_THREAT, SKILLS, SHOP_ITEMS, COUNTRY_DATA, SCAM_OBJECTIVES } from './constants';
+import { INITIAL_MONEY, INITIAL_THREAT, SCAM_CATEGORIES, MAX_THREAT, SKILLS, SHOP_ITEMS, COUNTRY_DATA, SCAM_OBJECTIVES, ACHIEVEMENTS } from './constants';
 import { generateVictim, generateOpener } from './services/geminiService';
 
 import CharacterCreator from './components/CharacterCreator';
 import Dashboard from './components/Dashboard';
 import ScamInterface from './components/ScamInterface';
 import VictimDossier from './components/VictimDossier';
-import LandingScreen from './components/LandingScreen'; // Import Landing Screen
+import LandingScreen from './components/LandingScreen'; 
 import { Siren, Skull, ArrowLeft, Cpu, AlertOctagon, Terminal, Shield } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -20,7 +20,8 @@ const App: React.FC = () => {
     threatLevel: INITIAL_THREAT,
     scamsCompleted: 0,
     inventory: [],
-    skills: []
+    skills: [],
+    achievements: []
   });
   
   const [activeScam, setActiveScam] = useState<ScamState | null>(null);
@@ -43,7 +44,8 @@ const App: React.FC = () => {
         threatLevel: countryStats.startingThreat,
         scamsCompleted: 0,
         inventory: [...countryStats.startingItems],
-        skills: [...countryStats.startingSkills]
+        skills: [...countryStats.startingSkills],
+        achievements: []
     });
 
     setView(GameView.DASHBOARD);
@@ -123,6 +125,33 @@ const App: React.FC = () => {
       }
   };
 
+  const checkAchievements = (outcome: 'success' | 'failed' | 'police', currentScam: ScamState, moneyChange: number) => {
+      const unlocked = [...player.achievements];
+      const add = (id: string) => { if (!unlocked.includes(id)) unlocked.push(id); };
+
+      if (outcome === 'success') {
+          add('first_blood');
+          if (player.money + moneyChange >= 20000) add('high_roller');
+          if (currentScam.suspicion === 0) add('untouchable');
+          if (currentScam.suspicion > 90) add('close_call');
+
+          // Category specific
+          if (currentScam.category === "Grandson in Trouble") add('ach_grandson');
+          if (currentScam.category === "IRS Tax Audit") add('ach_irs');
+          if (currentScam.category === "Tech Support Virus") add('ach_tech');
+          if (currentScam.category === "Lottery Winner") add('ach_lotto');
+          if (currentScam.category === "Crypto Investment Opportunity") add('ach_crypto');
+          if (currentScam.category === "Romance Scam") add('ach_romance');
+          if (currentScam.category === "Business Email Compromise") add('ach_bec');
+          if (currentScam.category === "Kidnapping Hoax") add('ach_kidnap');
+          if (currentScam.category === "Charity Fraud") add('ach_charity');
+          if (currentScam.category === "Inheritance Advance Fee") add('ach_inherit');
+          if (currentScam.category === "Employment Mule Scam") add('ach_mule');
+      }
+
+      return unlocked;
+  };
+
   const handleScamEnd = (result: 'success' | 'failed' | 'police') => {
     if (!activeScam) return;
 
@@ -142,10 +171,14 @@ const App: React.FC = () => {
         const totalMult = payoutMult * skillMult;
         moneyChange = Math.floor((baseReward + Math.floor(Math.random() * 1000)) * totalMult);
         
+        // Check Achievements
+        const newAchievements = checkAchievements('success', activeScam, moneyChange);
+
         setPlayer(prev => ({ 
             ...prev, 
             money: prev.money + moneyChange,
-            scamsCompleted: prev.scamsCompleted + 1
+            scamsCompleted: prev.scamsCompleted + 1,
+            achievements: newAchievements
         }));
         // Delay for effect is handled by UI overlay
         setTimeout(() => {
