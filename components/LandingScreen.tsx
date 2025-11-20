@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Play, Terminal, Bot, UserCheck } from 'lucide-react';
@@ -31,8 +30,8 @@ const LandingScreen: React.FC<Props> = ({ onStart }) => {
               SYSTEM_ONLINE // V2.0
             </div>
             <h1 className="text-6xl md:text-7xl font-black font-mono tracking-tighter leading-tight mb-2">
-              SOCIAL<br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-300">ENGINEER</span>
+              SCAM<br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-300">SIMULATOR</span>
             </h1>
             <p className="text-xl text-zinc-400 font-mono">The Long Con Simulator</p>
           </div>
