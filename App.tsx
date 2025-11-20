@@ -227,8 +227,8 @@ const App: React.FC = () => {
               <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
               <Siren size={120} className="animate-pulse drop-shadow-[0_0_30px_rgba(239,68,68,0.8)]" />
               <div className="text-center z-10">
-                  <h1 className="text-8xl font-bold font-mono mb-4 tracking-tighter">BUSTED</h1>
-                  <p className="text-white text-2xl font-mono uppercase tracking-widest">Federal Agents have seized your assets</p>
+                  <h1 className="text-6xl md:text-8xl font-bold font-mono mb-4 tracking-tighter">BUSTED</h1>
+                  <p className="text-white text-xl md:text-2xl font-mono uppercase tracking-widest px-4">Federal Agents have seized your assets</p>
               </div>
               <button onClick={() => window.location.reload()} className="px-10 py-4 bg-red-600 text-white rounded hover:bg-red-500 font-bold z-10 shadow-lg hover:shadow-red-500/50 transition-all">
                   TERMINATE SESSION & RETRY
@@ -244,28 +244,28 @@ const App: React.FC = () => {
         
         {/* Header */}
         {view !== GameView.LANDING && view !== GameView.CHARACTER_CREATION && (
-            <header className="h-20 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-8 z-50">
-                <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-green-500/10 rounded flex items-center justify-center border border-green-500/30">
-                        <Skull size={24} className="text-green-500"/>
+            <header className="h-16 md:h-20 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-4 md:px-8 z-50 shrink-0">
+                <div className="flex items-center gap-2 md:gap-4">
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-green-500/10 rounded flex items-center justify-center border border-green-500/30">
+                        <Skull size={20} className="text-green-500 md:w-6 md:h-6"/>
                     </div>
                     <div>
-                        <h1 className="font-mono font-bold text-white text-lg tracking-tighter">SCAM_SIMULATOR<span className="text-green-500">_V2.0</span></h1>
-                        <p className="text-xs text-zinc-500 font-mono uppercase tracking-widest">Dark Web Interface // Secured</p>
+                        <h1 className="font-mono font-bold text-white text-sm md:text-lg tracking-tighter">SCAM_SIM<span className="text-green-500">_V2</span></h1>
+                        <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest hidden md:block">Dark Web Interface // Secured</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 md:gap-4">
                     <div className="text-right">
-                        <p className="text-xs text-zinc-500 font-bold uppercase">Available Funds</p>
-                        <p className="text-xl font-mono text-white font-bold">${player.money.toLocaleString()}</p>
+                        <p className="text-[10px] text-zinc-500 font-bold uppercase hidden md:block">Available Funds</p>
+                        <p className="text-sm md:text-xl font-mono text-white font-bold">${player.money.toLocaleString()}</p>
                     </div>
                     {/* Hide Dashboard button in Dossier and Active Scam to prevent easy exit */}
                     {view !== GameView.DASHBOARD && view !== GameView.VICTIM_DOSSIER && view !== GameView.ACTIVE_SCAM && (
                         <button 
                             onClick={() => setView(GameView.DASHBOARD)} 
-                            className="px-4 py-2 bg-zinc-900 border border-zinc-700 hover:border-white rounded text-sm text-zinc-300 hover:text-white flex items-center gap-2 transition-colors"
+                            className="px-3 py-2 md:px-4 md:py-2 bg-zinc-900 border border-zinc-700 hover:border-white rounded text-xs md:text-sm text-zinc-300 hover:text-white flex items-center gap-2 transition-colors"
                         >
-                            <ArrowLeft size={16}/> Dashboard
+                            <ArrowLeft size={14}/> <span className="hidden md:inline">Dashboard</span>
                         </button>
                     )}
                 </div>
@@ -309,23 +309,23 @@ const App: React.FC = () => {
             )}
 
             {view === GameView.SCAM_SELECTION && (
-                <div className="flex items-center justify-center min-h-full p-8">
+                <div className="flex items-center justify-center min-h-full p-4 md:p-8">
                     {loadingScam ? (
                         <div className="flex flex-col items-center gap-4">
                             <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-                            <div className="text-green-500 font-mono animate-pulse text-xl">SCANNING DARK WEB DIRECTORY...</div>
+                            <div className="text-green-500 font-mono animate-pulse text-lg md:text-xl text-center">SCANNING DARK WEB DIRECTORY...</div>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl w-full">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 max-w-6xl w-full pb-8">
                             {/* Tier 1 */}
-                            <button onClick={() => findTarget('easy')} className="relative group bg-zinc-900 border border-zinc-800 hover:border-green-500 rounded-2xl p-8 text-left transition-all hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(34,197,94,0.1)] overflow-hidden">
+                            <button onClick={() => findTarget('easy')} className="relative group bg-zinc-900 border border-zinc-800 hover:border-green-500 rounded-2xl p-6 md:p-8 text-left transition-all hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(34,197,94,0.1)] overflow-hidden">
                                 <div className="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
-                                <div className="mb-6 text-green-500 font-mono font-bold text-sm tracking-widest">TIER 1 // LOW YIELD</div>
-                                <h3 className="text-3xl font-bold text-white mb-4">The Elderly</h3>
-                                <p className="text-zinc-400 mb-6 leading-relaxed">Targets with low digital literacy and high isolation. Easy to manipulate emotionally.</p>
+                                <div className="mb-4 md:mb-6 text-green-500 font-mono font-bold text-sm tracking-widest">TIER 1 // LOW YIELD</div>
+                                <h3 className="text-2xl md:text-3xl font-bold text-white mb-2 md:mb-4">The Elderly</h3>
+                                <p className="text-zinc-400 mb-4 md:mb-6 leading-relaxed text-sm md:text-base">Targets with low digital literacy and high isolation. Easy to manipulate emotionally.</p>
                                 <div className="flex items-center justify-between mt-auto">
-                                    <span className="text-zinc-500 font-mono">$500 - $2,000</span>
-                                    <span className="text-green-400 group-hover:translate-x-2 transition-transform">Scan for Target &rarr;</span>
+                                    <span className="text-zinc-500 font-mono text-sm">$500 - $2,000</span>
+                                    <span className="text-green-400 group-hover:translate-x-2 transition-transform text-sm">Scan &rarr;</span>
                                 </div>
                             </button>
 
@@ -333,15 +333,15 @@ const App: React.FC = () => {
                             <button 
                                 onClick={() => findTarget('medium')} 
                                 disabled={player.scamsCompleted < 2}
-                                className="relative group bg-zinc-900 border border-zinc-800 hover:border-yellow-500 rounded-2xl p-8 text-left transition-all hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(234,179,8,0.1)] overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="relative group bg-zinc-900 border border-zinc-800 hover:border-yellow-500 rounded-2xl p-6 md:p-8 text-left transition-all hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(234,179,8,0.1)] overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <div className="absolute top-0 left-0 w-full h-1 bg-yellow-500"></div>
-                                <div className="mb-6 text-yellow-500 font-mono font-bold text-sm tracking-widest">TIER 2 // MID YIELD</div>
-                                <h3 className="text-3xl font-bold text-white mb-4">Small Business</h3>
-                                <p className="text-zinc-400 mb-6 leading-relaxed">Busy professionals or shop owners. Requires logical consistency and industry jargon.</p>
+                                <div className="mb-4 md:mb-6 text-yellow-500 font-mono font-bold text-sm tracking-widest">TIER 2 // MID YIELD</div>
+                                <h3 className="text-2xl md:text-3xl font-bold text-white mb-2 md:mb-4">Small Business</h3>
+                                <p className="text-zinc-400 mb-4 md:mb-6 leading-relaxed text-sm md:text-base">Busy professionals or shop owners. Requires logical consistency.</p>
                                 <div className="flex items-center justify-between mt-auto">
-                                    <span className="text-zinc-500 font-mono">$5,000 - $15,000</span>
-                                    {player.scamsCompleted < 2 ? <span className="text-red-500 text-xs">LOCKED (Req: 2 Wins)</span> : <span className="text-yellow-400 group-hover:translate-x-2 transition-transform">Scan for Target &rarr;</span>}
+                                    <span className="text-zinc-500 font-mono text-sm">$5k - $15k</span>
+                                    {player.scamsCompleted < 2 ? <span className="text-red-500 text-xs">LOCKED (2 Wins)</span> : <span className="text-yellow-400 group-hover:translate-x-2 transition-transform text-sm">Scan &rarr;</span>}
                                 </div>
                             </button>
 
@@ -349,15 +349,15 @@ const App: React.FC = () => {
                             <button 
                                 onClick={() => findTarget('hard')} 
                                 disabled={player.scamsCompleted < 5}
-                                className="relative group bg-zinc-900 border border-zinc-800 hover:border-red-500 rounded-2xl p-8 text-left transition-all hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(239,68,68,0.1)] overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="relative group bg-zinc-900 border border-zinc-800 hover:border-red-500 rounded-2xl p-6 md:p-8 text-left transition-all hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(239,68,68,0.1)] overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
-                                <div className="mb-6 text-red-500 font-mono font-bold text-sm tracking-widest">TIER 3 // HIGH YIELD</div>
-                                <h3 className="text-3xl font-bold text-white mb-4">The Executive</h3>
-                                <p className="text-zinc-400 mb-6 leading-relaxed">C-Suite targets. Zero trust baseline. Requires perfect intel and execution.</p>
+                                <div className="mb-4 md:mb-6 text-red-500 font-mono font-bold text-sm tracking-widest">TIER 3 // HIGH YIELD</div>
+                                <h3 className="text-2xl md:text-3xl font-bold text-white mb-2 md:mb-4">The Executive</h3>
+                                <p className="text-zinc-400 mb-4 md:mb-6 leading-relaxed text-sm md:text-base">C-Suite targets. Zero trust baseline. Requires perfect intel.</p>
                                 <div className="flex items-center justify-between mt-auto">
-                                    <span className="text-zinc-500 font-mono">$50,000+</span>
-                                    {player.scamsCompleted < 5 ? <span className="text-red-500 text-xs">LOCKED (Req: 5 Wins)</span> : <span className="text-red-400 group-hover:translate-x-2 transition-transform">Scan for Target &rarr;</span>}
+                                    <span className="text-zinc-500 font-mono text-sm">$50k+</span>
+                                    {player.scamsCompleted < 5 ? <span className="text-red-500 text-xs">LOCKED (5 Wins)</span> : <span className="text-red-400 group-hover:translate-x-2 transition-transform text-sm">Scan &rarr;</span>}
                                 </div>
                             </button>
                         </div>
@@ -366,18 +366,18 @@ const App: React.FC = () => {
             )}
 
             {view === GameView.SHOP && (
-                <div className="p-12 max-w-7xl mx-auto">
-                    <div className="flex items-center gap-4 mb-12">
+                <div className="p-6 md:p-12 max-w-7xl mx-auto pb-24">
+                    <div className="flex items-center gap-4 mb-8 md:mb-12">
                         <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                            <Cpu size={32} className="text-purple-500" />
+                            <Cpu size={24} className="text-purple-500 md:w-8 md:h-8" />
                         </div>
                         <div>
-                            <h2 className="text-4xl font-bold text-white font-mono tracking-tight">BLACK MARKET</h2>
-                            <p className="text-zinc-400">Hardware and services to mitigate risk.</p>
+                            <h2 className="text-3xl md:text-4xl font-bold text-white font-mono tracking-tight">BLACK MARKET</h2>
+                            <p className="text-zinc-400 text-sm md:text-base">Hardware and services to mitigate risk.</p>
                         </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                         {SHOP_ITEMS.map(item => {
                             // Check cost modifiers (China)
                             const countryStats = COUNTRY_DATA[player.attributes.country];
@@ -386,10 +386,10 @@ const App: React.FC = () => {
                             const canAfford = player.money >= finalCost;
                             
                             return (
-                                <div key={item.id} className={`bg-zinc-900/50 border border-zinc-800 p-8 rounded-2xl flex flex-col justify-between transition-all group backdrop-blur-sm ${canAfford ? 'hover:border-purple-500/50' : 'opacity-50 grayscale cursor-not-allowed'}`}>
+                                <div key={item.id} className={`bg-zinc-900/50 border border-zinc-800 p-6 md:p-8 rounded-2xl flex flex-col justify-between transition-all group backdrop-blur-sm ${canAfford ? 'hover:border-purple-500/50' : 'opacity-50 grayscale cursor-not-allowed'}`}>
                                     <div>
                                         <div className="flex justify-between items-start mb-4">
-                                            <h3 className={`font-bold text-xl transition-colors ${canAfford ? 'text-white group-hover:text-purple-400' : 'text-zinc-500'}`}>{item.name}</h3>
+                                            <h3 className={`font-bold text-lg md:text-xl transition-colors ${canAfford ? 'text-white group-hover:text-purple-400' : 'text-zinc-500'}`}>{item.name}</h3>
                                             <span className={`${canAfford ? 'text-purple-500' : 'text-zinc-600'} font-mono text-sm font-bold`}>${finalCost}</span>
                                         </div>
                                         <p className="text-zinc-400 text-sm leading-relaxed">{item.description}</p>
@@ -397,7 +397,7 @@ const App: React.FC = () => {
                                     <button 
                                         onClick={() => buyItem(item)}
                                         disabled={!canAfford}
-                                        className={`mt-8 w-full py-3 rounded-lg font-bold shadow-lg transition-all ${canAfford ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/20' : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'}`}
+                                        className={`mt-6 md:mt-8 w-full py-3 rounded-lg font-bold shadow-lg transition-all ${canAfford ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/20' : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'}`}
                                     >
                                         {canAfford ? 'Purchase Unit' : 'Insufficient Funds'}
                                     </button>
@@ -409,14 +409,14 @@ const App: React.FC = () => {
             )}
 
             {view === GameView.SKILL_TREE && (
-                 <div className="p-12 max-w-7xl mx-auto pb-24">
-                    <div className="flex items-center gap-4 mb-12">
+                 <div className="p-6 md:p-12 max-w-7xl mx-auto pb-24">
+                    <div className="flex items-center gap-4 mb-8 md:mb-12">
                         <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                            <AlertOctagon size={32} className="text-blue-500" />
+                            <AlertOctagon size={24} className="text-blue-500 md:w-8 md:h-8" />
                         </div>
                         <div>
-                            <h2 className="text-4xl font-bold text-white font-mono tracking-tight">NEURAL ENHANCEMENTS</h2>
-                            <p className="text-zinc-400">Cognitive upgrades to improve social engineering success rates.</p>
+                            <h2 className="text-3xl md:text-4xl font-bold text-white font-mono tracking-tight">NEURAL ENHANCEMENTS</h2>
+                            <p className="text-zinc-400 text-sm md:text-base">Cognitive upgrades to improve success rates.</p>
                         </div>
                     </div>
 

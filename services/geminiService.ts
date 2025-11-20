@@ -1,5 +1,4 @@
-
-import { GoogleGenAI, Modality } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim } from "../types";
 
 const getClient = () => {
@@ -22,6 +21,30 @@ const parseJSON = (text: string) => {
         console.error("Failed to parse JSON", text);
         return null;
     }
+};
+
+// RETRY HELPER: Handles Rate Limiting (429) with Exponential Backoff
+const retryOperation = async <T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await fn();
+        } catch (error: any) {
+            const isRateLimit = error?.status === 429 || 
+                                error?.code === 429 || 
+                                error?.message?.includes('429') ||
+                                error?.message?.includes('quota') ||
+                                error?.message?.includes('RESOURCE_EXHAUSTED');
+            
+            if (isRateLimit && i < retries - 1) {
+                console.warn(`Rate limit hit. Retrying in ${delay}ms... (Attempt ${i + 1}/${retries})`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2; // Exponential backoff
+                continue;
+            }
+            throw error;
+        }
+    }
+    throw new Error("Max retries exceeded");
 };
 
 // Visual descriptors to enforce country origin in AI generation
@@ -59,7 +82,7 @@ export const generatePlayerAvatar = async (attrs: PlayerAttributes): Promise<str
             Do NOT generate: 3D render, CGI, illustration, cartoon, anime, painting, plastic skin, smooth skin, doll-like.
         `;
 
-        const response = await ai.models.generateContent({
+        const response = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
             model: 'gemini-2.5-flash-image',
             contents: { parts: [{ text: prompt }] },
             config: {
@@ -67,7 +90,7 @@ export const generatePlayerAvatar = async (attrs: PlayerAttributes): Promise<str
                     aspectRatio: '1:1'
                 }
             }
-        });
+        }));
         
         const parts = response.candidates?.[0]?.content?.parts || [];
         for (const part of parts) {
@@ -150,11 +173,11 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
     };
 
     try {
-        const response = await ai.models.generateContent({
+        const response = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
             config: { responseMimeType: 'application/json' }
-        });
+        }));
         const parsed = parseJSON(response.text || "{}");
         if (parsed) data = { ...data, ...parsed };
     } catch(e) {
@@ -164,7 +187,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
     // Generate avatar for victim with photorealism focus
     let avatarUrl = "https://picsum.photos/400/400";
     try {
-        const imageResponse = await ai.models.generateContent({
+        const imageResponse = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
             model: 'gemini-2.5-flash-image',
             contents: { parts: [{ text: `
                 Raw, photorealistic portrait of ${data.name}, a ${data.age} year old ${data.gender} ${data.occupation}.
@@ -177,7 +200,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
                     aspectRatio: '1:1'
                 }
             }
-        });
+        }));
         
         const parts = imageResponse.candidates?.[0]?.content?.parts || [];
         for (const part of parts) {
@@ -211,10 +234,10 @@ export const generateOpener = async (scamCategory: string, victim: Victim): Prom
             Do not include quotation marks.
         `;
 
-        const response = await ai.models.generateContent({
+        const response = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt
-        });
+        }));
 
         return response.text?.trim() || "Hello, I am writing to you regarding an urgent matter.";
     } catch (e) {
@@ -266,7 +289,7 @@ export const getVictimResponse = async (history: ChatMessage[], victim: Victim, 
         });
 
         const lastMsg = history[history.length - 1].text;
-        const result = await chat.sendMessage({ message: lastMsg });
+        const result = await retryOperation<GenerateContentResponse>(() => chat.sendMessage({ message: lastMsg }));
         
         return result.text || "...";
     } catch (e) {
@@ -352,11 +375,11 @@ export const arbitrateChat = async (
             }
         `;
 
-        const response = await ai.models.generateContent({
+        const response = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
             config: { responseMimeType: 'application/json' }
-        });
+        }));
 
         return parseJSON(response.text || "{}") || {
             logicScore: 50,
@@ -405,75 +428,14 @@ export const generateScamHint = async (
             Return ONLY a JSON array of strings. e.g. ["Say X", "Say Y", "Say Z"]
         `;
 
-        const response = await ai.models.generateContent({
+        const response = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
             config: { responseMimeType: 'application/json' }
-        });
+        }));
         
         return parseJSON(response.text || "[]") || ["Try being polite", "Create urgency", "Ask for details"];
     } catch (e) {
         return ["Try clarifying your request", "Ask them to verify their identity", "Offer a fake reward"];
-    }
-}
-
-export const generateSpeech = async (text: string, gender: 'male' | 'female'): Promise<ArrayBuffer | null> => {
-    try {
-        const ai = getClient();
-        // Select voice based on victim gender. 'Puck' (Male) / 'Kore' (Female)
-        // Note: Gemini TTS voices are limited in preview.
-        const voiceName = gender.toLowerCase() === 'male' ? 'Puck' : 'Kore'; 
-        
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash-preview-tts",
-            contents: [{ parts: [{ text }] }],
-            config: {
-                responseModalities: [Modality.AUDIO],
-                speechConfig: {
-                    voiceConfig: {
-                        prebuiltVoiceConfig: { voiceName },
-                    },
-                },
-            },
-        });
-
-        const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-        
-        if (!base64Audio) {
-            console.warn("TTS: No audio data received");
-            return null;
-        }
-
-        // Decode base64 to ArrayBuffer
-        const binaryString = atob(base64Audio);
-        const len = binaryString.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-        }
-        return bytes.buffer;
-    } catch (e) {
-        console.error("TTS Generation failed", e);
-        return null;
-    }
-};
-
-// --- SPEECH TO TEXT VIA GEMINI (Network Error Fix) ---
-export const transcribeAudio = async (audioBase64: string): Promise<string> => {
-    try {
-        const ai = getClient();
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: {
-                parts: [
-                    { inlineData: { mimeType: "audio/webm", data: audioBase64 } }, 
-                    { text: "Transcribe this audio exactly. Do not add any other text. Return only the spoken words." }
-                ]
-            }
-        });
-        return response.text || "";
-    } catch (e) {
-        console.error("Transcription failed", e);
-        return "";
     }
 }

@@ -45,12 +45,12 @@ const CharacterCreator: React.FC<Props> = ({ onComplete }) => {
   };
 
   const StepIndicator = () => (
-    <div className="flex justify-between mb-8 relative z-10">
+    <div className="flex justify-between mb-6 md:mb-8 relative z-10 px-2">
         <div className="absolute top-1/2 left-0 w-full h-0.5 bg-zinc-800 -z-10"></div>
         {[1, 2, 3, 4, 5].map(i => (
             <div 
                 key={i} 
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${step >= i ? 'bg-green-500 text-black' : 'bg-zinc-900 border border-zinc-700 text-zinc-500'}`}
+                className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm font-bold transition-colors ${step >= i ? 'bg-green-500 text-black' : 'bg-zinc-900 border border-zinc-700 text-zinc-500'}`}
             >
                 {i}
             </div>
@@ -59,14 +59,14 @@ const CharacterCreator: React.FC<Props> = ({ onComplete }) => {
   );
 
   return (
-    <div className="w-full max-w-5xl bg-zinc-950/90 border border-zinc-800/50 backdrop-blur-xl rounded-2xl p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden flex flex-col h-[80vh]">
+    <div className="w-full max-w-5xl bg-zinc-950/90 border border-zinc-800/50 backdrop-blur-xl rounded-2xl p-4 md:p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden flex flex-col h-full md:h-[80vh]">
       {/* Decorative Elements */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
 
-      <div className="text-center mb-6 shrink-0">
-        <h2 className="text-4xl font-mono font-bold text-white mb-2 tracking-tight">IDENTITY SYNTHESIS</h2>
-        <p className="text-zinc-400 text-sm uppercase tracking-widest">Create your digital persona</p>
+      <div className="text-center mb-6 shrink-0 pt-4 md:pt-0">
+        <h2 className="text-3xl md:text-4xl font-mono font-bold text-white mb-2 tracking-tight">IDENTITY SYNTHESIS</h2>
+        <p className="text-zinc-400 text-xs md:text-sm uppercase tracking-widest">Create your digital persona</p>
       </div>
 
       <StepIndicator />
@@ -81,7 +81,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete }) => {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
             >
-                <h3 className="text-xl font-bold text-white border-b border-zinc-800 pb-2 mb-4">Basic Information</h3>
+                <h3 className="text-lg md:text-xl font-bold text-white border-b border-zinc-800 pb-2 mb-4">Basic Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label className="block text-xs font-bold text-green-500 uppercase mb-2 flex items-center gap-2"><User size={14}/> Alias</label>
@@ -112,15 +112,15 @@ const CharacterCreator: React.FC<Props> = ({ onComplete }) => {
                             <button
                                 key={g}
                                 onClick={() => setFormData({...formData, gender: g})}
-                                className={`p-3 rounded border text-sm ${formData.gender === g ? 'border-green-500 bg-green-500/20 text-white' : 'border-zinc-800 text-zinc-400 hover:border-zinc-600'}`}
+                                className={`p-3 rounded border text-xs md:text-sm ${formData.gender === g ? 'border-green-500 bg-green-500/20 text-white' : 'border-zinc-800 text-zinc-400 hover:border-zinc-600'}`}
                             >
                                 {g}
                             </button>
                         ))}
                     </div>
                 </div>
-                <div className="flex justify-end mt-8">
-                    <button onClick={() => setStep(2)} disabled={!formData.name} className="px-8 py-3 bg-white text-black font-bold rounded hover:bg-zinc-200 disabled:opacity-50">Select Origin &rarr;</button>
+                <div className="flex justify-end mt-8 pb-8">
+                    <button onClick={() => setStep(2)} disabled={!formData.name} className="w-full md:w-auto px-8 py-3 bg-white text-black font-bold rounded hover:bg-zinc-200 disabled:opacity-50">Select Origin &rarr;</button>
                 </div>
             </motion.div>
         )}
@@ -133,7 +133,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete }) => {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
             >
-                <h3 className="text-xl font-bold text-white border-b border-zinc-800 pb-2 mb-4 flex items-center gap-2">
+                <h3 className="text-lg md:text-xl font-bold text-white border-b border-zinc-800 pb-2 mb-4 flex items-center gap-2">
                     <Globe size={20}/> Select Origin
                 </h3>
                 <p className="text-zinc-400 text-sm">Where are you operating from? Your location determines starting resources and local heat.</p>
@@ -157,7 +157,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete }) => {
                                     </h4>
                                     {formData.country === countryKey && <CheckCircle2 size={20} className="text-green-500"/>}
                                 </div>
-                                <p className="text-zinc-400 text-xs italic mb-3 h-10 overflow-hidden">{country.description}</p>
+                                <p className="text-zinc-400 text-xs italic mb-3 h-auto md:h-10 overflow-hidden">{country.description}</p>
                                 
                                 <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
                                     <div className="bg-green-900/20 p-2 rounded border border-green-900/30">
@@ -174,7 +174,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete }) => {
                     })}
                 </div>
 
-                <div className="flex justify-between mt-8">
+                <div className="flex justify-between mt-8 pb-8">
                     <button onClick={() => setStep(1)} className="text-zinc-400 hover:text-white">Back</button>
                     <button onClick={() => setStep(3)} className="px-8 py-3 bg-white text-black font-bold rounded hover:bg-zinc-200">Next Step &rarr;</button>
                 </div>
@@ -189,7 +189,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete }) => {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
             >
-                <h3 className="text-xl font-bold text-white border-b border-zinc-800 pb-2 mb-4">Visual Aesthetics</h3>
+                <h3 className="text-lg md:text-xl font-bold text-white border-b border-zinc-800 pb-2 mb-4">Visual Aesthetics</h3>
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label className="block text-xs font-bold text-purple-400 uppercase mb-2 flex items-center gap-2"><Shirt size={14}/> Clothing</label>
@@ -210,7 +210,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete }) => {
                         </select>
                     </div>
                 </div>
-                <div className="flex justify-between mt-8">
+                <div className="flex justify-between mt-8 pb-8">
                     <button onClick={() => setStep(2)} className="text-zinc-400 hover:text-white">Back</button>
                     <button onClick={() => setStep(4)} className="px-8 py-3 bg-white text-black font-bold rounded hover:bg-zinc-200">Next Step &rarr;</button>
                 </div>
@@ -225,7 +225,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete }) => {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
             >
-                <h3 className="text-xl font-bold text-white border-b border-zinc-800 pb-2 mb-4 flex items-center gap-2">
+                <h3 className="text-lg md:text-xl font-bold text-white border-b border-zinc-800 pb-2 mb-4 flex items-center gap-2">
                     <Edit3 size={20}/> Character Backstory
                 </h3>
                 
@@ -261,12 +261,12 @@ const CharacterCreator: React.FC<Props> = ({ onComplete }) => {
                     ))}
                 </div>
 
-                <div className="flex justify-between mt-8 pt-6 border-t border-zinc-800">
+                <div className="flex justify-between mt-8 pt-6 border-t border-zinc-800 pb-8">
                     <button onClick={() => setStep(3)} className="text-zinc-400 hover:text-white">Back</button>
                     <button 
                         onClick={handleGenerate}
                         disabled={loading}
-                        className="px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-green-900/20 disabled:opacity-70"
+                        className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-green-900/20 disabled:opacity-70"
                     >
                         {loading ? <Loader2 className="animate-spin" /> : <Sparkles size={18} />}
                         {loading ? 'SYNTHESIZING...' : 'GENERATE IDENTITY'}
@@ -282,17 +282,17 @@ const CharacterCreator: React.FC<Props> = ({ onComplete }) => {
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-center space-y-8 h-full flex flex-col justify-center"
             >
-                <div className="relative w-64 h-64 mx-auto rounded-xl overflow-hidden border-4 border-zinc-800 shadow-[0_0_50px_rgba(34,197,94,0.2)] group">
+                <div className="relative w-48 h-48 md:w-64 md:h-64 mx-auto rounded-xl overflow-hidden border-4 border-zinc-800 shadow-[0_0_50px_rgba(34,197,94,0.2)] group">
                     <img src={formData.avatarUrl} alt="Avatar" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-center p-6">
                         <div>
-                            <h3 className="text-2xl font-bold text-white">{formData.name}</h3>
-                            <p className="text-green-400 font-mono text-sm uppercase tracking-wider">{formData.archetype}</p>
+                            <h3 className="text-xl md:text-2xl font-bold text-white">{formData.name}</h3>
+                            <p className="text-green-400 font-mono text-xs md:text-sm uppercase tracking-wider">{formData.archetype}</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto text-sm text-zinc-400">
+                <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto text-sm text-zinc-400 w-full">
                     <div className="bg-zinc-900 p-3 rounded border border-zinc-800">
                         <span className="text-zinc-500 block text-xs uppercase">Origin</span>
                         <span className="text-white font-bold">{formData.country}</span>
@@ -303,11 +303,11 @@ const CharacterCreator: React.FC<Props> = ({ onComplete }) => {
                     </div>
                 </div>
 
-                <div className="flex gap-4 justify-center mt-auto">
-                    <button onClick={() => setStep(4)} className="px-6 py-3 border border-zinc-700 rounded hover:bg-zinc-900 text-zinc-300">Regenerate</button>
+                <div className="flex flex-col md:flex-row gap-4 justify-center mt-auto pb-8">
+                    <button onClick={() => setStep(4)} className="px-6 py-3 border border-zinc-700 rounded hover:bg-zinc-900 text-zinc-300 w-full md:w-auto">Regenerate</button>
                     <button 
                         onClick={() => onComplete(formData)}
-                        className="px-8 py-3 bg-white text-black font-bold rounded flex items-center gap-2 hover:bg-zinc-200"
+                        className="px-8 py-3 bg-white text-black font-bold rounded flex items-center justify-center gap-2 hover:bg-zinc-200 w-full md:w-auto"
                     >
                         Confirm Identity <ChevronRight size={18} />
                     </button>
