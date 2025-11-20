@@ -256,7 +256,7 @@ const App: React.FC = () => {
 
   if (view === GameView.GAME_OVER) {
       return (
-          <div className="w-screen h-screen bg-red-950 flex items-center justify-center flex-col text-red-500 space-y-8 relative overflow-hidden">
+          <div className="w-screen h-[100dvh] bg-red-950 flex items-center justify-center flex-col text-red-500 space-y-8 relative overflow-hidden">
               <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
               <Siren size={120} className="animate-pulse drop-shadow-[0_0_30px_rgba(239,68,68,0.8)]" />
               <div className="text-center z-10">
@@ -271,7 +271,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="w-screen h-screen bg-zinc-950 text-gray-100 font-sans overflow-hidden flex flex-col relative selection:bg-green-500/30 selection:text-green-200">
+    <div className="w-screen h-[100dvh] bg-zinc-950 text-gray-100 font-sans overflow-hidden flex flex-col relative selection:bg-green-500/30 selection:text-green-200">
         {/* Global Background Effect */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(18,18,18,0)_2px,transparent_2px),linear-gradient(90deg,rgba(18,18,18,0)_2px,transparent_2px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none opacity-20"></div>
         
@@ -305,14 +305,14 @@ const App: React.FC = () => {
             </header>
         )}
 
-        <main className="flex-1 overflow-y-auto relative z-40 custom-scrollbar">
+        <main className="flex-1 overflow-hidden relative z-40">
             
             {view === GameView.LANDING && (
                 <LandingScreen onStart={handleStart} />
             )}
 
             {view === GameView.CHARACTER_CREATION && (
-                <div className="min-h-full flex items-center justify-center p-4 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-black">
+                <div className="h-full flex items-center justify-center p-4 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-black overflow-y-auto custom-scrollbar">
                     <CharacterCreator onComplete={handleCharacterComplete} />
                 </div>
             )}
@@ -342,7 +342,7 @@ const App: React.FC = () => {
             )}
 
             {view === GameView.SCAM_SELECTION && (
-                <div className="flex items-center justify-center min-h-full p-4 md:p-8">
+                <div className="flex items-center justify-center h-full p-4 md:p-8 overflow-y-auto custom-scrollbar">
                     {loadingScam ? (
                         <div className="flex flex-col items-center gap-4">
                             <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
@@ -399,7 +399,7 @@ const App: React.FC = () => {
             )}
 
             {view === GameView.SHOP && (
-                <div className="p-6 md:p-12 max-w-7xl mx-auto pb-24">
+                <div className="p-6 md:p-12 max-w-7xl mx-auto pb-24 h-full overflow-y-auto custom-scrollbar">
                     <div className="flex items-center gap-4 mb-8 md:mb-12">
                         <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
                             <Cpu size={24} className="text-purple-500 md:w-8 md:h-8" />
@@ -442,7 +442,7 @@ const App: React.FC = () => {
             )}
 
             {view === GameView.SKILL_TREE && (
-                 <div className="p-6 md:p-12 max-w-7xl mx-auto pb-24">
+                 <div className="p-6 md:p-12 max-w-7xl mx-auto pb-24 h-full overflow-y-auto custom-scrollbar">
                     <div className="flex items-center gap-4 mb-8 md:mb-12">
                         <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
                             <AlertOctagon size={24} className="text-blue-500 md:w-8 md:h-8" />

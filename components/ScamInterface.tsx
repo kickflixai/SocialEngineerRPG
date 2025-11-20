@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ScamState, PlayerState, ChatMessage } from '../types';
 import { getVictimResponse, arbitrateChat, generateScamHint } from '../services/geminiService';
@@ -137,13 +138,13 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-full gap-4 md:gap-6 p-2 md:p-6 bg-black overflow-hidden relative">
+    <div className="flex flex-col md:grid md:grid-cols-4 h-full gap-4 md:gap-6 p-2 md:p-6 bg-black overflow-hidden relative">
       {/* Global CRT Scanline & Vignette Overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] z-0 pointer-events-none bg-[length:100%_2px,3px_100%]"></div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_60%,rgba(0,0,0,0.8)_100%)] z-0 pointer-events-none"></div>
 
-      {/* Mobile Header - Collapsible Stats */}
-      <div className="md:hidden z-20 bg-zinc-950 border border-zinc-800 rounded-xl p-3 shrink-0">
+      {/* Mobile Header - Collapsible Stats (Visible only on Mobile) */}
+      <div className="md:hidden z-20 bg-zinc-950 border border-zinc-800 rounded-xl p-3 shrink-0 relative">
           <div className="flex items-center justify-between" onClick={() => setMobileStatsExpanded(!mobileStatsExpanded)}>
               <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full overflow-hidden border border-green-500/50">
@@ -199,13 +200,13 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       </div>
 
 
-      {/* Left Panel (Desktop Sidebar / Hidden on Mobile when collapsed) */}
-      <div className="hidden md:flex w-80 flex-col gap-4 shrink-0 h-full relative z-10">
+      {/* COLUMN 1: PROFILE & STATS (Desktop Only) */}
+      <div className="hidden md:flex flex-col gap-4 h-full relative z-10 col-span-1">
         
         {/* Profile Card */}
         <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-4 flex flex-col items-center text-center relative shadow-[0_0_20px_rgba(0,0,0,0.5)] shrink-0">
              {/* Avatar */}
-             <div className="relative w-28 h-28 mb-4 mt-2 group">
+             <div className="relative w-24 h-24 mb-3 mt-2 group">
                 <div className="absolute inset-0 rounded-full border border-dashed border-green-500/40 animate-spin-slow"></div>
                 <img src={scam.victim.avatarUrl} alt="Target" className="w-full h-full rounded-full object-cover border-2 border-zinc-800 opacity-90 group-hover:opacity-100 transition-opacity" />
                 <div className="absolute -bottom-2 -right-1 bg-black text-green-500 text-[10px] font-bold px-2 py-1 rounded border border-green-900 flex items-center gap-1 shadow-[0_0_10px_rgba(34,197,94,0.2)]">
@@ -213,8 +214,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                 </div>
              </div>
              
-             <h2 className="text-xl font-bold text-white font-mono truncate w-full tracking-tight">{scam.victim.name}</h2>
-             <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest">{scam.victim.age} Y/O // {scam.victim.occupation}</p>
+             <h2 className="text-lg font-bold text-white font-mono truncate w-full tracking-tight">{scam.victim.name}</h2>
+             <p className="text-zinc-500 text-[10px] font-mono uppercase tracking-widest">{scam.victim.age} Y/O // {scam.victim.occupation}</p>
              <div className="mt-2">
                  <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${scam.victim.difficulty === 'easy' ? 'bg-green-900/30 text-green-400 border border-green-900' : scam.victim.difficulty === 'medium' ? 'bg-yellow-900/30 text-yellow-400 border border-yellow-900' : 'bg-red-900/30 text-red-400 border border-red-900'}`}>
                      {scam.victim.difficulty} TARGET
@@ -223,7 +224,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         </div>
 
         {/* METERS: Trust, Suspicion, Progress */}
-        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-4 shadow-xl shrink-0 space-y-4 backdrop-blur-sm relative overflow-hidden">
+        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-4 shadow-xl flex-1 space-y-4 backdrop-blur-sm relative overflow-hidden flex flex-col justify-center">
             <div className="absolute top-0 left-0 w-1 h-full bg-zinc-800"></div>
             
             {/* Trust */}
@@ -268,78 +269,11 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                 </div>
             </div>
         </div>
-
-        {/* Intel Log (Compact / Auto-Sizing) */}
-        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl flex flex-col shadow-xl min-h-0 overflow-hidden backdrop-blur-sm shrink-0 max-h-64">
-             <button 
-                onClick={() => setIntelExpanded(!intelExpanded)}
-                className="p-3 border-b border-zinc-800 bg-black/40 flex justify-between items-center hover:bg-zinc-900/50 transition-colors"
-             >
-                <p className="text-green-600 uppercase font-bold text-[10px] flex items-center gap-2 tracking-widest">
-                    <Terminal size={12}/> TARGET_INTEL
-                </p>
-                {intelExpanded ? <ChevronDown size={12} className="text-zinc-500"/> : <ChevronUp size={12} className="text-zinc-500"/>}
-             </button>
-             
-             {intelExpanded && (
-                 <div className="overflow-y-auto p-3 custom-scrollbar space-y-3 text-xs font-mono">
-                     <div className="bg-zinc-900/50 p-2 rounded border-l-2 border-zinc-700">
-                        <p className="text-zinc-500 text-[10px] uppercase">Strategy</p>
-                        <p className="text-zinc-300">{scam.category}</p>
-                     </div>
-                     
-                     {(player.skills.includes('doxxing_suite') || player.skills.includes('social_scraper') || scam.revealedFacts.length > 0) && (
-                        <div className="space-y-2 animate-in fade-in slide-in-from-left-4 duration-500">
-                            {player.skills.includes('doxxing_suite') && (
-                                <div className="bg-green-900/10 p-2 rounded border-l-2 border-green-600">
-                                    <p className="text-green-500 text-[10px] uppercase font-bold">LEAK DETECTED</p>
-                                    <p className="text-zinc-300">{scam.victim.hiddenFact}</p>
-                                </div>
-                            )}
-                            {player.skills.includes('social_scraper') && (
-                                <div className="bg-red-900/10 p-2 rounded border-l-2 border-red-600">
-                                    <p className="text-red-500 text-[10px] uppercase font-bold">PSYCH VULNERABILITY</p>
-                                    <p className="text-zinc-300">{scam.victim.weakness}</p>
-                                </div>
-                            )}
-                            {scam.revealedFacts.map((fact, idx) => (
-                                 <div key={idx} className="bg-blue-900/10 p-2 rounded border-l-2 border-blue-600">
-                                    <p className="text-blue-500 text-[10px] uppercase font-bold">NEW INTEL</p>
-                                    <p className="text-zinc-300">{fact}</p>
-                                </div>
-                            ))}
-                        </div>
-                     )}
-                 </div>
-             )}
-        </div>
-
-        {/* Arbiter - Expanded to Fill Remaining Space */}
-        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-4 flex-1 flex flex-col relative overflow-hidden">
-             <div className="absolute top-0 right-0 p-2 opacity-20"><Radio size={40} className="text-green-500"/></div>
-             <p className="text-zinc-500 mb-2 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
-                 <Wifi size={10} className={processing ? "animate-pulse text-green-500" : "text-zinc-600"}/> AI_ARBITER_LINK
-             </p>
-             
-             <div className="font-mono text-xs relative z-10 flex-1 overflow-y-auto custom-scrollbar">
-                {processing ? (
-                     <div className="flex flex-col gap-2 text-yellow-500 h-full justify-center items-center opacity-80">
-                         <Loader2 size={24} className="animate-spin"/>
-                         <span>ANALYZING PATTERNS...</span>
-                     </div>
-                ) : (
-                    <div className="text-zinc-300 leading-relaxed">
-                        <span className="text-green-500 mr-2">&gt;</span>
-                        {lastThought || "ESTABLISHED CONNECTION. WAITING FOR INPUT..."}
-                    </div>
-                )}
-             </div>
-        </div>
       </div>
 
-      {/* Right: Chat Window (Takes full screen on mobile) */}
-      <div className="flex-1 flex flex-col bg-zinc-950 border border-zinc-800/60 rounded-xl overflow-hidden relative shadow-2xl h-full z-10">
-        {/* Header */}
+      {/* COLUMN 2: CHAT WINDOW (Middle - 2 Cols Wide) */}
+      <div className="flex-1 md:col-span-2 flex flex-col bg-zinc-950 border border-zinc-800/60 rounded-xl overflow-hidden relative shadow-2xl h-full z-10">
+        {/* Chat Header */}
         <div className="h-auto min-h-14 bg-black/60 backdrop-blur border-b border-zinc-800 flex flex-col px-3 md:px-6 py-2 md:py-3 shrink-0 justify-center">
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2 md:gap-3">
@@ -367,7 +301,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             </div>
         </div>
 
-        {/* Messages */}
+        {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-6 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900/20 to-black custom-scrollbar min-h-0 relative">
             {/* Grid Background */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
@@ -384,7 +318,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                             <img src={scam.victim.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
                         </div>
                     )}
-                    <div className={`max-w-[85%] md:max-w-[80%] p-3 md:p-4 rounded-xl text-xs md:text-sm leading-relaxed shadow-lg backdrop-blur-md border ${
+                    <div className={`max-w-[85%] md:max-w-[90%] p-3 md:p-4 rounded-xl text-xs md:text-sm leading-relaxed shadow-lg backdrop-blur-md border ${
                         msg.sender === 'player' 
                         ? 'bg-green-900/10 border-green-500/30 text-green-50 rounded-br-none' 
                         : 'bg-zinc-800/60 border-zinc-600/30 text-zinc-200 rounded-bl-none'
@@ -442,7 +376,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         <div className="p-2 md:p-4 bg-black/80 backdrop-blur border-t border-zinc-800 shrink-0 relative z-20">
              <div className="flex gap-2 md:gap-3">
                  <div className="relative flex gap-2">
-                    {/* NEW: Hint Button */}
+                    {/* Hint Button */}
                     <button
                         onClick={requestHints}
                         disabled={loadingHints || processing || scam.trust < 20}
@@ -452,7 +386,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                     >
                          {loadingHints ? <Loader2 size={18} className="animate-spin"/> : <Lightbulb size={18}/>}
                          
-                         {/* Tooltip - Hidden on Mobile to prevent obstruction */}
+                         {/* Tooltip */}
                          <span className="hidden md:flex absolute -top-10 left-1/2 -translate-x-1/2 bg-zinc-900 border border-zinc-700 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 items-center gap-2 shadow-xl">
                              <span className="text-zinc-300">Suggestion Engine</span>
                              <span className={`${scam.trust >= 20 ? "text-red-500" : "text-zinc-600"} font-mono font-bold`}>[-20 TRUST]</span>
@@ -478,9 +412,81 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                  </button>
              </div>
         </div>
+      </div>
 
-        {/* OVERLAYS FOR SUCCESS / FAILURE / ABORT */}
-        <AnimatePresence>
+      {/* COLUMN 3: SYSTEM & INTEL (Right - 1 Col Wide) */}
+      <div className="hidden md:flex flex-col gap-4 h-full relative z-10 col-span-1">
+        
+        {/* Intel Log (Compact / Collapsible) */}
+        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl flex flex-col shadow-xl min-h-0 overflow-hidden backdrop-blur-sm shrink-0">
+             <button 
+                onClick={() => setIntelExpanded(!intelExpanded)}
+                className="p-3 border-b border-zinc-800 bg-black/40 flex justify-between items-center hover:bg-zinc-900/50 transition-colors"
+             >
+                <p className="text-green-600 uppercase font-bold text-[10px] flex items-center gap-2 tracking-widest">
+                    <Terminal size={12}/> TARGET_INTEL
+                </p>
+                {intelExpanded ? <ChevronDown size={12} className="text-zinc-500"/> : <ChevronUp size={12} className="text-zinc-500"/>}
+             </button>
+             
+             {intelExpanded && (
+                 <div className="overflow-y-auto p-3 custom-scrollbar space-y-3 text-xs font-mono max-h-48">
+                     <div className="bg-zinc-900/50 p-2 rounded border-l-2 border-zinc-700">
+                        <p className="text-zinc-500 text-[10px] uppercase">Strategy</p>
+                        <p className="text-zinc-300">{scam.category}</p>
+                     </div>
+                     
+                     {(player.skills.includes('doxxing_suite') || player.skills.includes('social_scraper') || scam.revealedFacts.length > 0) && (
+                        <div className="space-y-2 animate-in fade-in slide-in-from-left-4 duration-500">
+                            {player.skills.includes('doxxing_suite') && (
+                                <div className="bg-green-900/10 p-2 rounded border-l-2 border-green-600">
+                                    <p className="text-green-500 text-[10px] uppercase font-bold">LEAK DETECTED</p>
+                                    <p className="text-zinc-300">{scam.victim.hiddenFact}</p>
+                                </div>
+                            )}
+                            {player.skills.includes('social_scraper') && (
+                                <div className="bg-red-900/10 p-2 rounded border-l-2 border-red-600">
+                                    <p className="text-red-500 text-[10px] uppercase font-bold">PSYCH VULNERABILITY</p>
+                                    <p className="text-zinc-300">{scam.victim.weakness}</p>
+                                </div>
+                            )}
+                            {scam.revealedFacts.map((fact, idx) => (
+                                 <div key={idx} className="bg-blue-900/10 p-2 rounded border-l-2 border-blue-600">
+                                    <p className="text-blue-500 text-[10px] uppercase font-bold">NEW INTEL</p>
+                                    <p className="text-zinc-300">{fact}</p>
+                                </div>
+                            ))}
+                        </div>
+                     )}
+                 </div>
+             )}
+        </div>
+
+        {/* Arbiter - Expanded to Fill Remaining Space */}
+        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-4 flex-1 flex flex-col relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-2 opacity-20"><Radio size={40} className="text-green-500"/></div>
+             <p className="text-zinc-500 mb-2 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                 <Wifi size={10} className={processing ? "animate-pulse text-green-500" : "text-zinc-600"}/> AI_ARBITER_LINK
+             </p>
+             
+             <div className="font-mono text-xs relative z-10 flex-1 overflow-y-auto custom-scrollbar">
+                {processing ? (
+                     <div className="flex flex-col gap-2 text-yellow-500 h-full justify-center items-center opacity-80">
+                         <Loader2 size={24} className="animate-spin"/>
+                         <span>ANALYZING PATTERNS...</span>
+                     </div>
+                ) : (
+                    <div className="text-zinc-300 leading-relaxed h-full">
+                        <span className="text-green-500 mr-2">&gt;</span>
+                        {lastThought || "ESTABLISHED CONNECTION. WAITING FOR INPUT..."}
+                    </div>
+                )}
+             </div>
+        </div>
+      </div>
+
+      {/* OVERLAYS FOR SUCCESS / FAILURE / ABORT */}
+      <AnimatePresence>
             {/* ABORT CONFIRMATION MODAL */}
             {showAbortConfirm && (
                 <motion.div 
@@ -540,8 +546,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                     </div>
                 </motion.div>
             )}
-        </AnimatePresence>
-      </div>
+      </AnimatePresence>
     </div>
   );
 };
