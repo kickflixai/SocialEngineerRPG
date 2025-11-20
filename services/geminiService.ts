@@ -106,7 +106,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
 
     // Tailored prompts based on difficulty to ensure personality matches mechanics
     const difficultyPrompts = {
-        easy: "Target is an elderly senior citizen (70+ years old). Personality: Trusting, polite, perhaps slightly confused by modern complexity but eager to fix problems. Resistance Style: 'Apologetic confusion', 'Wants to verify but doesn't know how', 'Slow to understand'.",
+        easy: "Target is an elderly senior citizen (70-95 years old). Personality: Trusting, polite, perhaps slightly confused by modern complexity but eager to fix problems. Resistance Style: 'Apologetic confusion', 'Wants to verify but doesn't know how', 'Slow to understand'.",
         medium: "Target is a working professional (30-50 years old). Personality: Busy, transactional, moderately skeptical. Resistance Style: 'Asks for verification', 'Too busy to talk', 'Professional skepticism'.",
         hard: "Target is a C-Level Executive or High Net Worth Individual. Personality: Arrogant, paranoid, ruthless, highly intelligent. Resistance Style: 'Legal threats', 'Aggressive counter-interrogation', 'Demands immediate proof', 'Mocking intelligence'."
     };
@@ -115,21 +115,26 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
     const genderPrompt = Math.random() > 0.5 ? "Male" : "Female";
 
     const prompt = `
-        Generate a fictional JSON profile for a 'victim' character in a roleplay social engineering defense game.
+        Generate a HIGHLY UNIQUE, FICTIONAL, and RANDOMIZED profile for a 'victim' character in a roleplay social engineering defense game.
         
         DIFFICULTY PROFILE: ${difficultyPrompts[difficulty]}
         Required Gender: ${genderPrompt}.
         
+        CRITICAL INSTRUCTION: Do NOT use generic names like 'John Smith' or 'Mary Jones'. Do NOT use generic jobs like 'Accountant' or 'Teacher' unless they have a specific, weird detail (e.g. 'Ex-Circus Accountant' or 'High School Chemistry Teacher who breeds lizards').
+        
+        The "hiddenFact" should be something embarrassing, illegal, or highly specific that a scammer could leverage (e.g. "Cheating on taxes", "Secret gambling debt", "Has an unregistered firearm").
+        The "weakness" should be a specific psychological trigger (e.g. "Fear of the IRS", "Greed for Crypto", "Lonely and wants a friend").
+        
         Return ONLY valid JSON matching this schema:
         {
-            "name": "string",
+            "name": "string (Full Name, varied ethnicity)",
             "age": number,
             "gender": "${genderPrompt}",
-            "occupation": "string",
-            "personality": "string",
-            "hiddenFact": "string",
-            "weakness": "string",
-            "resistanceStyle": "string"
+            "occupation": "string (Be specific and creative)",
+            "personality": "string (A brief description of their vibe)",
+            "hiddenFact": "string (A specific secret)",
+            "weakness": "string (Psychological trigger)",
+            "resistanceStyle": "string (How they fight back)"
         }
     `;
 
@@ -234,10 +239,15 @@ export const getVictimResponse = async (history: ChatMessage[], victim: Victim, 
             Current Situation: You are receiving messages that seem like a ${scamCategory} scam.
             
             INSTRUCTIONS FOR AI BASED ON DIFFICULTY:
-            - **EASY (Senior/Elderly)**: You are generally trusting and polite, but you DO HAVE LIMITS. If the person is rude or illogical, you get confused. If they rush you too fast to give money without explaining why, you hesitate. You speak in slightly longer, rambling sentences.
+            - **EASY (Senior/Elderly)**: You are generally trusting. If the player explains a technical step clearly (like "click the blue button"), you SHOULD eventually succeed. Do NOT get stuck in an infinite loop of "I can't find it" if the player's instructions are clear. You can be slow, but you must progress the story.
             - **MEDIUM (Business Owner)**: You are busy. You respond shortly. You need a logical reason to continue. You are skeptical but open to "opportunities" if phrased well.
             - **HARD (Executive/Rich)**: You are hostile to cold calls. You ask for immediate credentials. You mock valid attempts. You threaten legal action. It is very hard to make you happy.
             
+            GAME FLOW RULE:
+            - Do NOT block the game forever.
+            - If the player is making sense and addressing your concerns, allow the conversation to move forward.
+            - If the player is rude or nonsensical, then you can stonewall them.
+
             General Rules:
             1. Be unique to your character.
             2. If they mention your specific Weakness or Hidden Fact, you soften up significantly (even if Hard).
@@ -370,6 +380,42 @@ export const arbitrateChat = async (
         };
     }
 };
+
+// NEW: Helper to suggest player responses when they are stuck
+export const generateScamHint = async (
+    history: ChatMessage[], 
+    winCondition: string, 
+    victim: Victim
+): Promise<string[]> => {
+    try {
+        const ai = getClient();
+        const prompt = `
+            You are a "Scam Coach" AI helper.
+            The player is stuck.
+            
+            Current Goal: ${winCondition}.
+            Victim: ${victim.name} (${victim.personality}).
+            Last Message from Victim: "${history[history.length - 1]?.text || 'Hello'}".
+            
+            Suggest 3 short, distinct, and actionable things the player could type next to advance the scam.
+            1. A polite/charming approach.
+            2. A logical/urgent approach.
+            3. A high-risk/aggressive approach.
+            
+            Return ONLY a JSON array of strings. e.g. ["Say X", "Say Y", "Say Z"]
+        `;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: { responseMimeType: 'application/json' }
+        });
+        
+        return parseJSON(response.text || "[]") || ["Try being polite", "Create urgency", "Ask for details"];
+    } catch (e) {
+        return ["Try clarifying your request", "Ask them to verify their identity", "Offer a fake reward"];
+    }
+}
 
 export const generateSpeech = async (text: string, gender: 'male' | 'female'): Promise<ArrayBuffer | null> => {
     try {

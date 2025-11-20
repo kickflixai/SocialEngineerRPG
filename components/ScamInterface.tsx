@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { ScamState, PlayerState, ChatMessage } from '../types';
-import { getVictimResponse, arbitrateChat, generateSpeech, transcribeAudio } from '../services/geminiService';
-import { Send, Terminal, Wifi, Radio, Mic, MicOff, Volume2, VolumeX, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Unlock, ChevronDown, ChevronUp, Square, Target } from 'lucide-react';
+import { getVictimResponse, arbitrateChat, generateSpeech, transcribeAudio, generateScamHint } from '../services/geminiService';
+import { Send, Terminal, Wifi, Radio, Mic, MicOff, Volume2, VolumeX, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Unlock, ChevronDown, ChevronUp, Square, Target, Lightbulb } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
@@ -60,6 +60,10 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   const [showAbortConfirm, setShowAbortConfirm] = useState(false);
   const [intelExpanded, setIntelExpanded] = useState(true);
   
+  // Hint System
+  const [hints, setHints] = useState<string[]>([]);
+  const [loadingHints, setLoadingHints] = useState(false);
+
   const chatEndRef = useRef<HTMLDivElement>(null);
   const initRef = useRef(false);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -68,7 +72,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
 
   useEffect(() => {
     scrollToBottom();
-  }, [scam.history, processing]);
+  }, [scam.history, processing, hints]);
 
   // Audio Context Init - Create lazily
   const getAudioContext = () => {
@@ -156,10 +160,14 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
      }
   }, [scam, onUpdateScam]);
 
-  const handleSend = async () => {
-    if (!input.trim() || processing) return;
+  const handleSend = async (textOverride?: string) => {
+    const msgToSend = textOverride || input;
+    if (!msgToSend.trim() || processing) return;
 
-    const playerMsg: ChatMessage = { sender: 'player', text: input, timestamp: Date.now() };
+    // Clear hints when sending
+    setHints([]);
+
+    const playerMsg: ChatMessage = { sender: 'player', text: msgToSend, timestamp: Date.now() };
     const newHistory = [...scam.history, playerMsg];
     
     onUpdateScam({ ...scam, history: newHistory });
@@ -173,7 +181,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
     }
 
     try {
-        const analysis = await arbitrateChat(input, scam.victim, scam.trust, scam.suspicion, scam.progress, scam.category, scam.winCondition);
+        const analysis = await arbitrateChat(msgToSend, scam.victim, scam.trust, scam.suspicion, scam.progress, scam.category, scam.winCondition);
         setLastThought(analysis.internalThought);
 
         let newTrust = Math.max(0, Math.min(100, scam.trust + analysis.trustDelta));
@@ -216,6 +224,18 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
     } finally {
         setProcessing(false);
     }
+  };
+
+  const requestHints = async () => {
+      setLoadingHints(true);
+      try {
+          const suggestions = await generateScamHint(scam.history, scam.winCondition, scam.victim);
+          setHints(suggestions);
+      } catch (e) {
+          console.error(e);
+      } finally {
+          setLoadingHints(false);
+      }
   };
 
   // --- NEW AUDIO RECORDING LOGIC (MediaRecorder) ---
@@ -490,6 +510,29 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             ))}
             
             <AnimatePresence>
+                {/* Hint Suggestions */}
+                {hints.length > 0 && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="flex flex-col gap-2 items-end mb-2 relative z-20"
+                    >
+                        <span className="text-[10px] text-blue-400 font-mono uppercase tracking-wider bg-black/80 px-2 rounded">Suggested Response Vectors</span>
+                        <div className="flex flex-wrap gap-2 justify-end max-w-2xl">
+                            {hints.map((hint, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => handleSend(hint)}
+                                    className="text-xs bg-blue-900/20 hover:bg-blue-900/40 border border-blue-500/30 text-blue-200 px-3 py-2 rounded-lg text-left hover:border-blue-500 transition-colors"
+                                >
+                                    "{hint}"
+                                </button>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+
                 {processing && (
                     <motion.div 
                         initial={{ opacity: 0 }}
@@ -512,7 +555,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         {/* Input Area */}
         <div className="p-4 bg-black/80 backdrop-blur border-t border-zinc-800 shrink-0 relative z-20">
              <div className="flex gap-3">
-                 <div className="relative">
+                 <div className="relative flex gap-2">
                     {speechError && (
                         <div className="absolute -top-8 left-0 bg-red-900/90 text-white text-[10px] px-2 py-1 rounded border border-red-500 whitespace-nowrap z-50">
                             {speechError}
@@ -532,6 +575,19 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                     >
                         {isTranscribing ? <Loader2 size={18} className="animate-spin"/> : isRecording ? <Square size={18} fill="currentColor"/> : <Mic size={18}/>}
                     </button>
+
+                    {/* NEW: Hint Button */}
+                    <button
+                        onClick={requestHints}
+                        disabled={loadingHints || processing}
+                        className="p-4 rounded-lg border bg-black border-zinc-700 text-zinc-400 hover:text-blue-400 hover:border-blue-500 transition-all relative group"
+                        title="Ask AI for a Hint"
+                    >
+                         {loadingHints ? <Loader2 size={18} className="animate-spin"/> : <Lightbulb size={18}/>}
+                         <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-zinc-800 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                             Suggestion Engine
+                         </span>
+                    </button>
                  </div>
 
                  <input 
@@ -544,7 +600,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                     className="flex-1 bg-black border border-zinc-700 rounded-lg p-4 text-white placeholder-zinc-600 focus:border-green-500 focus:ring-1 focus:ring-green-500/20 outline-none transition-all font-mono text-sm"
                  />
                  <button 
-                    onClick={handleSend}
+                    onClick={() => handleSend()}
                     disabled={processing || !input.trim()}
                     className="bg-green-600 hover:bg-green-500 disabled:bg-zinc-900 disabled:text-zinc-700 disabled:border-zinc-800 text-black font-bold px-6 rounded-lg transition-all flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.2)]"
                  >
