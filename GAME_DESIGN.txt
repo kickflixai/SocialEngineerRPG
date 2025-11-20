@@ -1,0 +1,66 @@
+
+# SOCIAL ENGINEER: THE LONG CON - GAME DESIGN DOCUMENT
+
+## 1. CONCEPT & PITCH
+**Social Engineer** is a satirical, text-based roleplaying game (RPG) where the player assumes the role of a digital con artist. Unlike traditional RPGs where you fight monsters with swords, here you fight "Victims" with words, persuasion, and technical tools.
+
+The core novelty is that the "Victims" and the "Dungeon Master" (Arbiter) are powered by Generative AI (Gemini). This allows for infinite, non-scripted gameplay where the player can type *anything* to try and trick the victim, and the AI reacts realistically based on a generated psychological profile.
+
+## 2. CORE LOOP
+1.  **Identity Synthesis:** Player creates a persona (Archetype, Origin, Look).
+2.  **Acquire Target:** Player scans a directory of targets (Easy/Medium/Hard).
+    *   *System:* Gemini generates a JSON profile for a victim (Name, Weakness, Hidden Fact, Resistance Style).
+3.  **Dossier/Intel:** Player reviews the target. They can use "Skills" (like Doxxing) to reveal hidden traits before the chat starts.
+4.  **The Con (Combat):**
+    *   Player types a message (chat interface).
+    *   *Arbiter System:* A silent AI layer analyzes the player's message against the victim's weakness. It calculates Trust, Suspicion, and Progress changes.
+    *   *Victim System:* A separate AI layer roleplays the victim's response based on their personality and the Arbiter's outcome.
+5.  **Outcome:**
+    *   **Success:** Player convinces victim to send money (Progress = 100). Earn $$.
+    *   **Failure:** Victim hangs up (Suspicion = 100). Threat Level increases.
+    *   **Police:** Critical failure. Large Threat increase.
+6.  **Upgrade:** Player spends money on Black Market items (lower threat) or Neural Upgrades (new abilities).
+
+## 3. AI ARCHITECTURE
+The game relies on three distinct AI "Agents":
+
+### A. The Generator (World Builder)
+*   **Role:** Creates content on the fly.
+*   **Tasks:** Generates photorealistic avatars (Imagen), creates victim JSON profiles, and generates unique opening lines.
+
+### B. The Victim (Roleplayer)
+*   **Role:** Reacts to the player.
+*   **Prompting Strategy:** "You are an elderly woman who is lonely" or "You are a cynical CEO". The prompt includes a "Resistance Style" (e.g., asking technical questions) to ensure they aren't too easy to trick.
+
+### C. The Arbiter (Game Master)
+*   **Role:** Logic and Scoring.
+*   **Mechanism:** It does not output chat. It outputs JSON data: `{ trustDelta: +10, suspicionDelta: -5, internalThought: "Player used emotional appeal successfully." }`.
+*   **Why:** This decouples the *simulation* of the conversation from the *mechanics* of winning/losing.
+
+## 4. CODE ORGANIZATION
+
+### Core
+*   `App.tsx`: Main state machine. Handles view switching (Menu -> Game -> Shop).
+*   `types.ts`: TypeScript interfaces for strong typing of Game State and AI Responses.
+*   `constants.ts`: Static data (Country stats, Skill definitions, Shop items).
+
+### Services
+*   `geminiService.ts`: The interface to Google's Gemini API.
+    *   Handles `generateContent` for text/JSON.
+    *   Handles `generateImages` for avatars.
+    *   Handles `generateSpeech` for TTS.
+    *   Manages the user's API Key.
+
+### Components
+*   `LandingScreen.tsx`: Intro, explanation, and API Key entry.
+*   `CharacterCreator.tsx`: Form to build the player object + AI Avatar generation.
+*   `Dashboard.tsx`: Main hub. Visualizes stats (Money, Threat) and navigation.
+*   `ScamSelection.tsx`: "Quest Board" to find victims.
+*   `VictimDossier.tsx`: Pre-mission screen. Shows intel and allows selecting a strategy.
+*   `ScamInterface.tsx`: The main gameplay view. Chat UI + Real-time stat meters + Voice input/output.
+*   `ScamResult.tsx`: Win/Loss screen.
+
+## 5. AESTHETICS
+*   **Theme:** Cyberpunk / Dark Web / Terminal.
+*   **Colors:** Zinc (Greys), Green (Success/Code), Red (Danger/Threat).
+*   **UI:** Uses "Glassmorphism" (translucent backgrounds), monospaced fonts (JetBrains Mono), and CRT scanline effects to simulate a hacker's terminal.
