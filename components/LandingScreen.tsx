@@ -33,7 +33,7 @@ const LandingScreen: React.FC<Props> = ({ onStart }) => {
               SCAM<br/>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-300">SIMULATOR</span>
             </h1>
-            <p className="text-xl text-zinc-400 font-mono">The Long Con Simulator</p>
+            <p className="text-xl text-zinc-400 font-mono">The Social Engineering RPG</p>
           </div>
 
           <div className="space-y-6 text-zinc-300 text-sm leading-relaxed border-l-2 border-zinc-800 pl-6">

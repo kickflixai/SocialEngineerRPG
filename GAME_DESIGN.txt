@@ -1,8 +1,8 @@
 
-# SOCIAL ENGINEER: THE LONG CON - GAME DESIGN DOCUMENT
+# SCAM SIMULATOR: THE SOCIAL ENGINEERING RPG - GAME DESIGN DOCUMENT
 
 ## 1. CONCEPT & PITCH
-**Social Engineer** is a satirical, text-based roleplaying game (RPG) where the player assumes the role of a digital con artist. Unlike traditional RPGs where you fight monsters with swords, here you fight "Victims" with words, persuasion, and technical tools.
+**Scam Simulator** is a satirical, text-based roleplaying game (RPG) where the player assumes the role of a digital con artist. Unlike traditional RPGs where you fight monsters with swords, here you fight "Victims" with words, persuasion, and technical tools.
 
 The core novelty is that the "Victims" and the "Dungeon Master" (Arbiter) are powered by Generative AI (Gemini). This allows for infinite, non-scripted gameplay where the player can type *anything* to try and trick the victim, and the AI reacts realistically based on a generated psychological profile.
 
