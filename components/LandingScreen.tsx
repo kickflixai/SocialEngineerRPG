@@ -30,10 +30,10 @@ const LandingScreen: React.FC<Props> = ({ onStart }) => {
               SYSTEM_ONLINE // V2.0
             </div>
             <h1 className="text-6xl md:text-7xl font-black font-mono tracking-tighter leading-tight mb-2">
-              SCAM<br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-300">SIMULATOR</span>
+              SOCIAL<br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-300">ENGINEER</span>
             </h1>
-            <p className="text-xl text-zinc-400 font-mono">The Social Engineering RPG</p>
+            <p className="text-xl text-zinc-400 font-mono">The Long Con RPG</p>
           </div>
 
           <div className="space-y-6 text-zinc-300 text-sm leading-relaxed border-l-2 border-zinc-800 pl-6">
