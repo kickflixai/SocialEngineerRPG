@@ -13,6 +13,22 @@ interface Props {
   onAbort: () => void;
 }
 
+// Helper to decode raw PCM data from Gemini TTS
+const decodePCM = (buffer: ArrayBuffer, ctx: AudioContext): AudioBuffer => {
+    const pcmData = new Int16Array(buffer);
+    const numChannels = 1;
+    const sampleRate = 24000; // Gemini TTS uses 24kHz
+    const frameCount = pcmData.length;
+    const audioBuffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+    
+    const channelData = audioBuffer.getChannelData(0);
+    for (let i = 0; i < frameCount; i++) {
+        // Convert Int16 to Float32 [-1.0, 1.0]
+        channelData[i] = pcmData[i] / 32768.0;
+    }
+    return audioBuffer;
+};
+
 const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd, onAbort }) => {
   const [input, setInput] = useState('');
   const [processing, setProcessing] = useState(false);
@@ -61,14 +77,16 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                       if (audioContextRef.current.state === 'suspended') {
                           await audioContextRef.current.resume();
                       }
-                      const buffer = await audioContextRef.current.decodeAudioData(audioData);
+                      // Use manual PCM decoding instead of decodeAudioData
+                      const buffer = decodePCM(audioData, audioContextRef.current);
+                      
                       const source = audioContextRef.current.createBufferSource();
                       source.buffer = buffer;
                       source.connect(audioContextRef.current.destination);
                       source.start();
                       source.onended = () => setIsPlayingAudio(false);
                   } catch (e) {
-                      console.error("Audio decode error", e);
+                      console.error("Audio playback error", e);
                       setIsPlayingAudio(false);
                   }
               } else {
