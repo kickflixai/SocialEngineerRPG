@@ -18,8 +18,8 @@ const VictimDossier: React.FC<Props> = ({ victim, player, onExecute, loading }) 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   return (
-    <div className="h-full flex items-center justify-center p-0 md:p-8 bg-black/40 overflow-y-auto custom-scrollbar">
-      <div className="max-w-6xl w-full bg-zinc-950 border-x md:border border-zinc-800/80 md:rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col md:flex-row min-h-screen md:min-h-[85vh] h-auto relative">
+    <div className="w-full h-full overflow-y-auto custom-scrollbar bg-black/40 p-2 md:p-8">
+      <div className="max-w-6xl w-full mx-auto bg-zinc-950 border-x md:border border-zinc-800/80 md:rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col md:flex-row relative">
         {/* CRT Line */}
         <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%)] bg-[length:100%_4px] z-20 opacity-50"></div>
 
@@ -57,7 +57,7 @@ const VictimDossier: React.FC<Props> = ({ victim, player, onExecute, loading }) 
         </div>
 
         {/* Right: Intel & Strategy Selection */}
-        <div className="w-full md:w-2/3 p-6 md:p-8 bg-zinc-900/20 flex flex-col h-auto md:h-full relative">
+        <div className="w-full md:w-2/3 p-6 md:p-8 bg-zinc-900/20 flex flex-col h-auto relative">
            <div className="mb-6 shrink-0">
                <h3 className="text-xl md:text-2xl font-bold text-white font-mono mb-1 flex items-center gap-3 tracking-tighter">
                    <Database size={24} className="text-green-500"/> INTEL_DATABASE

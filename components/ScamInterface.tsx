@@ -20,7 +20,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   
   const [showAbortConfirm, setShowAbortConfirm] = useState(false);
   const [intelExpanded, setIntelExpanded] = useState(true);
-  const [mobileStatsExpanded, setMobileStatsExpanded] = useState(false); // Mobile specific toggle
+  const [mobileStatsExpanded, setMobileStatsExpanded] = useState(false); 
   
   // Hint System
   const [hints, setHints] = useState<string[]>([]);
@@ -117,10 +117,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   };
 
   const requestHints = async () => {
-      // Cost check: 20 Trust
       if (scam.trust < 20) return;
 
-      // Deduct Trust immediately
       onUpdateScam({
           ...scam,
           trust: Math.max(0, scam.trust - 20)
@@ -138,7 +136,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   };
 
   return (
-    <div className="flex flex-col md:grid md:grid-cols-4 h-full gap-4 md:gap-6 p-2 md:p-6 bg-black overflow-hidden relative">
+    <div className="flex flex-col md:grid md:grid-cols-3 h-full gap-4 md:gap-6 p-2 md:p-6 bg-black overflow-hidden relative">
       {/* Global CRT Scanline & Vignette Overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] z-0 pointer-events-none bg-[length:100%_2px,3px_100%]"></div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_60%,rgba(0,0,0,0.8)_100%)] z-0 pointer-events-none"></div>
@@ -200,40 +198,40 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       </div>
 
 
-      {/* COLUMN 1: PROFILE & STATS (Desktop Only) */}
+      {/* COLUMN 1: PROFILE & STATS (Desktop Only - 1 Col Wide) */}
       <div className="hidden md:flex flex-col gap-4 h-full relative z-10 col-span-1">
         
         {/* Profile Card */}
-        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-4 flex flex-col items-center text-center relative shadow-[0_0_20px_rgba(0,0,0,0.5)] shrink-0">
+        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-6 flex flex-col items-center text-center relative shadow-[0_0_20px_rgba(0,0,0,0.5)] shrink-0">
              {/* Avatar */}
-             <div className="relative w-24 h-24 mb-3 mt-2 group">
+             <div className="relative w-32 h-32 mb-4 mt-2 group">
                 <div className="absolute inset-0 rounded-full border border-dashed border-green-500/40 animate-spin-slow"></div>
-                <img src={scam.victim.avatarUrl} alt="Target" className="w-full h-full rounded-full object-cover border-2 border-zinc-800 opacity-90 group-hover:opacity-100 transition-opacity" />
+                <img src={scam.victim.avatarUrl} alt="Target" className="w-full h-full rounded-full object-cover border-4 border-zinc-800 opacity-90 group-hover:opacity-100 transition-opacity" />
                 <div className="absolute -bottom-2 -right-1 bg-black text-green-500 text-[10px] font-bold px-2 py-1 rounded border border-green-900 flex items-center gap-1 shadow-[0_0_10px_rgba(34,197,94,0.2)]">
                     <Wifi size={8} className="animate-pulse" /> LIVE FEED
                 </div>
              </div>
              
-             <h2 className="text-lg font-bold text-white font-mono truncate w-full tracking-tight">{scam.victim.name}</h2>
-             <p className="text-zinc-500 text-[10px] font-mono uppercase tracking-widest">{scam.victim.age} Y/O // {scam.victim.occupation}</p>
-             <div className="mt-2">
-                 <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${scam.victim.difficulty === 'easy' ? 'bg-green-900/30 text-green-400 border border-green-900' : scam.victim.difficulty === 'medium' ? 'bg-yellow-900/30 text-yellow-400 border border-yellow-900' : 'bg-red-900/30 text-red-400 border border-red-900'}`}>
+             <h2 className="text-xl font-bold text-white font-mono truncate w-full tracking-tight mb-1">{scam.victim.name}</h2>
+             <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest mb-4">{scam.victim.age} Y/O // {scam.victim.occupation}</p>
+             <div>
+                 <span className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${scam.victim.difficulty === 'easy' ? 'bg-green-900/30 text-green-400 border border-green-900' : scam.victim.difficulty === 'medium' ? 'bg-yellow-900/30 text-yellow-400 border border-yellow-900' : 'bg-red-900/30 text-red-400 border border-red-900'}`}>
                      {scam.victim.difficulty} TARGET
                  </span>
              </div>
         </div>
 
         {/* METERS: Trust, Suspicion, Progress */}
-        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-4 shadow-xl flex-1 space-y-4 backdrop-blur-sm relative overflow-hidden flex flex-col justify-center">
+        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-6 shadow-xl flex-1 space-y-6 backdrop-blur-sm relative overflow-hidden flex flex-col justify-center">
             <div className="absolute top-0 left-0 w-1 h-full bg-zinc-800"></div>
             
             {/* Trust */}
-            <div className="space-y-1 relative">
-                <div className="flex justify-between text-[10px] font-mono">
-                    <span className="text-green-500 font-bold tracking-widest flex items-center gap-1"><Lock size={8}/> TRUST_LEVEL</span>
-                    <span className="text-white">{scam.trust}%</span>
+            <div className="space-y-2 relative">
+                <div className="flex justify-between text-xs font-mono">
+                    <span className="text-green-500 font-bold tracking-widest flex items-center gap-2"><Lock size={12}/> TRUST_LEVEL</span>
+                    <span className="text-white font-bold">{scam.trust}%</span>
                 </div>
-                <div className="h-2 bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden flex gap-0.5">
+                <div className="h-3 bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden flex gap-0.5">
                     {Array.from({length: 20}).map((_, i) => (
                         <div key={i} className={`flex-1 transition-all duration-300 ${i < (scam.trust / 5) ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.8)]' : 'bg-zinc-900'}`}></div>
                     ))}
@@ -241,12 +239,12 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             </div>
 
             {/* Suspicion */}
-            <div className="space-y-1 relative">
-                <div className="flex justify-between text-[10px] font-mono">
-                    <span className="text-red-500 font-bold tracking-widest flex items-center gap-1"><AlertTriangle size={8}/> SUSPICION</span>
-                    <span className="text-white">{scam.suspicion}%</span>
+            <div className="space-y-2 relative">
+                <div className="flex justify-between text-xs font-mono">
+                    <span className="text-red-500 font-bold tracking-widest flex items-center gap-2"><AlertTriangle size={12}/> SUSPICION</span>
+                    <span className="text-white font-bold">{scam.suspicion}%</span>
                 </div>
-                <div className="h-2 bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden flex gap-0.5">
+                <div className="h-3 bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden flex gap-0.5">
                      {Array.from({length: 20}).map((_, i) => (
                         <div key={i} className={`flex-1 transition-all duration-300 ${i < (scam.suspicion / 5) ? 'bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.8)]' : 'bg-zinc-900'}`}></div>
                     ))}
@@ -254,12 +252,12 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             </div>
 
              {/* Progress */}
-             <div className="space-y-1 relative">
-                <div className="flex justify-between text-[10px] font-mono">
-                    <span className="text-blue-400 font-bold tracking-widest flex items-center gap-1"><Unlock size={8}/> INFILTRATION</span>
-                    <span className="text-white">{scam.progress}%</span>
+             <div className="space-y-2 relative">
+                <div className="flex justify-between text-xs font-mono">
+                    <span className="text-blue-400 font-bold tracking-widest flex items-center gap-2"><Unlock size={12}/> INFILTRATION</span>
+                    <span className="text-white font-bold">{scam.progress}%</span>
                 </div>
-                 <div className="h-3 bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden relative">
+                 <div className="h-4 bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden relative">
                      <div className="absolute inset-0 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIklEQVQIW2NkQAKrVq36zwjjgzhhYWGMYAEYB8RmROaABADeOQ8CXl/xfgAAAABJRU5ErkJggg==')] opacity-20"></div>
                      <motion.div 
                         initial={{ width: 0 }}
@@ -271,8 +269,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         </div>
       </div>
 
-      {/* COLUMN 2: CHAT WINDOW (Middle - 2 Cols Wide) */}
-      <div className="flex-1 md:col-span-2 flex flex-col bg-zinc-950 border border-zinc-800/60 rounded-xl overflow-hidden relative shadow-2xl h-full z-10">
+      {/* COLUMN 2: CHAT WINDOW (Middle - 1 Col Wide) */}
+      <div className="flex-1 md:col-span-1 flex flex-col bg-zinc-950 border border-zinc-800/60 rounded-xl overflow-hidden relative shadow-2xl h-full z-10">
         {/* Chat Header */}
         <div className="h-auto min-h-14 bg-black/60 backdrop-blur border-b border-zinc-800 flex flex-col px-3 md:px-6 py-2 md:py-3 shrink-0 justify-center">
             <div className="flex items-center justify-between mb-2">
@@ -280,7 +278,6 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                     <div className="w-2 h-2 md:w-3 md:h-3 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.8)] animate-pulse"></div>
                     <div>
                         <div className="text-xs md:text-sm font-mono font-bold text-white tracking-widest">SECURE_CHANNEL_V2</div>
-                        <div className="text-[8px] md:text-[10px] text-zinc-500 font-mono hidden md:block">ENCRYPTION: AES-256 // ROUTING: ONION</div>
                     </div>
                 </div>
                  <div className="flex items-center gap-2 md:gap-3">
@@ -295,14 +292,16 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             
             {/* MISSION OBJECTIVE BANNER */}
             <div className="bg-blue-900/20 border border-blue-500/30 rounded px-2 py-1.5 md:px-3 md:py-2 flex items-center gap-2 md:gap-3 animate-pulse">
-                <Target size={12} className="text-blue-400" />
-                <span className="text-[9px] md:text-[10px] text-blue-300 font-mono font-bold tracking-wider uppercase whitespace-nowrap">OBJECTIVE:</span>
-                <span className="text-[10px] md:text-xs text-white font-mono truncate">{scam.winCondition || "Extract Funds"}</span>
+                <Target size={12} className="text-blue-400 shrink-0" />
+                <div className="flex flex-col min-w-0">
+                    <span className="text-[9px] text-blue-300 font-mono font-bold tracking-wider uppercase whitespace-nowrap">OBJECTIVE:</span>
+                    <span className="text-[10px] text-white font-mono truncate">{scam.winCondition || "Extract Funds"}</span>
+                </div>
             </div>
         </div>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-4 md:space-y-6 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900/20 to-black custom-scrollbar min-h-0 relative">
+        <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-4 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900/20 to-black custom-scrollbar min-h-0 relative">
             {/* Grid Background */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
 
@@ -318,13 +317,12 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                             <img src={scam.victim.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
                         </div>
                     )}
-                    <div className={`max-w-[85%] md:max-w-[90%] p-3 md:p-4 rounded-xl text-xs md:text-sm leading-relaxed shadow-lg backdrop-blur-md border ${
+                    <div className={`max-w-[90%] p-3 rounded-xl text-xs md:text-sm leading-relaxed shadow-lg backdrop-blur-md border ${
                         msg.sender === 'player' 
                         ? 'bg-green-900/10 border-green-500/30 text-green-50 rounded-br-none' 
                         : 'bg-zinc-800/60 border-zinc-600/30 text-zinc-200 rounded-bl-none'
                     }`}>
                         <p>{msg.text}</p>
-                        <p className="text-[8px] md:text-[9px] opacity-40 mt-1 md:mt-2 font-mono text-right">{new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                     </div>
                 </motion.div>
             ))}
@@ -373,24 +371,18 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         </div>
 
         {/* Input Area */}
-        <div className="p-2 md:p-4 bg-black/80 backdrop-blur border-t border-zinc-800 shrink-0 relative z-20">
-             <div className="flex gap-2 md:gap-3">
+        <div className="p-2 md:p-3 bg-black/80 backdrop-blur border-t border-zinc-800 shrink-0 relative z-20">
+             <div className="flex gap-2">
                  <div className="relative flex gap-2">
                     {/* Hint Button */}
                     <button
                         onClick={requestHints}
                         disabled={loadingHints || processing || scam.trust < 20}
-                        className={`p-3 md:p-4 rounded-lg border bg-black border-zinc-700 text-zinc-400 transition-all relative group ${
+                        className={`p-3 rounded-lg border bg-black border-zinc-700 text-zinc-400 transition-all relative group ${
                             scam.trust >= 20 ? 'hover:text-blue-400 hover:border-blue-500' : 'opacity-30 cursor-not-allowed'
                         }`}
                     >
                          {loadingHints ? <Loader2 size={18} className="animate-spin"/> : <Lightbulb size={18}/>}
-                         
-                         {/* Tooltip */}
-                         <span className="hidden md:flex absolute -top-10 left-1/2 -translate-x-1/2 bg-zinc-900 border border-zinc-700 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 items-center gap-2 shadow-xl">
-                             <span className="text-zinc-300">Suggestion Engine</span>
-                             <span className={`${scam.trust >= 20 ? "text-red-500" : "text-zinc-600"} font-mono font-bold`}>[-20 TRUST]</span>
-                         </span>
                     </button>
                  </div>
 
@@ -401,12 +393,12 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                     disabled={processing}
                     placeholder="Type payload..."
-                    className="flex-1 bg-black border border-zinc-700 rounded-lg p-3 md:p-4 text-white placeholder-zinc-600 focus:border-green-500 focus:ring-1 focus:ring-green-500/20 outline-none transition-all font-mono text-xs md:text-sm"
+                    className="flex-1 bg-black border border-zinc-700 rounded-lg p-3 text-white placeholder-zinc-600 focus:border-green-500 focus:ring-1 focus:ring-green-500/20 outline-none transition-all font-mono text-xs"
                  />
                  <button 
                     onClick={() => handleSend()}
                     disabled={processing || !input.trim()}
-                    className="bg-green-600 hover:bg-green-500 disabled:bg-zinc-900 disabled:text-zinc-700 disabled:border-zinc-800 text-black font-bold px-4 md:px-6 rounded-lg transition-all flex items-center justify-center shadow-[0_0_20px_rgba(34,197,94,0.2)]"
+                    className="bg-green-600 hover:bg-green-500 disabled:bg-zinc-900 disabled:text-zinc-700 disabled:border-zinc-800 text-black font-bold px-4 rounded-lg transition-all flex items-center justify-center"
                  >
                     <Send size={18} />
                  </button>
@@ -417,8 +409,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       {/* COLUMN 3: SYSTEM & INTEL (Right - 1 Col Wide) */}
       <div className="hidden md:flex flex-col gap-4 h-full relative z-10 col-span-1">
         
-        {/* Intel Log (Compact / Collapsible) */}
-        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl flex flex-col shadow-xl min-h-0 overflow-hidden backdrop-blur-sm shrink-0">
+        {/* Intel Log (Collapsible) */}
+        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl flex flex-col shadow-xl min-h-0 overflow-hidden backdrop-blur-sm shrink-0 max-h-[30%]">
              <button 
                 onClick={() => setIntelExpanded(!intelExpanded)}
                 className="p-3 border-b border-zinc-800 bg-black/40 flex justify-between items-center hover:bg-zinc-900/50 transition-colors"
@@ -430,7 +422,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
              </button>
              
              {intelExpanded && (
-                 <div className="overflow-y-auto p-3 custom-scrollbar space-y-3 text-xs font-mono max-h-48">
+                 <div className="overflow-y-auto p-3 custom-scrollbar space-y-3 text-xs font-mono">
                      <div className="bg-zinc-900/50 p-2 rounded border-l-2 border-zinc-700">
                         <p className="text-zinc-500 text-[10px] uppercase">Strategy</p>
                         <p className="text-zinc-300">{scam.category}</p>
@@ -463,21 +455,21 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         </div>
 
         {/* Arbiter - Expanded to Fill Remaining Space */}
-        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-4 flex-1 flex flex-col relative overflow-hidden">
-             <div className="absolute top-0 right-0 p-2 opacity-20"><Radio size={40} className="text-green-500"/></div>
-             <p className="text-zinc-500 mb-2 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
-                 <Wifi size={10} className={processing ? "animate-pulse text-green-500" : "text-zinc-600"}/> AI_ARBITER_LINK
+        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-6 flex-1 flex flex-col relative overflow-hidden shadow-xl">
+             <div className="absolute top-0 right-0 p-4 opacity-10"><Radio size={60} className="text-green-500"/></div>
+             <p className="text-zinc-500 mb-4 text-xs font-bold uppercase tracking-widest flex items-center gap-2 border-b border-zinc-800 pb-2">
+                 <Wifi size={12} className={processing ? "animate-pulse text-green-500" : "text-zinc-600"}/> AI_ARBITER_LINK
              </p>
              
-             <div className="font-mono text-xs relative z-10 flex-1 overflow-y-auto custom-scrollbar">
+             <div className="font-mono text-sm relative z-10 flex-1 overflow-y-auto custom-scrollbar">
                 {processing ? (
-                     <div className="flex flex-col gap-2 text-yellow-500 h-full justify-center items-center opacity-80">
-                         <Loader2 size={24} className="animate-spin"/>
-                         <span>ANALYZING PATTERNS...</span>
+                     <div className="flex flex-col gap-3 text-yellow-500 h-full justify-center items-center opacity-90">
+                         <Loader2 size={32} className="animate-spin"/>
+                         <span className="tracking-widest font-bold text-xs">ANALYZING PATTERNS...</span>
                      </div>
                 ) : (
                     <div className="text-zinc-300 leading-relaxed h-full">
-                        <span className="text-green-500 mr-2">&gt;</span>
+                        <span className="text-green-500 mr-2 text-lg font-bold">&gt;</span>
                         {lastThought || "ESTABLISHED CONNECTION. WAITING FOR INPUT..."}
                     </div>
                 )}
