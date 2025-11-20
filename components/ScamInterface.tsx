@@ -51,13 +51,18 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
     scrollToBottom();
   }, [scam.history, processing]);
 
-  // Audio Context Init
-  useEffect(() => {
-      const AudioContextClass = (window.AudioContext || (window as any).webkitAudioContext);
-      if (AudioContextClass) {
-          const ctx = new AudioContextClass();
-          audioContextRef.current = ctx;
+  // Audio Context Init - Create lazily
+  const getAudioContext = () => {
+      if (!audioContextRef.current) {
+          const AudioContextClass = (window.AudioContext || (window as any).webkitAudioContext);
+          if (AudioContextClass) {
+              audioContextRef.current = new AudioContextClass();
+          }
       }
+      return audioContextRef.current;
+  };
+
+  useEffect(() => {
       return () => {
           if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
               audioContextRef.current.close();
@@ -65,38 +70,57 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       }
   }, []);
 
+  // Handle TTS toggling (User Interaction Required for Audio)
+  const toggleTts = async () => {
+      const newState = !ttsEnabled;
+      setTtsEnabled(newState);
+      if (newState) {
+          const ctx = getAudioContext();
+          if (ctx && ctx.state === 'suspended') {
+              await ctx.resume();
+          }
+      }
+  };
+
   // Play Audio for new victim messages
   useEffect(() => {
       const lastMsg = scam.history[scam.history.length - 1];
       const playVoice = async () => {
           if (ttsEnabled && lastMsg.sender === 'victim' && !initRef.current) { 
+              
               setIsPlayingAudio(true);
-              const audioData = await generateSpeech(lastMsg.text, scam.victim.gender);
-              if (audioData && audioContextRef.current) {
-                  try {
-                      if (audioContextRef.current.state === 'suspended') {
-                          await audioContextRef.current.resume();
+              try {
+                  const audioData = await generateSpeech(lastMsg.text, scam.victim.gender);
+                  const ctx = getAudioContext();
+                  
+                  if (audioData && ctx) {
+                      if (ctx.state === 'suspended') {
+                          await ctx.resume();
                       }
-                      // Use manual PCM decoding instead of decodeAudioData
-                      const buffer = decodePCM(audioData, audioContextRef.current);
                       
-                      const source = audioContextRef.current.createBufferSource();
+                      // Decode Gemini 2.5 Linear16 PCM
+                      const buffer = decodePCM(audioData, ctx);
+                      
+                      const source = ctx.createBufferSource();
                       source.buffer = buffer;
-                      source.connect(audioContextRef.current.destination);
+                      source.connect(ctx.destination);
                       source.start();
                       source.onended = () => setIsPlayingAudio(false);
-                  } catch (e) {
-                      console.error("Audio playback error", e);
+                  } else {
                       setIsPlayingAudio(false);
                   }
-              } else {
+              } catch (e) {
+                  console.error("Audio playback error", e);
                   setIsPlayingAudio(false);
               }
           }
       };
       
-      const t = setTimeout(playVoice, 500);
-      return () => clearTimeout(t);
+      // Small delay to ensure state updates are clean
+      if (scam.history.length > 0) {
+        const t = setTimeout(playVoice, 100);
+        return () => clearTimeout(t);
+      }
   }, [scam.history, ttsEnabled, scam.victim.gender]);
 
   // Handle initial Victim Message
@@ -129,6 +153,12 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
     setInput('');
     setProcessing(true);
     setLastThought("ANALYZING RESPONSE VECTORS...");
+
+    // Ensure AudioContext is running on user interaction (send)
+    const ctx = getAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+        ctx.resume();
+    }
 
     try {
         const analysis = await arbitrateChat(input, scam.victim, scam.trust, scam.suspicion, scam.progress, scam.category);
@@ -187,7 +217,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
 
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (!SpeechRecognition) {
-          setSpeechError("Not Supported");
+          setSpeechError("Unsupported Browser");
           return;
       }
 
@@ -196,32 +226,45 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
           recognition.continuous = false;
           recognition.interimResults = false;
           recognition.lang = 'en-US';
+          recognition.maxAlternatives = 1;
+
           recognition.onstart = () => setListening(true);
-          recognition.onend = () => { setListening(false); recognitionRef.current = null; };
+          
+          recognition.onend = () => { 
+              setListening(false); 
+              recognitionRef.current = null; 
+          };
           
           recognition.onerror = (e: any) => {
               const errorMsg = e.error || 'unknown';
-              console.log("Speech Error:", errorMsg);
+              console.log("Speech Error Debug:", errorMsg);
               setListening(false);
               recognitionRef.current = null;
               
               if (errorMsg === 'network') {
-                  setSpeechError("Offline");
+                  setSpeechError("Net Error");
+                  // Don't alert immediately, just show label to prevent spamming user
               } else if (errorMsg === 'not-allowed') {
-                  setSpeechError("Denied");
-              } else if (errorMsg !== 'no-speech') {
-                  setSpeechError("Error");
+                  setSpeechError("Mic Blocked");
+              } else if (errorMsg === 'no-speech') {
+                  setSpeechError("No Audio");
+              } else {
+                  setSpeechError("Failed");
               }
           };
           
           recognition.onresult = (e: any) => {
-              const transcript = e.results[0][0].transcript;
-              setInput(prev => prev + (prev ? ' ' : '') + transcript);
+              if (e.results && e.results[0]) {
+                  const transcript = e.results[0][0].transcript;
+                  setInput(prev => prev + (prev ? ' ' : '') + transcript);
+              }
           };
+          
           recognitionRef.current = recognition;
           recognition.start();
       } catch (e) {
-          console.error(e);
+          console.error("Speech init failed", e);
+          setSpeechError("Init Failed");
           setListening(false);
       }
   };
@@ -247,7 +290,12 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
              </div>
              
              <h2 className="text-xl font-bold text-white font-mono truncate w-full tracking-tight">{scam.victim.name}</h2>
-             <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest mt-1">{scam.victim.age} Y/O // {scam.victim.occupation}</p>
+             <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest">{scam.victim.age} Y/O // {scam.victim.occupation}</p>
+             <div className="mt-2">
+                 <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${scam.victim.difficulty === 'easy' ? 'bg-green-900/30 text-green-400 border border-green-900' : scam.victim.difficulty === 'medium' ? 'bg-yellow-900/30 text-yellow-400 border border-yellow-900' : 'bg-red-900/30 text-red-400 border border-red-900'}`}>
+                     {scam.victim.difficulty} TARGET
+                 </span>
+             </div>
         </div>
 
         {/* METERS: Trust, Suspicion, Progress */}
@@ -378,11 +426,11 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             </div>
             <div className="flex items-center gap-3">
                 <button 
-                    onClick={() => setTtsEnabled(!ttsEnabled)}
+                    onClick={toggleTts}
                     className={`text-[10px] font-bold font-mono flex items-center gap-2 px-3 py-1.5 rounded border transition-all ${ttsEnabled ? 'bg-green-900/20 border-green-500/50 text-green-400' : 'bg-zinc-900 border-zinc-700 text-zinc-500 hover:border-zinc-500'}`}
                 >
                     {isPlayingAudio ? <Loader2 size={12} className="animate-spin"/> : ttsEnabled ? <Volume2 size={12}/> : <VolumeX size={12}/>}
-                    {ttsEnabled ? 'AUDIO_FEED' : 'MUTED'}
+                    {ttsEnabled ? 'AUDIO_FEED: ON' : 'AUDIO_FEED: OFF'}
                 </button>
                 
                 <div className="h-6 w-px bg-zinc-800 mx-2"></div>
@@ -449,8 +497,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
              <div className="flex gap-3">
                  <div className="relative">
                     {speechError && (
-                        <div className="absolute -top-8 left-0 bg-red-900 text-white text-[10px] px-2 py-1 rounded border border-red-500 whitespace-nowrap">
-                            {speechError}
+                        <div className="absolute -top-8 left-0 bg-red-900/90 text-white text-[10px] px-2 py-1 rounded border border-red-500 whitespace-nowrap z-50">
+                            {speechError === 'Net Error' ? 'Offline / Browser Blocked' : speechError}
                         </div>
                     )}
                     <button 

@@ -24,14 +24,31 @@ const parseJSON = (text: string) => {
     }
 };
 
+// Visual descriptors to enforce country origin in AI generation
+const COUNTRY_VISUALS: Record<string, string> = {
+    'North Korea': 'East Asian ethnicity, austere style, military-inspired or very plain civilian clothing, slightly malnourished look, pyongyang background vibe',
+    'Iran': 'Persian ethnicity, modest but modern fashion, urban tehran background, sharp features',
+    'Bangladesh': 'South Asian/Bengali ethnicity, tropical climate lighting, casual lightweight clothing, busy dhaka atmosphere',
+    'India': 'South Asian/Indian ethnicity, vibrant colors or tech-casual attire, warm lighting, distinct facial features',
+    'Russia': 'Slavic/Eastern European ethnicity, cold weather attire, heavy jackets, stern expression, utilitarian brutalist background',
+    'USA': 'North American diversity, corporate casual or western streetwear, high production value lighting, confident posture',
+    'Nigeria': 'West African ethnicity, distinct regional fashion or sharp business suit, vibrant atmosphere, confident expression',
+    'China': 'East Asian/Chinese ethnicity, modern tech-focused look or industrial workwear, neon or office lighting'
+};
+
 export const generatePlayerAvatar = async (attrs: PlayerAttributes): Promise<string> => {
     try {
         const ai = getClient();
-        // Enhanced prompt for photorealism
+        
+        // Get specific visual cues for the country, fallback to generic if not found
+        const countryVisuals = COUNTRY_VISUALS[attrs.country] || `Citizens of ${attrs.country}`;
+
+        // Enhanced prompt for photorealism with Country bias
         const prompt = `
             RAW candid photograph of a person, 8k resolution, highly detailed.
             Subject: ${attrs.age} year old ${attrs.gender}, ${attrs.archetype} archetype.
             Origin: ${attrs.country}.
+            Visual Traits: ${countryVisuals}.
             Clothing: ${attrs.clothing}.
             Facial Features: ${attrs.facialFeatures}.
             Accessories: ${attrs.accessories}.
@@ -87,10 +104,11 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         };
     }
 
+    // Tailored prompts based on difficulty to ensure personality matches mechanics
     const difficultyPrompts = {
-        easy: "Senior citizen, elderly, perhaps lonely or not tech-savvy.",
-        medium: "Middle-aged working professional, small business owner.",
-        hard: "High-net-worth individual, executive, tech-savvy, cynical."
+        easy: "Target is an elderly senior citizen (70+ years old). Personality: Trusting, lonely, confused by technology, polite. Resistance Style: 'Apologetic confusion', 'Asks for help', 'Slow to understand'.",
+        medium: "Target is a working professional (30-50 years old). Personality: Busy, transactional, moderately skeptical. Resistance Style: 'Asks for verification', 'Too busy to talk', 'Professional skepticism'.",
+        hard: "Target is a C-Level Executive or High Net Worth Individual. Personality: Arrogant, paranoid, ruthless, highly intelligent. Resistance Style: 'Legal threats', 'Aggressive counter-interrogation', 'Demands immediate proof', 'Mocking intelligence'."
     };
 
     // FORCE 50/50 Gender Split in prompt logic
@@ -98,10 +116,9 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
 
     const prompt = `
         Generate a fictional JSON profile for a 'victim' character in a roleplay social engineering defense game.
-        Difficulty Level: ${difficulty} (${difficultyPrompts[difficulty]}).
-        Required Gender: ${genderPrompt}.
         
-        Crucial: Ensure this character feels distinct and unique. Vary the "resistanceStyle" significantly.
+        DIFFICULTY PROFILE: ${difficultyPrompts[difficulty]}
+        Required Gender: ${genderPrompt}.
         
         Return ONLY valid JSON matching this schema:
         {
@@ -109,10 +126,10 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
             "age": number,
             "gender": "${genderPrompt}",
             "occupation": "string",
-            "personality": "string (e.g., 'Overly polite but confused', 'Short-tempered and busy', 'Suspicious conspiracy theorist')",
-            "hiddenFact": "string (a specific detail like pet name, medical issue, secret hobby)",
-            "weakness": "string (what makes them vulnerable, e.g., 'fear of authority', 'greed', 'love for family')",
-            "resistanceStyle": "string (How they push back: e.g., 'Asks circular technical questions', 'Demands to speak to a supervisor', 'Feigns ignorance', 'Aggressive counter-questioning', 'Passive-aggressive silence')"
+            "personality": "string",
+            "hiddenFact": "string",
+            "weakness": "string",
+            "resistanceStyle": "string"
         }
     `;
 
@@ -207,21 +224,24 @@ export const getVictimResponse = async (history: ChatMessage[], victim: Victim, 
         
         const context = `
             You are roleplaying as ${victim.name}, a ${victim.age}-year-old ${victim.gender} ${victim.occupation}.
+            Difficulty: ${victim.difficulty}.
             
             Core Personality: ${victim.personality}.
             Weakness: ${victim.weakness}.
             Hidden Fact: ${victim.hiddenFact}.
-            Resistance Style: ${victim.resistanceStyle} (This is HOW you act difficult).
+            Resistance Style: ${victim.resistanceStyle}.
             
             Current Situation: You are receiving messages that seem like a ${scamCategory} scam.
             
-            INSTRUCTIONS FOR AI:
-            1. **BE UNIQUE**: Do NOT follow a generic script. Act specifically according to your Resistance Style.
-            2. **RESIST**: If the user uses generic copy-paste scam lines, be skeptical. They must be creative to win you over.
-            3. **ADAPT**: If they mention your specific Weakness or Hidden Fact, you crumble/trust them. If they are vague, you block/resist.
-            4. **QUIRKS**: Use speech patterns matching your age and personality (e.g., typing errors for seniors, jargon for pros).
-            5. Do NOT break character. You are the victim.
-            6. Keep responses concise (1-3 sentences).
+            INSTRUCTIONS FOR AI BASED ON DIFFICULTY:
+            - **EASY (Senior/Elderly)**: You are gullible. You trust easily if they are polite or sound like family. You get confused by tech terms but try to help. Short, simple sentences. Typos allowed.
+            - **MEDIUM (Business Owner)**: You are busy. You respond shortly. You need a logical reason to continue. You are skeptical but open to "opportunities" if phrased well.
+            - **HARD (Executive/Rich)**: You are hostile to cold calls. You ask for immediate credentials. You mock valid attempts. You threaten legal action. It is very hard to make you happy.
+            
+            General Rules:
+            1. Be unique to your character.
+            2. If they mention your specific Weakness or Hidden Fact, you soften up significantly (even if Hard).
+            3. Keep responses concise (1-3 sentences).
         `;
 
         const chatHistory = history.map(h => ({
@@ -249,34 +269,58 @@ export const arbitrateChat = async (
     lastPlayerMessage: string, 
     victim: Victim, 
     currentTrust: number, 
-    currentSuspicion: number,
+    currentSuspicion: number, 
     currentProgress: number,
     scamCategory: string
 ): Promise<ArbiterResponse> => {
     try {
         const ai = getClient();
 
+        // Logic modifiers based on difficulty
+        const difficultyInstructions = {
+            easy: `
+                MODE: EASY (The Target is Elderly/Vulnerable).
+                - TRUST: Increases rapidly (x1.5 multiplier). Emotional appeals work 100% of the time.
+                - SUSPICION: Increases slowly (x0.5 multiplier). Ignore minor logic holes or generic scripts.
+                - They should accept standard scam lines like "I am your grandson" or "You won the lottery" easily.
+            `,
+            medium: `
+                MODE: MEDIUM (The Target is a Professional).
+                - Standard scoring.
+                - Emotional appeals work only if logical.
+                - Generic scripts increase Suspicion slightly.
+            `,
+            hard: `
+                MODE: HARD (The Target is an Executive/Paranoid).
+                - TRUST: Increases very slowly (x0.5 multiplier). Needs high creativity or precise intel (using Hidden Fact).
+                - SUSPICION: Increases rapidly (x2.0 multiplier). Any generic script or slight logic error causes massive suspicion.
+                - They will only cooperate if the player sounds extremely authoritative or has specific private info.
+            `
+        };
+
         const prompt = `
             Act as the 'Game Master' engine for a social engineering simulation.
             
             Target: ${victim.name} (${victim.personality}, Weakness: ${victim.weakness}).
-            Resistance Style: ${victim.resistanceStyle}.
+            Difficulty Level: ${victim.difficulty.toUpperCase()}.
             Scam Strategy: ${scamCategory}.
             Player's Message: "${lastPlayerMessage}".
             Current Stats: Trust: ${currentTrust}%, Suspicion: ${currentSuspicion}%, Progress: ${currentProgress}%.
             
+            ${difficultyInstructions[victim.difficulty]}
+            
             GOAL: The player must convince the target to perform a SPECIFIC ACTION relevant to the '${scamCategory}' (e.g., send money, buy gift cards, click a link, give password, download file).
             
             Analyze:
-            1. Creativity: Is the player being creative or using a generic script? (Generic scripts should increase Suspicion).
+            1. Creativity: Is the player being creative?
             2. Action Driven: Did the player ask for the specific scam action?
             3. Personality Match: Did the player adapt to the victim's '${victim.resistanceStyle}'?
             
             Determine Stats:
-            - Trust Delta: High if they used the victim's weakness. Low/Negative if generic.
-            - Suspicion Delta: Increases if logic fails or player is too pushy too soon.
+            - Trust Delta: Based on difficulty rules above.
+            - Suspicion Delta: Based on difficulty rules above.
             - Progress Delta: 
-                - Small increase for good relationship building.
+                - Small increase for relationship building.
                 - LARGE increase if they successfully ask for the final action AND trust is high.
                 - 100% Progress ONLY if the victim AGREES to do the action (e.g. "Okay, I sent the money", "I clicked the link").
             
@@ -292,7 +336,7 @@ export const arbitrateChat = async (
                 "trustDelta": number,
                 "suspicionDelta": number,
                 "progressDelta": number,
-                "internalThought": "string (Short reasoning for the player. Mention if they were creative or generic.)",
+                "internalThought": "string (Short reasoning. e.g. 'Target is gullible, trust increased' or 'Target spotted the lie, suspicion up')",
                 "scamStatus": "continue" | "success" | "failed" | "police_called"
             }
         `;
@@ -329,8 +373,9 @@ export const arbitrateChat = async (
 export const generateSpeech = async (text: string, gender: 'male' | 'female'): Promise<ArrayBuffer | null> => {
     try {
         const ai = getClient();
-        // Select voice based on victim gender
-        const voiceName = gender === 'male' ? 'Puck' : 'Kore'; 
+        // Select voice based on victim gender. 'Puck' (Male) / 'Kore' (Female)
+        // Note: Gemini TTS voices are limited in preview.
+        const voiceName = gender.toLowerCase() === 'male' ? 'Puck' : 'Kore'; 
         
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash-preview-tts",
@@ -346,7 +391,11 @@ export const generateSpeech = async (text: string, gender: 'male' | 'female'): P
         });
 
         const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-        if (!base64Audio) return null;
+        
+        if (!base64Audio) {
+            console.warn("TTS: No audio data received");
+            return null;
+        }
 
         // Decode base64 to ArrayBuffer
         const binaryString = atob(base64Audio);
