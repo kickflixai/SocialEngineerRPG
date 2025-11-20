@@ -242,7 +242,7 @@ const App: React.FC = () => {
                         <Skull size={24} className="text-green-500"/>
                     </div>
                     <div>
-                        <h1 className="font-mono font-bold text-white text-lg tracking-tighter">SOCIAL_ENGINEER<span className="text-green-500">_V2.0</span></h1>
+                        <h1 className="font-mono font-bold text-white text-lg tracking-tighter">SCAM_SIMULATOR<span className="text-green-500">_V2.0</span></h1>
                         <p className="text-xs text-zinc-500 font-mono uppercase tracking-widest">Dark Web Interface // Secured</p>
                     </div>
                 </div>

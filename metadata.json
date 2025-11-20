@@ -1,5 +1,5 @@
 {
-  "name": "Social Engineer",
+  "name": "Scam Simulator",
   "description": "A satirical roleplaying game where you play as a social engineer attempting to talk your way into fortune while managing police threat levels. Powered by Gemini AI.",
   "requestFramePermissions": [
     "microphone"
