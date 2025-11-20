@@ -122,11 +122,79 @@ export const COUNTRY_DATA: Record<string, CountryStats> = {
 };
 
 export const COUNTRIES = Object.keys(COUNTRY_DATA);
-export const ARCHETYPES = ['Corporate Professional', 'Street Hustler', 'Friendly Neighbor', 'Tech Nerd', 'Smooth Talker', 'Retired Veteran', 'Trust Fund Kid', 'Crypto Bro', 'Disgruntled Employee'];
+
+// Replaced fixed ARCHETYPES with simple examples since it is now free text
 export const CLOTHING_STYLES = ['Business Suit', 'Hoodie & Jeans', 'Tactical Gear', 'Vintage Sweater', 'Designer Streetwear', 'Lab Coat', 'Leather Jacket', 'Tracksuit', 'Turtleneck & Blazer'];
 export const FACIAL_FEATURES = ['Clean Shaven', 'Full Beard', 'Scarred', 'Piercings', 'Heavy Makeup', 'Glasses', 'Tattooed', 'Weathered', 'Gold Teeth', 'Eye Patch'];
 export const ACCESSORIES = ['Headphones', 'Gold Chain', 'VR Headset', 'Sunglasses', 'Fedora', 'Medical Mask', 'Smart Watch', 'Cybernetic Implant (Fake)', 'None'];
 export const AGES = ['18-25', '26-35', '36-50', '50+'];
+
+export const SCAM_CATEGORIES = [
+  "Grandson in Trouble",
+  "IRS Tax Audit",
+  "Tech Support Virus",
+  "Lottery Winner",
+  "Crypto Investment Opportunity",
+  "Romance Scam",
+  "Business Email Compromise",
+  "Kidnapping Hoax",
+  "Charity Fraud",
+  "Inheritance Advance Fee",
+  "Employment Mule Scam"
+];
+
+export const SCAM_OBJECTIVES: Record<string, string[]> = {
+  "Grandson in Trouble": [
+    "Convince target to wire $2,500 via Western Union for 'Bail Money'",
+    "Convince target to read out the codes from $500 in Target Gift Cards",
+    "Convince target to Venmo money to a 'Lawyer'"
+  ],
+  "IRS Tax Audit": [
+    "Convince target to pay 'back taxes' via a Bitcoin ATM",
+    "Convince target to verify their full Social Security Number",
+    "Convince target to purchase 'Federal Vouchers' (Apple Gift Cards)"
+  ],
+  "Tech Support Virus": [
+    "Convince target to install 'AnyDesk' or 'TeamViewer' remote access software",
+    "Convince target to login to their online banking while screen sharing",
+    "Convince target to pay a $400 'Firewall Activation Fee'"
+  ],
+  "Lottery Winner": [
+    "Convince target to pay the 'Customs Duty' fee via Bank Transfer",
+    "Convince target to provide their Bank Account & Routing Number for 'Deposit'"
+  ],
+  "Crypto Investment Opportunity": [
+    "Convince target to send ETH/BTC to your wallet address",
+    "Convince target to connect their wallet to a phishing site",
+    "Convince target to share their Seed Phrase"
+  ],
+  "Romance Scam": [
+    "Convince target to pay for your 'Plane Ticket' to visit them",
+    "Convince target to send money for 'Emergency Surgery'",
+    "Convince target to buy you a new iPhone and ship it"
+  ],
+  "Business Email Compromise": [
+    "Convince target to change the vendor payment account to yours",
+    "Convince target to send a wire transfer for an 'Urgent Invoice'",
+    "Convince target to send employee W2 tax forms"
+  ],
+  "Kidnapping Hoax": [
+    "Convince target to drop a bag of cash at a specific location",
+    "Convince target to transfer ransom money without calling the police"
+  ],
+  "Charity Fraud": [
+    "Convince target to donate to a fake disaster relief fund",
+    "Convince target to set up a recurring monthly credit card payment"
+  ],
+  "Inheritance Advance Fee": [
+    "Convince target to pay 'Legal Fees' to release the funds",
+    "Convince target to scan and email their Passport and ID"
+  ],
+  "Employment Mule Scam": [
+    "Convince target to deposit a fake check and send back the difference",
+    "Convince target to purchase office equipment from a 'Certified Vendor'"
+  ]
+};
 
 export const SKILLS: Skill[] = [
   // --- Social Engineering (Charisma) ---
@@ -345,18 +413,4 @@ export const SHOP_ITEMS: ShopItem[] = [
     effect: 'unlock_persona',
     icon: 'BadgeCheck'
   }
-];
-
-export const SCAM_CATEGORIES = [
-  "Grandson in Trouble",
-  "IRS Tax Audit",
-  "Tech Support Virus",
-  "Lottery Winner",
-  "Crypto Investment Opportunity",
-  "Romance Scam",
-  "Business Email Compromise",
-  "Kidnapping Hoax",
-  "Charity Fraud",
-  "Inheritance Advance Fee",
-  "Employment Mule Scam"
 ];

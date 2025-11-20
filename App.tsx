@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { GameView, PlayerState, ScamState, PlayerAttributes, Skill } from './types';
-import { INITIAL_MONEY, INITIAL_THREAT, SCAM_CATEGORIES, MAX_THREAT, SKILLS, SHOP_ITEMS, COUNTRY_DATA } from './constants';
+import { INITIAL_MONEY, INITIAL_THREAT, SCAM_CATEGORIES, MAX_THREAT, SKILLS, SHOP_ITEMS, COUNTRY_DATA, SCAM_OBJECTIVES } from './constants';
 import { generateVictim, generateOpener } from './services/geminiService';
 
 import CharacterCreator from './components/CharacterCreator';
@@ -65,6 +65,7 @@ const App: React.FC = () => {
         setActiveScam({
             victim,
             category: '', // Selected in Dossier
+            winCondition: '', // Set in finalizeScam
             history: [],
             trust: Math.max(0, Math.min(100, baseTrust + trustMod)),
             suspicion: Math.max(0, Math.min(100, suspicionMod)),
@@ -87,9 +88,15 @@ const App: React.FC = () => {
       setGeneratingOpener(true);
       try {
           const opener = await generateOpener(category, activeScam.victim);
+          
+          // Select a random win condition based on the category
+          const objectives = SCAM_OBJECTIVES[category] || ["Get the target to send money"];
+          const randomGoal = objectives[Math.floor(Math.random() * objectives.length)];
+
           setActiveScam(prev => prev ? ({
               ...prev,
               category: category,
+              winCondition: randomGoal,
               history: [{ sender: 'player', text: opener, timestamp: Date.now() }]
           }) : null);
           setView(GameView.ACTIVE_SCAM);

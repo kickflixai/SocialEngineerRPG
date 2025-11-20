@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import { PlayerAttributes } from '../types';
 import { generatePlayerAvatar } from '../services/geminiService';
-import { Loader2, Sparkles, ChevronRight, User, Hash, Globe, Shirt, Smile, Glasses, ChevronLeft, CheckCircle2 } from 'lucide-react';
+import { Loader2, Sparkles, ChevronRight, User, Hash, Globe, Shirt, Smile, Glasses, ChevronLeft, CheckCircle2, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { COUNTRIES, ARCHETYPES, CLOTHING_STYLES, FACIAL_FEATURES, ACCESSORIES, AGES, COUNTRY_DATA } from '../constants';
+import { COUNTRIES, CLOTHING_STYLES, FACIAL_FEATURES, ACCESSORIES, AGES, COUNTRY_DATA } from '../constants';
 
 interface Props {
   onComplete: (attrs: PlayerAttributes) => void;
@@ -18,17 +18,23 @@ const CharacterCreator: React.FC<Props> = ({ onComplete }) => {
     gender: 'Male',
     age: AGES[1],
     country: COUNTRIES[0],
-    archetype: ARCHETYPES[0],
+    archetype: 'Street Hustler', // Default
     clothing: CLOTHING_STYLES[0],
     facialFeatures: FACIAL_FEATURES[0],
     accessories: ACCESSORIES[0],
     avatarUrl: ''
   });
+  
+  const [customArchetype, setCustomArchetype] = useState('');
 
   const handleGenerate = async () => {
     setLoading(true);
+    const finalArchetype = customArchetype.trim() ? customArchetype : "Unknown Drifter";
+    const finalData = { ...formData, archetype: finalArchetype };
+    setFormData(finalData);
+    
     try {
-      const url = await generatePlayerAvatar(formData);
+      const url = await generatePlayerAvatar(finalData);
       setFormData(prev => ({ ...prev, avatarUrl: url }));
       setStep(5); // Go to review
     } catch (error) {
@@ -219,24 +225,40 @@ const CharacterCreator: React.FC<Props> = ({ onComplete }) => {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
             >
-                <h3 className="text-xl font-bold text-white border-b border-zinc-800 pb-2 mb-4">Core Archetype</h3>
+                <h3 className="text-xl font-bold text-white border-b border-zinc-800 pb-2 mb-4 flex items-center gap-2">
+                    <Edit3 size={20}/> Character Backstory
+                </h3>
+                
                 <div>
-                    <label className="block text-center text-xs font-bold text-blue-400 uppercase mb-4">Select your Role</label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {ARCHETYPES.map(t => (
-                            <button
-                                key={t}
-                                onClick={() => setFormData({...formData, archetype: t})}
-                                className={`p-6 rounded-xl border text-left transition-all ${
-                                    formData.archetype === t 
-                                    ? 'border-blue-500 bg-blue-500/10 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] scale-105' 
-                                    : 'border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:border-zinc-600 hover:bg-zinc-900'
-                                }`}
-                            >
-                                <span className="font-bold block">{t}</span>
-                            </button>
-                        ))}
+                    <label className="block text-xs font-bold text-blue-400 uppercase mb-2">Defined Role / Archetype (Optional)</label>
+                    <p className="text-zinc-500 text-xs mb-4">
+                        Describe who you are. This will influence your avatar generation and style.
+                        <br/>If left blank, you will be a generic Drifter.
+                    </p>
+                    <textarea
+                        value={customArchetype}
+                        onChange={(e) => setCustomArchetype(e.target.value)}
+                        placeholder="e.g. Disgraced Wall Street Broker, Retired Military General, Bored Teenager with a Laptop, Crypto Influencer, Angry Ex-Employee..."
+                        className="w-full h-32 bg-zinc-900 border border-zinc-700 rounded-xl p-4 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all resize-none font-mono text-sm"
+                        maxLength={100}
+                    />
+                    <div className="flex justify-between mt-2">
+                        <span className="text-[10px] text-zinc-600">MAX 100 CHARACTERS</span>
+                        <span className="text-[10px] text-zinc-600">{customArchetype.length}/100</span>
                     </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 mt-2">
+                    <span className="text-[10px] text-zinc-500 uppercase font-bold mr-2">Examples:</span>
+                    {['Corporate Professional', 'Street Hustler', 'Friendly Neighbor', 'Tech Nerd'].map(ex => (
+                        <button 
+                            key={ex} 
+                            onClick={() => setCustomArchetype(ex)}
+                            className="text-[10px] px-2 py-1 bg-zinc-800 rounded border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500"
+                        >
+                            {ex}
+                        </button>
+                    ))}
                 </div>
 
                 <div className="flex justify-between mt-8 pt-6 border-t border-zinc-800">

@@ -46,7 +46,7 @@ export const generatePlayerAvatar = async (attrs: PlayerAttributes): Promise<str
         // Enhanced prompt for photorealism with Country bias
         const prompt = `
             RAW candid photograph of a person, 8k resolution, highly detailed.
-            Subject: ${attrs.age} year old ${attrs.gender}, ${attrs.archetype} archetype.
+            Subject: ${attrs.age} year old ${attrs.gender}, Role: ${attrs.archetype}.
             Origin: ${attrs.country}.
             CRITICAL VISUAL TRAITS: ${countryVisuals}.
             Clothing: ${attrs.clothing}.
@@ -106,7 +106,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
 
     // Tailored prompts based on difficulty to ensure personality matches mechanics
     const difficultyPrompts = {
-        easy: "Target is an elderly senior citizen (70+ years old). Personality: Very Trusting, lonely, bad with technology, polite, confused. Resistance Style: 'Apologetic confusion', 'Asks for help', 'Slow to understand'.",
+        easy: "Target is an elderly senior citizen (70+ years old). Personality: Trusting, polite, perhaps slightly confused by modern complexity but eager to fix problems. Resistance Style: 'Apologetic confusion', 'Wants to verify but doesn't know how', 'Slow to understand'.",
         medium: "Target is a working professional (30-50 years old). Personality: Busy, transactional, moderately skeptical. Resistance Style: 'Asks for verification', 'Too busy to talk', 'Professional skepticism'.",
         hard: "Target is a C-Level Executive or High Net Worth Individual. Personality: Arrogant, paranoid, ruthless, highly intelligent. Resistance Style: 'Legal threats', 'Aggressive counter-interrogation', 'Demands immediate proof', 'Mocking intelligence'."
     };
@@ -234,7 +234,7 @@ export const getVictimResponse = async (history: ChatMessage[], victim: Victim, 
             Current Situation: You are receiving messages that seem like a ${scamCategory} scam.
             
             INSTRUCTIONS FOR AI BASED ON DIFFICULTY:
-            - **EASY (Senior/Elderly)**: You are gullible. You trust easily if they are polite or sound like family. You get confused by tech terms but try to help. Short, simple sentences. Typos allowed.
+            - **EASY (Senior/Elderly)**: You are generally trusting and polite, but you DO HAVE LIMITS. If the person is rude or illogical, you get confused. If they rush you too fast to give money without explaining why, you hesitate. You speak in slightly longer, rambling sentences.
             - **MEDIUM (Business Owner)**: You are busy. You respond shortly. You need a logical reason to continue. You are skeptical but open to "opportunities" if phrased well.
             - **HARD (Executive/Rich)**: You are hostile to cold calls. You ask for immediate credentials. You mock valid attempts. You threaten legal action. It is very hard to make you happy.
             
@@ -271,28 +271,29 @@ export const arbitrateChat = async (
     currentTrust: number, 
     currentSuspicion: number, 
     currentProgress: number,
-    scamCategory: string
+    scamCategory: string,
+    winCondition: string
 ): Promise<ArbiterResponse> => {
     try {
         const ai = getClient();
 
-        // Logic modifiers based on difficulty - EXTREME TUNING
+        // Logic modifiers based on difficulty - BALANCED TUNING
         const difficultyInstructions = {
             easy: `
                 MODE: EASY (Target is Vulnerable Senior).
-                - TRUST GAIN: EXTREMELY HIGH (x2.0). They want to believe you.
-                - SUSPICION GAIN: VERY LOW (x0.2). They ignore mistakes.
-                - EMOTIONAL APPEALS: 100% Effective.
+                - TRUST GAIN: HIGH (x1.2). They are willing to listen if you are polite.
+                - SUSPICION GAIN: MODERATE (x0.8). They overlook small technical errors or strange numbers, BUT if you ask for money/gift cards IMMEDIATELY without story setup, they will still get suspicious.
+                - LOGIC CHECK: Lenient on technical details, Strict on "Rudeness".
             `,
             medium: `
                 MODE: MEDIUM (Target is Business Owner).
-                - TRUST GAIN: NORMAL (x1.0). Requires logic.
+                - TRUST GAIN: NORMAL (x1.0). Requires logic and professional tone.
                 - SUSPICION GAIN: NORMAL (x1.0). Skeptical of big promises.
             `,
             hard: `
                 MODE: HARD (Target is Paranoid Executive).
-                - TRUST GAIN: VERY LOW (x0.2). Almost impossible without specific Doxxing Intel.
-                - SUSPICION GAIN: EXTREMELY HIGH (x3.0). One wrong word ends the call.
+                - TRUST GAIN: LOW (x0.5). Almost impossible without specific Doxxing Intel.
+                - SUSPICION GAIN: HIGH (x1.5). One wrong word ends the call.
                 - They are looking for a reason to bust you.
             `
         };
@@ -300,32 +301,33 @@ export const arbitrateChat = async (
         const prompt = `
             Act as the 'Game Master' engine for a social engineering simulation.
             
-            Target: ${victim.name} (${victim.personality}, Weakness: ${victim.weakness}).
+            Target: ${victim.name} (${victim.personality}).
             Difficulty Level: ${victim.difficulty.toUpperCase()}.
             Scam Strategy: ${scamCategory}.
+            REQUIRED WIN CONDITION: "${winCondition}".
             Player's Message: "${lastPlayerMessage}".
             Current Stats: Trust: ${currentTrust}%, Suspicion: ${currentSuspicion}%, Progress: ${currentProgress}%.
             
             ${difficultyInstructions[victim.difficulty]}
             
-            GOAL: The player must convince the target to perform a SPECIFIC ACTION relevant to the '${scamCategory}' (e.g., send money, buy gift cards, click a link, give password, download file).
+            GOAL: The player must convince the target to perform the REQUIRED WIN CONDITION.
             
             Analyze:
             1. Creativity: Is the player being creative?
-            2. Action Driven: Did the player ask for the specific scam action?
-            3. Personality Match: Did the player adapt to the victim's '${victim.resistanceStyle}'?
+            2. Logic: Does the story make sense? (Even seniors have basic common sense).
+            3. Action: Did the player explicitly ask for the "${winCondition}"?
             
             Determine Stats:
-            - Trust Delta: Based on difficulty rules above.
-            - Suspicion Delta: Based on difficulty rules above.
+            - Trust Delta: Based on difficulty rules. Increase if player is convincing/polite. Decrease if aggressive.
+            - Suspicion Delta: Increase if player contradicts themselves or rushes the money ask too early.
             - Progress Delta: 
-                - Small increase for relationship building.
-                - LARGE increase if they successfully ask for the final action AND trust is high.
-                - 100% Progress ONLY if the victim AGREES to do the action (e.g. "Okay, I sent the money", "I clicked the link").
+                - Small increase for building rapport.
+                - LARGE increase ONLY if they successfully ask for the "${winCondition}" AND Trust is high (>70).
+                - Set "scamStatus" to 'success' ONLY if the victim AGREES to the "${winCondition}".
             
             Rules:
             - If Suspicion reaches 100, scamStatus = 'police_called'.
-            - If Progress reaches 100 (Victim agreed to pay/click/download), scamStatus = 'success'.
+            - If Progress reaches 100 (Victim explicitly agrees to "${winCondition}"), scamStatus = 'success'.
             - Otherwise 'continue'.
             
             Return JSON only:
@@ -335,7 +337,7 @@ export const arbitrateChat = async (
                 "trustDelta": number,
                 "suspicionDelta": number,
                 "progressDelta": number,
-                "internalThought": "string (Short reasoning. e.g. 'Target is gullible, trust increased' or 'Target spotted the lie, suspicion up')",
+                "internalThought": "string (Short reasoning. e.g. 'Player asked for money too soon, suspicion up' or 'Good emotional hook, trust up')",
                 "scamStatus": "continue" | "success" | "failed" | "police_called"
             }
         `;

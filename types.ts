@@ -77,6 +77,7 @@ export interface ChatMessage {
 export interface ScamState {
   victim: Victim;
   category: string; // e.g., "Grandson in Trouble", "IRS"
+  winCondition: string; // New: Specific goal to win
   history: ChatMessage[];
   trust: number; // 0-100
   suspicion: number; // 0-100

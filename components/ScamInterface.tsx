@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ScamState, PlayerState, ChatMessage } from '../types';
 import { getVictimResponse, arbitrateChat, generateSpeech, transcribeAudio } from '../services/geminiService';
-import { Send, Terminal, Wifi, Radio, Mic, MicOff, Volume2, VolumeX, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Unlock, ChevronDown, ChevronUp, Square } from 'lucide-react';
+import { Send, Terminal, Wifi, Radio, Mic, MicOff, Volume2, VolumeX, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Unlock, ChevronDown, ChevronUp, Square, Target } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
@@ -173,7 +173,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
     }
 
     try {
-        const analysis = await arbitrateChat(input, scam.victim, scam.trust, scam.suspicion, scam.progress, scam.category);
+        const analysis = await arbitrateChat(input, scam.victim, scam.trust, scam.suspicion, scam.progress, scam.category, scam.winCondition);
         setLastThought(analysis.internalThought);
 
         let newTrust = Math.max(0, Math.min(100, scam.trust + analysis.trustDelta));
@@ -424,31 +424,40 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       {/* Right: Chat Window */}
       <div className="flex-1 flex flex-col bg-zinc-950 border border-zinc-800/60 rounded-xl overflow-hidden relative shadow-2xl h-full z-10">
         {/* Header */}
-        <div className="h-16 bg-black/60 backdrop-blur border-b border-zinc-800 flex items-center px-6 justify-between shrink-0">
-            <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.8)] animate-pulse"></div>
-                <div>
-                    <div className="text-sm font-mono font-bold text-white tracking-widest">SECURE_CHANNEL_V2</div>
-                    <div className="text-[10px] text-zinc-500 font-mono">ENCRYPTION: AES-256 // ROUTING: ONION</div>
+        <div className="h-auto min-h-16 bg-black/60 backdrop-blur border-b border-zinc-800 flex flex-col px-6 py-3 shrink-0 justify-center">
+            <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.8)] animate-pulse"></div>
+                    <div>
+                        <div className="text-sm font-mono font-bold text-white tracking-widest">SECURE_CHANNEL_V2</div>
+                        <div className="text-[10px] text-zinc-500 font-mono">ENCRYPTION: AES-256 // ROUTING: ONION</div>
+                    </div>
+                </div>
+                 <div className="flex items-center gap-3">
+                    <button 
+                        onClick={toggleTts}
+                        className={`text-[10px] font-bold font-mono flex items-center gap-2 px-3 py-1.5 rounded border transition-all ${ttsEnabled ? 'bg-green-900/20 border-green-500/50 text-green-400' : 'bg-zinc-900 border-zinc-700 text-zinc-500 hover:border-zinc-500'}`}
+                    >
+                        {isPlayingAudio ? <Loader2 size={12} className="animate-spin"/> : ttsEnabled ? <Volume2 size={12}/> : <VolumeX size={12}/>}
+                        {ttsEnabled ? 'AUDIO_FEED: ON' : 'AUDIO_FEED: OFF'}
+                    </button>
+                    
+                    <div className="h-6 w-px bg-zinc-800 mx-2"></div>
+
+                    <button 
+                        onClick={() => setShowAbortConfirm(true)}
+                        className="text-[10px] font-bold font-mono flex items-center gap-2 px-3 py-1.5 rounded border border-red-900/50 bg-red-950/20 text-red-500 hover:bg-red-900/40 hover:border-red-500 transition-all"
+                    >
+                        <Power size={12} /> DISCONNECT
+                    </button>
                 </div>
             </div>
-            <div className="flex items-center gap-3">
-                <button 
-                    onClick={toggleTts}
-                    className={`text-[10px] font-bold font-mono flex items-center gap-2 px-3 py-1.5 rounded border transition-all ${ttsEnabled ? 'bg-green-900/20 border-green-500/50 text-green-400' : 'bg-zinc-900 border-zinc-700 text-zinc-500 hover:border-zinc-500'}`}
-                >
-                    {isPlayingAudio ? <Loader2 size={12} className="animate-spin"/> : ttsEnabled ? <Volume2 size={12}/> : <VolumeX size={12}/>}
-                    {ttsEnabled ? 'AUDIO_FEED: ON' : 'AUDIO_FEED: OFF'}
-                </button>
-                
-                <div className="h-6 w-px bg-zinc-800 mx-2"></div>
-
-                <button 
-                    onClick={() => setShowAbortConfirm(true)}
-                    className="text-[10px] font-bold font-mono flex items-center gap-2 px-3 py-1.5 rounded border border-red-900/50 bg-red-950/20 text-red-500 hover:bg-red-900/40 hover:border-red-500 transition-all"
-                >
-                    <Power size={12} /> DISCONNECT
-                </button>
+            
+            {/* MISSION OBJECTIVE BANNER */}
+            <div className="bg-blue-900/20 border border-blue-500/30 rounded px-3 py-2 flex items-center gap-3 animate-pulse">
+                <Target size={14} className="text-blue-400" />
+                <span className="text-[10px] text-blue-300 font-mono font-bold tracking-wider uppercase">MISSION OBJECTIVE:</span>
+                <span className="text-xs text-white font-mono">{scam.winCondition || "Extract Funds"}</span>
             </div>
         </div>
 
