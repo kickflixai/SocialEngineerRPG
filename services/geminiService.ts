@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective } from "../types";
-import { OCCUPATIONS, QUIRKS, SPEECH_STYLES_BY_AGE } from "../constants";
+import { OCCUPATIONS, QUIRKS, SPEECH_STYLES_BY_AGE, FIRST_NAMES, LAST_NAMES } from "../constants";
 
 const getClient = () => {
     // In Vite, process.env.API_KEY is replaced by the define plugin in vite.config.ts
@@ -134,6 +134,11 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
     const genderPrompt = Math.random() > 0.5 ? "Male" : "Female";
     const age = difficulty === 'easy' ? Math.floor(Math.random() * 20) + 65 : difficulty === 'medium' ? Math.floor(Math.random() * 30) + 25 : Math.floor(Math.random() * 20) + 30;
     
+    // Name Generation from Lists
+    const randFirst = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+    const randLast = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+    const forcedName = `${randFirst} ${randLast}`;
+
     // Select speech style based on age group
     let speechPool = SPEECH_STYLES_BY_AGE.adult;
     if (age < 30) speechPool = SPEECH_STYLES_BY_AGE.youth;
@@ -166,30 +171,31 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
     };
 
     const prompt = `
-        Generate a HIGHLY UNIQUE, COMPLEX, and NON-GENERIC profile for a social engineering target.
+        Generate a HIGHLY UNIQUE profile for a social engineering target.
         
         DIFFICULTY: ${difficulty.toUpperCase()} (${difficultyPrompts[difficulty]})
         
         MANDATORY SEEDS (Incorporate these!):
+        - Name: ${forcedName}
         - Occupation: ${randJob}
         - Speech Style: ${randSpeech}
         - Unique Quirks: ${combinedQuirks}
         - Gender: ${genderPrompt}
         - Age: ${age}
         
-        CRITICAL INSTRUCTION: Avoid tropes. Do not make them a generic "Accountant". Make them feel like a real, weird human being with a specific life.
-        Combine the quirks and occupation into a cohesive, memorable persona.
-        
-        The "hiddenFact" should be specific dirt (e.g. "Embezzling from the HOA fund", "Running a secret OnlyFans").
-        The "weakness" should be a psychological trigger (e.g. "Fear of public humiliation", "Desperate need for validation").
+        CRITICAL INSTRUCTION: 
+        1. Personality description must be CONCISE. Maximum 3-4 sentences.
+        2. Avoid tropes. Make them feel like a real, weird human being.
+        3. The "hiddenFact" should be specific dirt.
+        4. The "weakness" should be a psychological trigger.
         
         Return ONLY valid JSON matching this schema:
         {
-            "name": "string (Full Name)",
+            "name": "${forcedName}",
             "age": number,
             "gender": "${genderPrompt}",
             "occupation": "string (The specific seeded job)",
-            "personality": "string (Complex description incorporating the quirks)",
+            "personality": "string (Max 3-4 sentences)",
             "archetype": "string (Short label, e.g. 'The Paranoid Baker')",
             "speechStyle": "string (The seeded speech style)",
             "hiddenFact": "string",
@@ -199,7 +205,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
     `;
 
     let data: any = {
-        name: "Unknown Target",
+        name: forcedName,
         age: age,
         gender: genderPrompt.toLowerCase(),
         occupation: randJob,

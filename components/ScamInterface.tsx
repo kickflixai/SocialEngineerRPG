@@ -4,9 +4,10 @@ import { ScamState, PlayerState, ChatMessage, ShopItem, HackAbility } from '../t
 import { getVictimResponse, arbitrateChat, generateScamHint } from '../services/geminiService';
 import { audioManager } from '../services/audioService';
 import { HACK_ABILITIES } from '../constants';
-import { Send, Terminal, Wifi, Radio, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Circle, Package, ChevronDown, ChevronUp, Target, Lightbulb, BrainCircuit, ArrowRight, Zap, Mail, Bell, Mic, Search, Code, Speaker, WifiOff, Shuffle, FileCheck, BadgeCheck, Key, Fingerprint, Unlock, Database, Printer, AppWindow, Music, Disc, Thermometer, Ghost, MousePointer2, Video, MonitorX } from 'lucide-react';
+import { Send, Terminal, Wifi, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Circle, Package, ChevronDown, ChevronUp, Target, Lightbulb, ArrowRight, Zap, Fingerprint, Database, Code } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import InventoryModal from './InventoryModal';
+import HackingTerminalModal from './HackingTerminalModal';
 
 interface Props {
   scam: ScamState;
@@ -28,6 +29,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   const [isExiting, setIsExiting] = useState(false);
   
   // Hacking Terminal
+  const [showHackTerminal, setShowHackTerminal] = useState(false);
   const [hackCooldown, setHackCooldown] = useState<string | null>(null);
   
   // Hint System
@@ -308,33 +310,6 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   const hasDoxxing = player.skills.includes('doxxing_suite');
   const hasScraper = player.skills.includes('social_scraper');
 
-  const HackIcon = ({ icon }: { icon: string }) => {
-      switch(icon) {
-          case 'Mail': return <Mail size={16}/>;
-          case 'Bell': return <Bell size={16}/>;
-          case 'Speaker': return <Speaker size={16}/>;
-          case 'WifiOff': return <WifiOff size={16}/>;
-          case 'Shuffle': return <Shuffle size={16}/>;
-          case 'FileCheck': return <FileCheck size={16}/>;
-          case 'Mic': return <Mic size={16}/>;
-          case 'BadgeCheck': return <BadgeCheck size={16}/>;
-          case 'Search': return <Search size={16}/>;
-          case 'Key': return <Key size={16}/>;
-          // New Icons
-          case 'Printer': return <Printer size={16}/>;
-          case 'Lightbulb': return <Lightbulb size={16}/>;
-          case 'MonitorX': return <MonitorX size={16}/>;
-          case 'AppWindow': return <AppWindow size={16}/>;
-          case 'Music': return <Music size={16}/>;
-          case 'Disc': return <Disc size={16}/>;
-          case 'Thermometer': return <Thermometer size={16}/>;
-          case 'Ghost': return <Ghost size={16}/>;
-          case 'MousePointer2': return <MousePointer2 size={16}/>;
-          case 'Video': return <Video size={16}/>;
-          default: return <Code size={16}/>;
-      }
-  };
-
   return (
     <div className="flex flex-col md:grid md:grid-cols-3 h-full gap-4 md:gap-6 p-2 md:p-6 bg-black overflow-hidden relative">
        {/* Mobile Header */}
@@ -532,7 +507,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
        {/* ... RIGHT COL (TARGET ANALYSIS & HACKING TERMINAL) ... */}
        <div className="hidden md:flex flex-col gap-4 h-full relative z-10 col-span-1 overflow-y-auto custom-scrollbar pr-1">
            
-           {/* TARGET ANALYSIS (Moved from Left) */}
+           {/* TARGET ANALYSIS */}
            <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-3 shrink-0 space-y-3">
                 <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-2">Target Analysis</h3>
                 
@@ -558,7 +533,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                 </div>
            </div>
 
-           {/* TERMINAL LOG (Expanded Priority) */}
+           {/* TERMINAL LOG (Expanded to fill available space) */}
            <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl flex flex-col relative overflow-hidden shadow-xl flex-1 min-h-[12rem]">
                 <div className="p-2 border-b border-zinc-800 bg-black/40 flex justify-between items-center">
                     <p className="text-green-600 uppercase font-bold text-[10px] flex items-center gap-2 tracking-widest"><Terminal size={12}/> SYS_LOG</p>
@@ -583,46 +558,13 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                 </div>
            </div>
 
-           {/* HACKING DECK (Fixed smaller height) */}
-           <div className="bg-zinc-900/80 border border-zinc-800/60 rounded-xl p-3 flex flex-col relative overflow-hidden shadow-xl h-48 shrink-0">
-                <div className="flex items-center justify-between mb-3 shrink-0">
-                    <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2"><Code size={14}/> Hacking Tools</h3>
-                    <span className="text-[9px] text-zinc-500">{HACK_ABILITIES.length} AVAILABLE</span>
-                </div>
-
-               {/* HACKS GRID */}
-               <div className="grid grid-cols-2 gap-2 overflow-y-auto custom-scrollbar content-start">
-                   {HACK_ABILITIES.map(hack => {
-                       const canAfford = scam.socialCharge >= hack.cost;
-                       const isOnCooldown = hackCooldown === hack.id;
-                       
-                       return (
-                           <button
-                               key={hack.id}
-                               onClick={() => executeHack(hack)}
-                               disabled={!canAfford || processing || isOnCooldown}
-                               className={`p-2 rounded border text-left flex flex-col justify-between transition-all relative group h-16 ${
-                                   isOnCooldown 
-                                   ? 'bg-green-900/20 border-green-500/50 cursor-not-allowed'
-                                   : canAfford 
-                                        ? 'bg-zinc-900 hover:bg-blue-900/20 border-zinc-700 hover:border-blue-500' 
-                                        : 'bg-zinc-950 border-zinc-800 opacity-50 cursor-not-allowed'
-                               }`}
-                           >
-                               {isOnCooldown && <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-green-500 bg-black/50 backdrop-blur-[1px]">EXECUTING...</div>}
-                               
-                               <div className="flex justify-between items-center w-full mb-1">
-                                   <HackIcon icon={hack.icon} />
-                                   <span className={`text-[9px] font-mono font-bold ${canAfford ? "text-blue-300" : "text-zinc-600"}`}>{hack.cost} PWR</span>
-                               </div>
-                               <div>
-                                   <div className={`text-[10px] font-bold leading-tight truncate ${canAfford ? "text-white" : "text-zinc-500"}`}>{hack.name}</div>
-                               </div>
-                           </button>
-                       );
-                   })}
-               </div>
-           </div>
+           {/* HACKING TERMINAL BUTTON (Replaces Deck) */}
+           <button 
+                onClick={() => setShowHackTerminal(true)}
+                className="w-full py-4 bg-zinc-900 hover:bg-blue-900/20 border border-zinc-700 hover:border-blue-500 rounded-xl text-zinc-400 hover:text-blue-400 transition-all font-bold font-mono text-xs flex items-center justify-center gap-2 group shadow-lg shrink-0"
+           >
+               <Code size={16} /> INITIALIZE HACKING CONSOLE <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform"/>
+           </button>
        </div>
 
        {/* Overlays */}
@@ -693,6 +635,16 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             inventory={player.inventory} 
             onUseItem={handleUseItem}
             context="scam"
+        />
+
+        <HackingTerminalModal 
+            isOpen={showHackTerminal}
+            onClose={() => setShowHackTerminal(false)}
+            abilities={HACK_ABILITIES}
+            socialCharge={scam.socialCharge}
+            onExecute={executeHack}
+            cooldowns={hackCooldown}
+            processing={processing}
         />
     </div>
   );

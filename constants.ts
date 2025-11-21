@@ -659,6 +659,33 @@ export const SHOP_ITEMS: ShopItem[] = [
 ];
 
 // --- RANDOMIZERS FOR VICTIM VARIETY ---
+export const FIRST_NAMES = [
+    "Agnes", "Bert", "Chiara", "Dante", "Elara", "Finn", "Greta", "Hans", "Ingrid", "Jamal", 
+    "Keiko", "Liam", "Mei", "Nia", "Oscar", "Priya", "Quincy", "Rosa", "Sven", "Tariq", 
+    "Uma", "Viktor", "Wei", "Ximena", "Yusuf", "Zoe", "Albert", "Beatrice", "Charles", "Doris",
+    "Evelyn", "Frank", "Gertrude", "Harold", "Ida", "Jack", "Katherine", "Leonard", "Martha", "Norman",
+    "Olive", "Percy", "Queenie", "Ralph", "Sylvia", "Thomas", "Ursula", "Vera", "Walter", "Yvonne",
+    "Aiden", "Bella", "Caleb", "Daisy", "Ethan", "Fiona", "Gavin", "Hazel", "Isaac", "Julia",
+    "Kai", "Luna", "Mason", "Nora", "Owen", "Piper", "Quinn", "Riley", "Sam", "Tessa",
+    "Alessandro", "Bianca", "Carlos", "Diego", "Elena", "Fabio", "Gabriela", "Hugo", "Isabella", "Javier",
+    "Katarina", "Luca", "Mateo", "Natalia", "Octavio", "Paulo", "Rafael", "Sofia", "Thiago", "Valentina",
+    "Akira", "Bao", "Chen", "Dao", "Emiko", "Feng", "Genji", "Hiro", "Ichiro", "Jin",
+    "Kenji", "Li", "Min", "Naomi", "Ryu", "Sakura", "Takumi", "Yuki", "Zhang", "Wei"
+];
+
+export const LAST_NAMES = [
+    "Vancroft", "Dubois", "Patel", "Kim", "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia",
+    "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas",
+    "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez",
+    "Clark", "Ramirez", "Lewis", "Robinson", "Walker", "Young", "Allen", "King", "Wright", "Scott",
+    "Torres", "Nguyen", "Hill", "Flores", "Green", "Adams", "Nelson", "Baker", "Hall", "Rivera",
+    "Campbell", "Mitchell", "Carter", "Roberts", "Gomez", "Phillips", "Evans", "Turner", "Diaz", "Parker",
+    "Cruz", "Edwards", "Collins", "Reyes", "Stewart", "Morris", "Morales", "Murphy", "Cook", "Rogers",
+    "Gutierrez", "Ortiz", "Morgan", "Cooper", "Peterson", "Bailey", "Reed", "Kelly", "Howard", "Ramos",
+    "Cox", "Ward", "Richardson", "Watson", "Brooks", "Chavez", "Wood", "James", "Bennett", "Gray",
+    "Mendoza", "Ruiz", "Hughes", "Price", "Alvarez", "Castillo", "Sanders", "Patel", "Myers", "Long",
+    "Ross", "Foster", "Jimenez", "Powell", "Jenkins", "Perry", "Russell", "Sullivan", "Bell", "Coleman"
+];
 
 export const OCCUPATIONS = [
     "Underwater Welder", "Professional Dog Walker", "Failed Crypto Trader", "Antique Doll Restorer", 
