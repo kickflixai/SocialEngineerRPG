@@ -83,8 +83,7 @@ export const generatePlayerAvatar = async (attrs: PlayerAttributes): Promise<str
             Do NOT generate: 3D render, CGI, illustration, cartoon, anime, painting, plastic skin, smooth skin, doll-like.
         `;
         
-        // Actually we need to call the image model for images.
-         const imageResponse = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
+        const imageResponse = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
             model: 'gemini-2.5-flash-image',
             contents: { parts: [{ text: prompt }] },
             config: {
@@ -251,7 +250,7 @@ export const generateOpener = async (scamCategory: string, victim: Victim): Prom
 export const getVictimResponse = async (
     history: ChatMessage[], 
     victim: Victim, 
-    scamCategory: string,
+    scamCategory: string, 
     activeObjective: ScamObjective
 ): Promise<{ text: string, objectiveComplete: boolean }> => {
     try {
@@ -302,9 +301,8 @@ export const getVictimResponse = async (
             }
         `;
 
-        // Convert history format
         const chatHistory = history.map(h => ({
-            role: h.sender === 'player' ? 'user' : 'model', // Map system to user for simplicity, or just include in text
+            role: h.sender === 'player' ? 'user' : 'model', 
             parts: [{ text: h.sender === 'system' ? `[SYSTEM ALERT: ${h.text}]` : h.text }]
         }));
 
@@ -336,7 +334,8 @@ export const getVictimResponse = async (
 export const arbitrateChat = async (
     lastPlayerMessage: string, 
     victim: Victim, 
-    currentRelationship: number, 
+    currentTrust: number,
+    currentSuspicion: number,
     scamCategory: string, 
     activeObjective: ScamObjective,
     hasCompletedFinal: boolean
@@ -347,21 +346,24 @@ export const arbitrateChat = async (
         const difficultyInstructions = {
             easy: `
                 MODE: EASY (Target is Vulnerable Senior).
-                - RELATIONSHIP GAIN: HIGH (x1.5). Good moves give +15 to +25 relationship.
-                - RELATIONSHIP LOSS: LOW (x0.8). Bad moves drop -10 to -15.
-                - CREATIVITY REWARD: High. Reward any story attempt.
+                - TRUST GAIN: HIGH. Good moves give +15 to +25 Trust.
+                - TRUST LOSS: LOW. Bad moves drop -5 to -10 Trust.
+                - SUSPICION GAIN: LOW. Mistakes add +5 to +10 Suspicion.
+                - CREATIVITY REWARD: High.
             `,
             medium: `
                 MODE: MEDIUM (Target is Business Owner).
-                - RELATIONSHIP GAIN: MODERATE (x1.0). Good moves give +10 to +15 relationship.
-                - RELATIONSHIP LOSS: MODERATE. Bad logic drops -10 to -20.
-                - CREATIVITY REWARD: Medium. Rewards jargon and specificity.
+                - TRUST GAIN: MODERATE. Good moves give +10 to +15 Trust.
+                - TRUST LOSS: MODERATE. Bad logic drops -10 to -20 Trust.
+                - SUSPICION GAIN: MODERATE. Mistakes add +10 to +20 Suspicion.
+                - CREATIVITY REWARD: Medium.
             `,
             hard: `
                 MODE: HARD (Target is Paranoid Executive).
-                - RELATIONSHIP GAIN: LOW (x0.7). Hard to earn trust (+5 to +10).
-                - RELATIONSHIP LOSS: CRITICAL (x2.0). Mistakes drop -30 to -50.
-                - CREATIVITY REWARD: Strict. Only specific, authoritative details earn charge.
+                - TRUST GAIN: LOW. Hard to earn trust (+5 to +10).
+                - TRUST LOSS: CRITICAL. Mistakes drop -20 to -40 Trust.
+                - SUSPICION GAIN: HIGH. Mistakes add +20 to +30 Suspicion.
+                - CREATIVITY REWARD: Strict.
             `
         };
 
@@ -374,36 +376,41 @@ export const arbitrateChat = async (
             
             CURRENT ACTIVE OBJECTIVE: "${activeObjective.description}" (Step ${activeObjective.order}/3)
             Player's Message: "${lastPlayerMessage}".
-            Current Relationship Score: ${currentRelationship} (-100 = Total Suspicion, 100 = Total Trust).
+            
+            Current Trust: ${currentTrust} / 100. (High = Good).
+            Current Suspicion: ${currentSuspicion} / 100. (High = Bad).
             
             ${difficultyInstructions[victim.difficulty]}
             
             TASK:
             1. Analyze the conversation logic.
-            2. Determine Relationship change (-100 to 100 delta).
-            3. Determine Creativity Score (0 to 10). This fills a 'Hacking Charge' meter.
+            2. Determine TRUST change (can be positive or negative).
+            3. Determine SUSPICION increase (MUST be >= 0). Suspicion NEVER decreases.
+            4. Determine Creativity Score (0 to 10).
             
-            GUIDELINES:
-            - **RELATIONSHIP DELTA**:
-                - Positive (+10 to +30): Player is polite, logical, authoritative, or used specific fake details (IDs, Codes).
-                - Negative (-10 to -40): Player was rude, contradictory, vague, or ignored a question.
+            MECHANICS:
+            - **TRUST DELTA**: 
+                - Increase if polite, logical, authoritative, or authoritative specific fake details used.
+                - Decrease if rude, vague, or contradictory.
+            - **SUSPICION DELTA**:
+                - Increase (+5 to +30) if the player makes a mistake, threatens aggressively without setup, or contradicts themselves.
+                - **CRITICAL**: If Suspicion Increases, Trust usually Decreases too.
+                - Suspicion NEVER decreases. Delta must be >= 0.
             - **CREATIVITY SCORE (0-10)**:
-                - 0-3: Generic script, short answer ("ok", "yes").
-                - 4-7: Good sentence, logical flow.
-                - 8-10: Excellent creative writing, made-up technical jargon, specific fake codes, or emotional manipulation.
+                - 0-3: Generic script.
+                - 4-7: Good logic.
+                - 8-10: Excellent specificity, jargon, or emotional manipulation.
             
             CRITICAL OBJECTIVE VALIDATION RULES:
             - 'objectiveComplete' is TRUE ONLY if the VICTIM has explicitly stated/revealed the requested info or performed the action in the previous messages.
-            - If the Player asked for the info, but the Victim ignored it, refused, or asked a question back, 'objectiveComplete' MUST BE FALSE.
             
             Return JSON only:
             {
-                "logicScore": number (0-100), // Legacy
-                "emotionalImpact": number (0-100), // Legacy
-                "relationshipDelta": number (Integer, e.g. +15 or -20),
+                "trustDelta": number (Integer, e.g. +15 or -20),
+                "suspicionDelta": number (Integer, e.g. 0 or +15. Must be >= 0),
                 "creativityScore": number (0-10),
                 "objectiveComplete": boolean,
-                "internalThought": "string (Short reasoning. e.g. 'Player used specific Auth Code, relationship +15, high creativity')",
+                "internalThought": "string (Short reasoning)",
                 "scamStatus": "continue" | "success" | "failed" | "police_called"
             }
         `;
@@ -415,22 +422,25 @@ export const arbitrateChat = async (
         }));
 
         const result = parseJSON(response.text || "{}") || {
-            relationshipDelta: 0,
+            trustDelta: 0,
+            suspicionDelta: 0,
             creativityScore: 0,
             objectiveComplete: false,
             internalThought: "Analyzing...",
             scamStatus: 'continue'
         };
 
-        // Enforce integer rounding
-        result.relationshipDelta = Math.round(result.relationshipDelta || 0);
+        // Enforce logic constraints
+        result.trustDelta = Math.round(result.trustDelta || 0);
+        result.suspicionDelta = Math.max(0, Math.round(result.suspicionDelta || 0));
         result.creativityScore = Math.round(result.creativityScore || 0);
 
         return result;
     } catch (e) {
         console.error("Arbiter failed", e);
         return {
-            relationshipDelta: 0,
+            trustDelta: 0,
+            suspicionDelta: 0,
             creativityScore: 0,
             objectiveComplete: false,
             internalThought: "Connection unstable...",
@@ -439,7 +449,6 @@ export const arbitrateChat = async (
     }
 };
 
-// NEW: Helper to suggest player responses when they are stuck
 export const generateScamHint = async (
     history: ChatMessage[], 
     activeObjective: string, 
@@ -456,9 +465,6 @@ export const generateScamHint = async (
             Last Message from Victim: "${history[history.length - 1]?.text || 'Hello'}".
             
             Suggest 3 short, distinct, and actionable things the player could type next to advance the scam.
-            1. A polite/charming approach.
-            2. A logical/urgent approach.
-            3. A high-risk/aggressive approach.
             
             Return ONLY a JSON array of strings. e.g. ["Say X", "Say Y", "Say Z"]
         `;

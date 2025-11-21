@@ -92,17 +92,16 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   const handleUseItem = (item: ShopItem) => {
      onConsumeItem(item); // Remove from inventory globally
 
-     if (item.effect === 'reduce_suspicion') {
-         onUpdateScam({ ...scam, relationship: Math.min(100, scam.relationship + 30) });
-         alert("Voice modulator active. Relationship boosted.");
+     if (item.effect === 'boost_trust_minor') {
+         onUpdateScam({ ...scam, trust: Math.min(100, scam.trust + 20) });
+         alert("Voice modulator active. Trust boosted.");
      } else if (item.effect === 'boost_trust') {
-         onUpdateScam({ ...scam, relationship: Math.min(100, scam.relationship + 25) });
-         alert("Fake ID verified. Relationship boosted.");
-     } else if (item.effect === 'reset_suspicion') {
-         onUpdateScam({ ...scam, relationship: 0 });
-         alert("DDoS attack successful. Connection reset to neutral.");
+         onUpdateScam({ ...scam, trust: Math.min(100, scam.trust + 25) });
+         alert("Fake ID verified. Trust boosted.");
+     } else if (item.effect === 'reset_trust') {
+         onUpdateScam({ ...scam, trust: 50 });
+         alert("DDoS attack successful. Connection reset (Trust=50).");
      } else if (item.effect === 'force_objective') {
-         // Complete current objective but raise suspicion/threat?
          const updatedObjectives = [...scam.objectives];
          const objIndex = updatedObjectives.findIndex(o => o.id === activeObjective.id);
          if (objIndex !== -1) {
@@ -111,9 +110,9 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
          onUpdateScam({ 
              ...scam, 
              objectives: updatedObjectives,
-             relationship: Math.max(-100, scam.relationship - 30) // Cost of using ransomware
+             suspicion: Math.min(100, scam.suspicion + 30) // Cost of using ransomware
          });
-         alert("Ransomware deployed. Objective forced. Relationship damaged.");
+         alert("Ransomware deployed. Objective forced. Suspicion increased.");
      }
   };
 
@@ -175,7 +174,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         const analysis = await arbitrateChat(
             msgToSend, 
             scam.victim, 
-            scam.relationship, 
+            scam.trust,
+            scam.suspicion,
             scam.category, 
             activeObjective, 
             allCompleted
@@ -183,24 +183,27 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         
         setLastThought(analysis.internalThought);
 
-        // Update Relationship (-100 to 100)
-        let newRelationship = Math.round(Math.max(-100, Math.min(100, scam.relationship + analysis.relationshipDelta)));
+        // Update Trust (-100 to 100 logic adapted to 0-100)
+        // Arbiter returns trustDelta
+        let trustDelta = analysis.trustDelta;
         
         // Skills modifiers
-        if (player.skills.includes('silver_tongue') && analysis.relationshipDelta < 0) {
-             // Mitigate loss
-             newRelationship = Math.round(scam.relationship + (analysis.relationshipDelta * 0.8));
+        if (player.skills.includes('silver_tongue') && trustDelta < 0) {
+             trustDelta = Math.round(trustDelta * 0.8); // Mitigate loss
         }
-        if (player.skills.includes('empathy_mirror') && analysis.relationshipDelta > 0) {
-             // Boost gain
-             newRelationship = Math.round(scam.relationship + (analysis.relationshipDelta * 1.25));
+        if (player.skills.includes('empathy_mirror') && trustDelta > 0) {
+             trustDelta = Math.round(trustDelta * 1.25); // Boost gain
         }
 
+        // Update Suspicion (Monotonic)
+        let suspicionDelta = Math.max(0, analysis.suspicionDelta); // Ensure non-negative
+
+        const newTrust = Math.max(0, Math.min(100, scam.trust + trustDelta));
+        const newSuspicion = Math.min(100, scam.suspicion + suspicionDelta);
+
         // Update Social Charge (Creativity)
-        // Arbitrary multiplier: Score (0-10) * 3 = up to 30 charge per message
         let chargeGain = analysis.creativityScore * 3;
         if (player.skills.includes('empathy_mirror')) chargeGain = Math.floor(chargeGain * 1.25);
-        
         const newCharge = Math.min(100, scam.socialCharge + chargeGain);
 
         let updatedObjectives = [...scam.objectives];
@@ -218,14 +221,15 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         let updatedScam = {
             ...scam,
             history: newHistory,
-            relationship: newRelationship,
+            trust: newTrust,
+            suspicion: newSuspicion,
             socialCharge: newCharge,
             objectives: updatedObjectives
         };
         onUpdateScam(updatedScam);
 
         // End Conditions
-        if (analysis.scamStatus === 'police_called' || newRelationship <= -100) {
+        if (analysis.scamStatus === 'police_called' || newSuspicion >= 100) {
             onScamEnd('police');
             return;
         }
@@ -264,22 +268,15 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   };
 
   const requestHints = async () => {
-      if (scam.relationship < 0) return;
+      if (scam.trust < 20) return;
       audioManager.playClick();
-      onUpdateScam({ ...scam, relationship: Math.max(-100, scam.relationship - 10) });
+      onUpdateScam({ ...scam, trust: Math.max(0, scam.trust - 10) });
       setLoadingHints(true);
       try {
           const suggestions = await generateScamHint(scam.history, activeObjective.description, scam.victim);
           setHints(suggestions);
       } catch (e) { console.error(e); } finally { setLoadingHints(false); }
   };
-
-  // Calculate position of meter marker (0 to 100%)
-  // Relationship is -100 to 100.
-  // -100 -> 0%
-  // 0 -> 50%
-  // 100 -> 100%
-  const meterPercent = ((scam.relationship + 100) / 200) * 100;
 
   return (
     <div className="flex flex-col md:grid md:grid-cols-3 h-full gap-4 md:gap-6 p-2 md:p-6 bg-black overflow-hidden relative">
@@ -292,10 +289,9 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                   </div>
                   <div>
                       <h2 className="text-sm font-bold text-white font-mono">{scam.victim.name}</h2>
-                      <div className="w-24 h-1.5 bg-zinc-900 rounded-full mt-1 overflow-hidden border border-zinc-800 relative">
-                          <div className="absolute top-0 bottom-0 left-0 bg-red-500 w-1/2"></div>
-                          <div className="absolute top-0 bottom-0 right-0 bg-green-500 w-1/2"></div>
-                          <div className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_5px_white]" style={{ left: `${meterPercent}%` }}></div>
+                      <div className="flex gap-1 mt-1">
+                          <div className="w-12 h-1 bg-zinc-800 rounded-full overflow-hidden"><div className="h-full bg-green-500" style={{width: `${scam.trust}%`}}></div></div>
+                          <div className="w-12 h-1 bg-zinc-800 rounded-full overflow-hidden"><div className="h-full bg-red-500" style={{width: `${scam.suspicion}%`}}></div></div>
                       </div>
                   </div>
               </div>
@@ -325,37 +321,37 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
 
         <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-6 shadow-xl flex-1 space-y-6 backdrop-blur-sm relative overflow-hidden flex flex-col">
             
-            {/* UNIFIED METER */}
-            <div className="space-y-3 relative">
-                <div className="flex justify-between text-xs font-mono uppercase tracking-widest">
-                    <span className="text-red-500 font-bold flex items-center gap-2"><AlertTriangle size={12}/> SUSPICION</span>
-                    <span className="text-green-500 font-bold flex items-center gap-2">TRUST <CheckCircle2 size={12}/></span>
-                </div>
-                
-                <div className="relative h-4 bg-zinc-900 border border-zinc-700 rounded-full overflow-hidden shadow-inner">
-                    {/* Gradient Background */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-red-900/50 via-transparent to-green-900/50"></div>
-                    
-                    {/* Center Marker (Neutral) */}
-                    <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-zinc-600/50 -translate-x-1/2"></div>
-                    
-                    {/* The Needle/Bar */}
-                    <div 
-                        className="absolute top-0 bottom-0 w-1.5 bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all duration-500 ease-out z-10"
-                        style={{ left: `calc(${meterPercent}% - 3px)` }}
-                    ></div>
-
-                    {/* Fill Effect */}
-                    <div 
-                        className={`absolute top-0 bottom-0 transition-all duration-500 opacity-30 ${scam.relationship > 0 ? 'bg-green-500 left-1/2' : 'bg-red-500 right-1/2'}`}
-                        style={{ width: `${Math.abs(scam.relationship) / 2}%` }}
-                    ></div>
+            {/* SEPARATE METERS */}
+            <div className="space-y-6">
+                {/* TRUST METER */}
+                <div>
+                    <div className="flex justify-between text-xs font-mono uppercase tracking-widest mb-2">
+                        <span className="text-green-500 font-bold flex items-center gap-2"><CheckCircle2 size={12}/> TRUST</span>
+                        <span className="text-white font-mono">{scam.trust}%</span>
+                    </div>
+                    <div className="h-3 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden shadow-inner relative">
+                         <div 
+                            className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-900 to-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)] transition-all duration-700 ease-out"
+                            style={{ width: `${scam.trust}%` }}
+                         ></div>
+                    </div>
                 </div>
 
-                <div className="flex justify-between text-[10px] font-mono text-zinc-500">
-                     <span>-100</span>
-                     <span className={scam.relationship === 0 ? 'text-white font-bold' : ''}>0</span>
-                     <span>+100</span>
+                {/* SUSPICION METER */}
+                <div>
+                    <div className="flex justify-between text-xs font-mono uppercase tracking-widest mb-2">
+                        <span className="text-red-500 font-bold flex items-center gap-2"><AlertTriangle size={12}/> SUSPICION</span>
+                        <span className="text-white font-mono">{scam.suspicion}%</span>
+                    </div>
+                    <div className="h-3 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden shadow-inner relative">
+                         <div 
+                            className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-900 to-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)] transition-all duration-700 ease-out"
+                            style={{ width: `${scam.suspicion}%` }}
+                         ></div>
+                         {/* Danger Zone Indicator */}
+                         <div className="absolute top-0 right-0 w-[10%] h-full bg-red-500/20 border-l border-red-500/30"></div>
+                    </div>
+                    <p className="text-[9px] text-zinc-600 mt-1 text-right">WARNING: 100% TERMINATES CONNECTION</p>
                 </div>
             </div>
             
@@ -445,7 +441,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         <div className="p-2 md:p-3 bg-black/80 backdrop-blur border-t border-zinc-800 shrink-0 relative z-20">
              <div className="flex gap-2">
                  <div className="relative flex gap-2">
-                    <button onClick={requestHints} disabled={loadingHints || processing || scam.relationship < -20} className={`p-3 rounded-lg border bg-black border-zinc-700 text-zinc-400 transition-all relative group ${scam.relationship >= -20 ? 'hover:text-blue-400 hover:border-blue-500' : 'opacity-30 cursor-not-allowed'}`}>
+                    <button onClick={requestHints} disabled={loadingHints || processing || scam.trust < 20} className={`p-3 rounded-lg border bg-black border-zinc-700 text-zinc-400 transition-all relative group ${scam.trust >= 20 ? 'hover:text-blue-400 hover:border-blue-500' : 'opacity-30 cursor-not-allowed'}`}>
                          {loadingHints ? <Loader2 size={18} className="animate-spin"/> : <Lightbulb size={18}/>}
                     </button>
                     <button onClick={() => setInventoryOpen(true)} className="p-3 rounded-lg border bg-black border-zinc-700 text-zinc-400 hover:text-purple-400 hover:border-purple-500 transition-all relative group">
@@ -589,7 +585,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                     </div>
                 </motion.div>
             )}
-             {scam.relationship <= -100 && (
+             {scam.suspicion >= 100 && (
                 <motion.div initial={{opacity: 0}} animate={{opacity: 1}} className="absolute inset-0 z-50 bg-red-950/90 flex items-center justify-center backdrop-blur-sm p-4">
                     <div className="text-center space-y-6 p-8 md:p-12 border-2 border-red-500 rounded-2xl bg-black shadow-[0_0_50px_rgba(239,68,68,0.5)] max-w-lg w-full">
                         <ShieldAlert size={60} className="text-red-500 mx-auto animate-pulse"/>

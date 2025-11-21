@@ -38,7 +38,7 @@ export interface CountryStats {
   startingItems: string[];
   startingSkills: string[];
   modifiers: {
-    relationshipStartBonus?: number; // Replaces trustBonus
+    trustStartBonus?: number; 
     threatMultiplier?: number;
     payoutMultiplier?: number;
     startSuspicious?: boolean;
@@ -78,7 +78,7 @@ export interface Victim {
 }
 
 export interface ChatMessage {
-  sender: 'player' | 'victim' | 'system'; // Added system
+  sender: 'player' | 'victim' | 'system'; 
   text: string;
   timestamp: number;
 }
@@ -97,8 +97,9 @@ export interface ScamState {
   objectives: ScamObjective[];
   history: ChatMessage[];
   
-  // NEW MECHANICS
-  relationship: number; // -100 (Suspicion) to 100 (Trust)
+  // MECHANICS
+  trust: number; // 0-100
+  suspicion: number; // 0-100 (Monotonic increase)
   socialCharge: number; // 0-100 (Mana for hacks)
   
   status: 'active' | 'success' | 'failed' | 'police_called';
@@ -107,8 +108,9 @@ export interface ScamState {
 }
 
 export interface ArbiterResponse {
-  relationshipDelta: number; // -X to +X
-  creativityScore: number; // 0 to 10 (Adds to Social Charge)
+  trustDelta: number; // +/- X
+  suspicionDelta: number; // + X (Always positive or 0)
+  creativityScore: number; // 0 to 10 
   objectiveComplete: boolean; 
   internalThought: string;
   scamStatus: 'continue' | 'success' | 'failed' | 'police_called';
@@ -120,7 +122,7 @@ export interface HackAbility {
   description: string;
   cost: number;
   icon: string;
-  systemMessage: string; // What appears in chat
+  systemMessage: string; 
 }
 
 export interface Skill {

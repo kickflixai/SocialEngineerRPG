@@ -204,17 +204,18 @@ const App: React.FC = () => {
         const victim = await generateVictim(difficulty);
         
         const countryStats = COUNTRY_DATA[player.attributes.country];
-        const relationshipBonus = countryStats?.modifiers?.relationshipStartBonus || 0;
+        const trustBonus = countryStats?.modifiers?.trustStartBonus || 0;
 
-        let baseRelationship = difficulty === 'easy' ? 20 : difficulty === 'medium' ? 0 : -20;
+        let baseTrust = difficulty === 'easy' ? 40 : difficulty === 'medium' ? 20 : 0;
         
         setActiveScam({
             victim,
             category: '', 
             objectives: [], 
             history: [],
-            relationship: Math.max(-100, Math.min(100, baseRelationship + relationshipBonus)),
-            socialCharge: 20, // Start with some charge
+            trust: Math.max(0, Math.min(100, baseTrust + trustBonus)),
+            suspicion: 0, // Always start at 0
+            socialCharge: 20, 
             status: 'active',
             revealedFacts: [],
             isHighValue: highValueTargetActive
@@ -288,8 +289,8 @@ const App: React.FC = () => {
       if (outcome === 'success') {
           add('first_blood');
           if (player.money + moneyChange >= 20000) add('high_roller');
-          if (currentScam.relationship === 100) add('untouchable'); // Changed condition logic slightly
-          if (currentScam.relationship < -50) add('close_call'); // Changed condition logic slightly
+          if (currentScam.suspicion === 0) add('untouchable'); 
+          if (currentScam.suspicion > 90) add('close_call'); 
           
           if (currentScam.category === "Grandson in Trouble") add('ach_grandson');
           if (currentScam.category === "IRS Tax Audit") add('ach_irs');
