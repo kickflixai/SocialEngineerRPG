@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective } from "../types";
 import { OCCUPATIONS, QUIRKS, SPEECH_STYLES_BY_AGE, MALE_FIRST_NAMES, FEMALE_FIRST_NAMES, LAST_NAMES, VICTIM_FLAVORS } from "../constants";
@@ -302,7 +301,8 @@ export const getVictimResponse = async (
     history: ChatMessage[], 
     victim: Victim, 
     scamCategory: string, 
-    activeObjective: ScamObjective
+    activeObjective: ScamObjective,
+    currentTrust: number
 ): Promise<{ text: string, objectiveComplete: boolean, policeTriggered: boolean, callTerminated: boolean }> => {
     try {
         const ai = getClient();
@@ -320,6 +320,13 @@ export const getVictimResponse = async (
             Current Situation: You are receiving messages that seem like a ${scamCategory} scam.
             
             CURRENT SCAMMER OBJECTIVE: "${activeObjective.description}".
+            CURRENT TRUST LEVEL: ${currentTrust}%
+
+            TRUST BEHAVIOR:
+            - 0-30%: Hostile/Skeptical. Short answers. Demands proof.
+            - 31-70%: Neutral/Cautious.
+            - 71-90%: Friendly/Gullible. Willing to overlook oddities if explained creatively.
+            - 91-100%: BRAINWASHED. You fully believe the user. You interpret "glitches" or "hacks" (like flickering lights) as exactly what the user says they are (ghosts, security protocols, etc). You are eager to help and very compliant.
             
             INSTRUCTIONS:
             1. Reply to the message in character. USE YOUR GENERATED SPEECH STYLE.
@@ -327,7 +334,7 @@ export const getVictimResponse = async (
             3. If you are "Technologically Illiterate", act like it. If you are "Aggressive", be aggressive.
             4. SYSTEM MESSAGES: Messages starting with [SYSTEM ALERT] are physical events in your environment (e.g. lights flickering, printer noise). 
                - You MUST react to these immediately and emotionally.
-               - If the player explains these events (e.g. "It's a ghost" or "Security check"), and you are gullible or superstitious (based on your FLAVOR), BELIEVE THEM.
+               - If TRUST is HIGH (>90%) and the user explains these events (e.g. "It's a ghost"), you MUST BELIEVE THEM.
             
             GAME OVER CONDITIONS (FAIL STATE):
             - If you feel extremely threatened, scared, or angry, you should HANG UP or CALL THE POLICE.
@@ -406,19 +413,19 @@ export const arbitrateChat = async (
         const difficultyInstructions = {
             easy: `
                 MODE: EASY (Target is Vulnerable/Confused).
-                - TRUST GAIN: HIGH (+15 to +25).
-                - TRUST LOSS: LOW (-5 to -10).
+                - TRUST GAIN: LOW (+5 to +8). Hard to earn.
+                - TRUST LOSS: MEDIUM (-5 to -15).
                 - SUSPICION GAIN: LOW (+5 to +10). Only for obvious threats.
             `,
             medium: `
                 MODE: MEDIUM (Target is Skeptical/Busy).
-                - TRUST GAIN: MODERATE (+10 to +15).
-                - TRUST LOSS: MODERATE (-10 to -20).
+                - TRUST GAIN: VERY LOW (+3 to +6).
+                - TRUST LOSS: HIGH (-10 to -20).
                 - SUSPICION GAIN: MODERATE (+10 to +20).
             `,
             hard: `
                 MODE: HARD (Target is Paranoid/Hostile).
-                - TRUST GAIN: LOW (+5 to +10).
+                - TRUST GAIN: EXTREMELY LOW (+2 to +5).
                 - TRUST LOSS: CRITICAL (-20 to -40).
                 - SUSPICION GAIN: HIGH (+20 to +30).
             `
@@ -451,16 +458,17 @@ export const arbitrateChat = async (
             2. Determine SUSPICION increase (MUST be >= 0).
             3. Determine Creativity Score (0 to 10).
             
-            HACK SYNERGY CHECK (CRITICAL):
-            - Look at the RECENT CONVERSATION LOG.
-            - Did a [SYSTEM] event (Hack) occur recently (e.g. lights flickering, printer noise, fake notifications)?
-            - Does the Player's message USE that physical event to support their lie? (e.g. "The lights flickered because the secure connection is active" or "That noise is the ghost").
-            - IF YES: This is 'Creative Hacking'. Reward LARGE TRUST BONUS (+20) and MAX CREATIVITY.
-            
-            MECHANICS:
-            - **TRUST**: Increase if logical, authoritative, or plays into the victim's specific ARCHETYPE.
-            - **SUSPICION**: ONLY increase if the player threatens, contradicts themselves, or uses an obvious script. Weird roleplay is NOT suspicious if it fits the context.
+            MECHANICS & RULES:
+            - **TRUST SCALING**: Trust is HARD to earn. Default gains should be small (e.g. +3 to +8). Do not give +20 unless it's a perfect hack synergy.
+            - **SUSPICION/TRUST LINK**: If you increase Suspicion, you MUST decrease Trust. (e.g. Suspicion +10 implies Trust -10). You cannot trust someone you are suspicious of.
+            - **SUSPICION**: Increase if the player threatens, contradicts themselves, or uses an obvious script.
             - **CREATIVITY**: Reward specific jargon, made-up codes, or creative use of hacks.
+            
+            HACK SYNERGY & HIGH TRUST:
+            - Did a [SYSTEM] event (Hack) occur recently?
+            - If the player uses that event creatively to lie:
+                - If Trust > 90: The victim is BRAINWASHED. Suspicion gain should be 0. Trust gain should be high.
+                - If Trust < 50: The lie might fail, causing Suspicion.
             
             CRITICAL OBJECTIVE VALIDATION RULES:
             - 'objectiveComplete' is TRUE ONLY if the VICTIM has explicitly stated/revealed the requested info in the previous messages.

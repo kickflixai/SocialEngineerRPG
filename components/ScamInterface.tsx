@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ScamState, PlayerState, ChatMessage, ShopItem, HackAbility } from '../types';
 import { getVictimResponse, arbitrateChat, generateScamHint } from '../services/geminiService';
@@ -77,7 +76,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
          const fetchFirstReply = async () => {
              setProcessing(true);
              try {
-                 const replyData = await getVictimResponse(scam.history, scam.victim, scam.category, activeObjective);
+                 const replyData = await getVictimResponse(scam.history, scam.victim, scam.category, activeObjective, scam.trust);
                  audioManager.playMessageReceived();
                  const newHistory = [...scam.history, { sender: 'victim', text: replyData.text, timestamp: Date.now() } as ChatMessage];
                  onUpdateScam({
@@ -179,7 +178,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       setProcessing(true);
       try {
           // Victim Reacts to System Message
-          const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, activeObjective);
+          const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, activeObjective, newTrust);
           audioManager.playMessageReceived();
           
           // Check for police/hangup triggers
@@ -244,6 +243,11 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
 
         let trustDelta = analysis.trustDelta;
         
+        // Mechanically dampening trust gains to make the game harder
+        if (trustDelta > 0) {
+             trustDelta = Math.ceil(trustDelta * 0.5);
+        }
+
         if (player.skills.includes('silver_tongue') && trustDelta < 0) {
              trustDelta = Math.round(trustDelta * 0.8); 
         }
@@ -252,6 +256,11 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         }
 
         let suspicionDelta = Math.max(0, analysis.suspicionDelta);
+
+        // Mechanically enforce trust loss if suspicion increases
+        if (suspicionDelta > 0) {
+             trustDelta -= suspicionDelta;
+        }
 
         const newTrust = Math.max(0, Math.min(100, scam.trust + trustDelta));
         const newSuspicion = Math.min(100, scam.suspicion + suspicionDelta);
@@ -291,7 +300,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         }
 
         const nextActiveObjective = updatedObjectives.find(o => !o.isCompleted) || updatedObjectives[updatedObjectives.length - 1];
-        const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, nextActiveObjective);
+        const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, nextActiveObjective, newTrust);
         audioManager.playMessageReceived();
 
         if (replyData.policeTriggered) {
