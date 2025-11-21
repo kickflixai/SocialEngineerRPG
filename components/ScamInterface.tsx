@@ -4,7 +4,7 @@ import { ScamState, PlayerState, ChatMessage, ShopItem, HackAbility } from '../t
 import { getVictimResponse, arbitrateChat, generateScamHint } from '../services/geminiService';
 import { audioManager } from '../services/audioService';
 import { HACK_ABILITIES } from '../constants';
-import { Send, Terminal, Wifi, Radio, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Circle, Package, ChevronDown, ChevronUp, Target, Lightbulb, BrainCircuit, ArrowRight, Zap, Mail, Bell, Mic, Search, Code } from 'lucide-react';
+import { Send, Terminal, Wifi, Radio, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Circle, Package, ChevronDown, ChevronUp, Target, Lightbulb, BrainCircuit, ArrowRight, Zap, Mail, Bell, Mic, Search, Code, Speaker, WifiOff, Shuffle, FileCheck, BadgeCheck, Key, Fingerprint, Unlock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import InventoryModal from './InventoryModal';
 
@@ -130,9 +130,27 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       const newCharge = Math.max(0, scam.socialCharge - chargeCost);
       const newHistory = [...scam.history, { sender: 'system', text: hack.systemMessage, timestamp: Date.now() } as ChatMessage];
       
+      // Apply side effects immediately
+      let trustMod = 0;
+      let suspicionMod = 0;
+
+      switch(hack.id) {
+          case 'noise_generator': trustMod = 5; break;
+          case 'fake_receipt': trustMod = 15; break;
+          case 'voice_changer': trustMod = 20; break;
+          case 'gov_database': trustMod = 25; break;
+          case 'delay_packet': suspicionMod = -10; break;
+          case 'ip_scramble': suspicionMod = -15; break;
+      }
+
+      const newTrust = Math.min(100, Math.max(0, scam.trust + trustMod));
+      const newSuspicion = Math.max(0, scam.suspicion + suspicionMod);
+
       onUpdateScam({
           ...scam,
           socialCharge: newCharge,
+          trust: newTrust,
+          suspicion: newSuspicion,
           history: newHistory
       });
 
@@ -147,6 +165,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
           onUpdateScam({
               ...scam,
               socialCharge: newCharge,
+              trust: newTrust,
+              suspicion: newSuspicion,
               history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() } as ChatMessage]
           });
       } catch (e) {
@@ -183,25 +203,20 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         
         setLastThought(analysis.internalThought);
 
-        // Update Trust (-100 to 100 logic adapted to 0-100)
-        // Arbiter returns trustDelta
         let trustDelta = analysis.trustDelta;
         
-        // Skills modifiers
         if (player.skills.includes('silver_tongue') && trustDelta < 0) {
-             trustDelta = Math.round(trustDelta * 0.8); // Mitigate loss
+             trustDelta = Math.round(trustDelta * 0.8); 
         }
         if (player.skills.includes('empathy_mirror') && trustDelta > 0) {
-             trustDelta = Math.round(trustDelta * 1.25); // Boost gain
+             trustDelta = Math.round(trustDelta * 1.25); 
         }
 
-        // Update Suspicion (Monotonic)
-        let suspicionDelta = Math.max(0, analysis.suspicionDelta); // Ensure non-negative
+        let suspicionDelta = Math.max(0, analysis.suspicionDelta);
 
         const newTrust = Math.max(0, Math.min(100, scam.trust + trustDelta));
         const newSuspicion = Math.min(100, scam.suspicion + suspicionDelta);
 
-        // Update Social Charge (Creativity)
         let chargeGain = analysis.creativityScore * 3;
         if (player.skills.includes('empathy_mirror')) chargeGain = Math.floor(chargeGain * 1.25);
         const newCharge = Math.min(100, scam.socialCharge + chargeGain);
@@ -217,7 +232,6 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             }
         }
 
-        // Update State
         let updatedScam = {
             ...scam,
             history: newHistory,
@@ -228,7 +242,6 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         };
         onUpdateScam(updatedScam);
 
-        // End Conditions
         if (analysis.scamStatus === 'police_called' || newSuspicion >= 100) {
             onScamEnd('police');
             return;
@@ -238,12 +251,10 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             return;
         }
 
-        // Get Victim Response
         const nextActiveObjective = updatedObjectives.find(o => !o.isCompleted) || updatedObjectives[updatedObjectives.length - 1];
         const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, nextActiveObjective);
         audioManager.playMessageReceived();
 
-        // Victim Self-Report Check
         if (replyData.objectiveComplete && !isObjectiveComplete) {
              audioManager.playSuccess();
              const objIndex = updatedObjectives.findIndex(o => o.id === nextActiveObjective.id);
@@ -278,6 +289,25 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       } catch (e) { console.error(e); } finally { setLoadingHints(false); }
   };
 
+  const hasDoxxing = player.skills.includes('doxxing_suite');
+  const hasScraper = player.skills.includes('social_scraper');
+
+  const HackIcon = ({ icon }: { icon: string }) => {
+      switch(icon) {
+          case 'Mail': return <Mail size={16}/>;
+          case 'Bell': return <Bell size={16}/>;
+          case 'Speaker': return <Speaker size={16}/>;
+          case 'WifiOff': return <WifiOff size={16}/>;
+          case 'Shuffle': return <Shuffle size={16}/>;
+          case 'FileCheck': return <FileCheck size={16}/>;
+          case 'Mic': return <Mic size={16}/>;
+          case 'BadgeCheck': return <BadgeCheck size={16}/>;
+          case 'Search': return <Search size={16}/>;
+          case 'Key': return <Key size={16}/>;
+          default: return <Code size={16}/>;
+      }
+  };
+
   return (
     <div className="flex flex-col md:grid md:grid-cols-3 h-full gap-4 md:gap-6 p-2 md:p-6 bg-black overflow-hidden relative">
        {/* Mobile Header */}
@@ -303,33 +333,40 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
        <div className="hidden md:flex flex-col gap-4 h-full relative z-10 col-span-1">
            {/* Profile Card */}
            <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-6 flex flex-col items-center text-center relative shadow-[0_0_20px_rgba(0,0,0,0.5)] shrink-0">
-             <div className="relative w-32 h-32 mb-4 mt-2 group">
+             <div className="relative w-24 h-24 mb-3 mt-1 group">
                 <div className="absolute inset-0 rounded-full border border-dashed border-green-500/40 animate-spin-slow"></div>
                 <img src={scam.victim.avatarUrl} alt="Target" className="w-full h-full rounded-full object-cover border-4 border-zinc-800 opacity-90 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute -bottom-2 -right-1 bg-black text-green-500 text-[10px] font-bold px-2 py-1 rounded border border-green-900 flex items-center gap-1 shadow-[0_0_10px_rgba(34,197,94,0.2)]">
+                <div className="absolute -bottom-1 -right-1 bg-black text-green-500 text-[9px] font-bold px-2 py-0.5 rounded border border-green-900 flex items-center gap-1 shadow-[0_0_10px_rgba(34,197,94,0.2)]">
                     <Wifi size={8} className="animate-pulse" /> LIVE FEED
                 </div>
              </div>
-             <h2 className="text-xl font-bold text-white font-mono truncate w-full tracking-tight mb-1">{scam.victim.name}</h2>
-             <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest mb-4">{scam.victim.age} Y/O // {scam.victim.occupation}</p>
-             <div>
-                 <span className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${scam.victim.difficulty === 'easy' ? 'bg-green-900/30 text-green-400 border border-green-900' : scam.victim.difficulty === 'medium' ? 'bg-yellow-900/30 text-yellow-400 border border-yellow-900' : 'bg-red-900/30 text-red-400 border border-red-900'}`}>
-                     {scam.victim.difficulty} TARGET
-                 </span>
+             <h2 className="text-lg font-bold text-white font-mono truncate w-full tracking-tight mb-0.5">{scam.victim.name}</h2>
+             <p className="text-zinc-500 text-[10px] font-mono uppercase tracking-widest mb-3">{scam.victim.age} Y/O // {scam.victim.occupation}</p>
+             
+             {/* HACKING POWER METER (Relocated) */}
+             <div className="w-full bg-zinc-900/50 rounded-lg border border-blue-900/30 p-2 mb-2">
+                 <div className="flex justify-between items-end mb-1">
+                      <span className="text-[10px] font-bold uppercase text-blue-400 tracking-widest flex items-center gap-1"><Zap size={10}/> HACKING POWER</span>
+                      <span className="text-white font-mono text-xs font-bold">{scam.socialCharge}%</span>
+                 </div>
+                 <div className="w-full h-2 bg-zinc-950 border border-zinc-800 rounded-full overflow-hidden mb-1">
+                     <div className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] transition-all duration-500" style={{width: `${scam.socialCharge}%`}}></div>
+                 </div>
+                 <p className="text-[8px] text-zinc-500 text-center">POWERED BY CREATIVE RESPONSES</p>
              </div>
         </div>
 
-        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-6 shadow-xl flex-1 space-y-6 backdrop-blur-sm relative overflow-hidden flex flex-col">
+        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-5 shadow-xl flex-1 space-y-5 backdrop-blur-sm relative overflow-hidden flex flex-col min-h-0">
             
             {/* SEPARATE METERS */}
-            <div className="space-y-6">
+            <div className="space-y-4 shrink-0">
                 {/* TRUST METER */}
                 <div>
-                    <div className="flex justify-between text-xs font-mono uppercase tracking-widest mb-2">
+                    <div className="flex justify-between text-xs font-mono uppercase tracking-widest mb-1">
                         <span className="text-green-500 font-bold flex items-center gap-2"><CheckCircle2 size={12}/> TRUST</span>
                         <span className="text-white font-mono">{scam.trust}%</span>
                     </div>
-                    <div className="h-3 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden shadow-inner relative">
+                    <div className="h-2 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden shadow-inner relative">
                          <div 
                             className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-900 to-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)] transition-all duration-700 ease-out"
                             style={{ width: `${scam.trust}%` }}
@@ -339,33 +376,55 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
 
                 {/* SUSPICION METER */}
                 <div>
-                    <div className="flex justify-between text-xs font-mono uppercase tracking-widest mb-2">
+                    <div className="flex justify-between text-xs font-mono uppercase tracking-widest mb-1">
                         <span className="text-red-500 font-bold flex items-center gap-2"><AlertTriangle size={12}/> SUSPICION</span>
                         <span className="text-white font-mono">{scam.suspicion}%</span>
                     </div>
-                    <div className="h-3 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden shadow-inner relative">
+                    <div className="h-2 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden shadow-inner relative">
                          <div 
                             className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-900 to-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)] transition-all duration-700 ease-out"
                             style={{ width: `${scam.suspicion}%` }}
                          ></div>
-                         {/* Danger Zone Indicator */}
                          <div className="absolute top-0 right-0 w-[10%] h-full bg-red-500/20 border-l border-red-500/30"></div>
                     </div>
-                    <p className="text-[9px] text-zinc-600 mt-1 text-right">WARNING: 100% TERMINATES CONNECTION</p>
+                </div>
+            </div>
+
+            {/* PSYCH PROFILE & INTEL */}
+            <div className="space-y-2 shrink-0">
+                 <div className="bg-zinc-900/30 p-2 rounded border border-zinc-800/50">
+                    <h4 className="text-zinc-400 text-[10px] font-bold uppercase mb-1 flex items-center gap-2 tracking-wider">
+                        <Fingerprint size={12} className="text-purple-400"/> Psych Profile
+                    </h4>
+                    <p className="text-zinc-300 text-[10px] leading-relaxed font-mono">{scam.victim.personality}</p>
+                </div>
+                
+                <div className="bg-zinc-900/30 p-2 rounded border border-zinc-800/50 flex flex-col gap-1">
+                    <h4 className="text-zinc-400 text-[10px] font-bold uppercase flex items-center gap-2 tracking-wider">
+                        <Lock size={12} className="text-orange-400"/> Target Intel
+                    </h4>
+                    <div className="flex justify-between items-center text-[10px]">
+                        <span className="text-zinc-500">SECRET:</span>
+                        <span className={`font-mono ${hasDoxxing ? 'text-green-400' : 'text-red-900'}`}>{hasDoxxing ? scam.victim.hiddenFact : 'ENCRYPTED'}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[10px]">
+                        <span className="text-zinc-500">WEAKNESS:</span>
+                        <span className={`font-mono ${hasScraper ? 'text-green-400' : 'text-red-900'}`}>{hasScraper ? scam.victim.weakness : 'ENCRYPTED'}</span>
+                    </div>
                 </div>
             </div>
             
-             <div className="mt-4 pt-4 border-t border-zinc-800 flex-1 flex flex-col min-h-0">
-                <h4 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+             <div className="border-t border-zinc-800 pt-4 flex-1 flex flex-col min-h-0 overflow-hidden">
+                <h4 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
                     <Target size={12} className="text-blue-500" /> Execution Steps
                 </h4>
-                <div className="space-y-3 overflow-y-auto custom-scrollbar">
+                <div className="space-y-2 overflow-y-auto custom-scrollbar pr-1">
                     {scam.objectives.map((obj, idx) => {
                         const isActive = !obj.isCompleted && (idx === 0 || scam.objectives[idx - 1].isCompleted);
                         const isLocked = !obj.isCompleted && !isActive;
                         return (
-                            <div key={obj.id} className={`p-2 rounded border flex items-start gap-3 text-xs font-mono transition-all ${obj.isCompleted ? 'bg-green-900/20 border-green-500/30 text-green-400' : isActive ? 'bg-blue-900/20 border-blue-500/50 text-white shadow-[0_0_10px_rgba(59,130,246,0.1)]' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}`}>
-                                <div className="mt-0.5 shrink-0">{obj.isCompleted ? <CheckCircle2 size={14}/> : isLocked ? <Lock size={14}/> : <Circle size={14} className="animate-pulse text-blue-400"/>}</div>
+                            <div key={obj.id} className={`p-2 rounded border flex items-start gap-2 text-[10px] font-mono transition-all ${obj.isCompleted ? 'bg-green-900/20 border-green-500/30 text-green-400' : isActive ? 'bg-blue-900/20 border-blue-500/50 text-white shadow-[0_0_10px_rgba(59,130,246,0.1)]' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}`}>
+                                <div className="mt-0.5 shrink-0">{obj.isCompleted ? <CheckCircle2 size={12}/> : isLocked ? <Lock size={12}/> : <Circle size={12} className="animate-pulse text-blue-400"/>}</div>
                                 <div className="flex-1">
                                     <p className={`font-bold mb-0.5 ${isActive ? 'text-blue-400' : ''}`}>STEP 0{obj.order}: {obj.isFinal ? 'PAYLOAD' : 'INTEL'}</p>
                                     <p className={isLocked ? 'opacity-50' : ''}>{obj.description}</p>
@@ -472,7 +531,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
        <div className="hidden md:flex flex-col gap-4 h-full relative z-10 col-span-1">
            
            {/* TERMINAL LOG (Top Half) */}
-           <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl flex flex-col relative overflow-hidden shadow-xl h-[40%]">
+           <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl flex flex-col relative overflow-hidden shadow-xl h-[30%]">
                 <div className="p-3 border-b border-zinc-800 bg-black/40 flex justify-between items-center">
                     <p className="text-green-600 uppercase font-bold text-[10px] flex items-center gap-2 tracking-widest"><Terminal size={12}/> SYS_LOG</p>
                     <Wifi size={12} className={processing ? "animate-pulse text-green-500" : "text-zinc-600"}/>
@@ -498,31 +557,23 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
 
            {/* HACKING DECK (Bottom Half) */}
            <div className="bg-zinc-900/80 border border-zinc-800/60 rounded-xl p-4 flex-1 flex flex-col relative overflow-hidden shadow-xl">
-               {/* CHARGE METER */}
-               <div className="mb-4">
-                   <div className="flex justify-between items-end mb-1">
-                        <span className="text-[10px] font-bold uppercase text-blue-400 tracking-widest flex items-center gap-1"><Zap size={10}/> SOCIAL CHARGE</span>
-                        <span className="text-white font-mono text-xs">{scam.socialCharge}%</span>
-                   </div>
-                   <div className="w-full h-2 bg-zinc-950 border border-zinc-800 rounded-full overflow-hidden">
-                       <div className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] transition-all duration-500" style={{width: `${scam.socialCharge}%`}}></div>
-                   </div>
-                   <p className="text-[9px] text-zinc-500 mt-1 text-right">Generate charge via creative responses</p>
-               </div>
+                <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2"><Code size={14}/> Hacking Terminal</h3>
+                    <span className="text-[9px] text-zinc-500">AVAILABLE TOOLS: {HACK_ABILITIES.length}</span>
+                </div>
 
                {/* HACKS GRID */}
-               <div className="grid grid-cols-2 gap-2 flex-1 overflow-y-auto custom-scrollbar">
+               <div className="grid grid-cols-2 gap-2 flex-1 overflow-y-auto custom-scrollbar content-start">
                    {HACK_ABILITIES.map(hack => {
                        const canAfford = scam.socialCharge >= hack.cost;
                        const isOnCooldown = hackCooldown === hack.id;
-                       const Icon = hack.icon === 'Mail' ? Mail : hack.icon === 'Bell' ? Bell : hack.icon === 'Mic' ? Mic : hack.icon === 'Search' ? Search : Code;
-
+                       
                        return (
                            <button
                                key={hack.id}
                                onClick={() => executeHack(hack)}
                                disabled={!canAfford || processing || isOnCooldown}
-                               className={`p-3 rounded border text-left flex flex-col justify-between transition-all relative group ${
+                               className={`p-2 rounded border text-left flex flex-col justify-between transition-all relative group h-16 md:h-20 ${
                                    isOnCooldown 
                                    ? 'bg-green-900/20 border-green-500/50 cursor-not-allowed'
                                    : canAfford 
@@ -532,13 +583,12 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                            >
                                {isOnCooldown && <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-green-500 bg-black/50 backdrop-blur-[1px]">EXECUTING...</div>}
                                
-                               <div className="flex justify-between items-start w-full mb-2">
-                                   <Icon size={16} className={canAfford ? "text-blue-400" : "text-zinc-600"} />
-                                   <span className={`text-[10px] font-mono font-bold ${canAfford ? "text-blue-300" : "text-zinc-600"}`}>{hack.cost} CHG</span>
+                               <div className="flex justify-between items-center w-full mb-1">
+                                   <HackIcon icon={hack.icon} />
+                                   <span className={`text-[9px] font-mono font-bold ${canAfford ? "text-blue-300" : "text-zinc-600"}`}>{hack.cost} PWR</span>
                                </div>
                                <div>
-                                   <div className={`text-xs font-bold mb-0.5 ${canAfford ? "text-white" : "text-zinc-500"}`}>{hack.name}</div>
-                                   <div className="text-[9px] text-zinc-500 leading-tight">{hack.description}</div>
+                                   <div className={`text-[10px] font-bold leading-tight ${canAfford ? "text-white" : "text-zinc-500"}`}>{hack.name}</div>
                                </div>
                            </button>
                        );

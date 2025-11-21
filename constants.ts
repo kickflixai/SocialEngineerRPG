@@ -14,7 +14,7 @@ export const HACK_ABILITIES: HackAbility[] = [
     {
         id: 'spoof_email',
         name: 'Forge Email',
-        description: 'Simulate an email arrival from a known contact.',
+        description: 'Simulate an email from a known contact.',
         cost: 35,
         icon: 'Mail',
         systemMessage: '>> EMAIL SPOOFING SUCCESSFUL. FAKE AUTHORIZATION DELIVERED TO TARGET INBOX.'
@@ -22,18 +22,58 @@ export const HACK_ABILITIES: HackAbility[] = [
     {
         id: 'fake_notification',
         name: 'Bank Alert',
-        description: 'Trigger a fake bank security notification.',
+        description: 'Trigger a fake security notification.',
         cost: 45,
         icon: 'Bell',
         systemMessage: '>> SMS INJECTION COMPLETE. TARGET RECEIVED "UNAUTHORIZED LOGIN" ALERT.'
     },
     {
+        id: 'noise_generator',
+        name: 'Office Ambience',
+        description: 'Play busy office sounds to boost credibility (+5 Trust).',
+        cost: 25,
+        icon: 'Speaker',
+        systemMessage: '>> AUDIO MIXER ACTIVE. BACKGROUND: "BUSY_CALL_CENTER_V4.MP3" LOOPING.'
+    },
+    {
+        id: 'delay_packet',
+        name: 'Lag Switch',
+        description: 'Simulate connection issues to buy time (-10 Suspicion).',
+        cost: 30,
+        icon: 'WifiOff',
+        systemMessage: '>> NETWORK THROTTLED. ARTIFICIAL LATENCY INTRODUCED.'
+    },
+    {
+        id: 'ip_scramble',
+        name: 'Trace Scrubber',
+        description: 'Bounce signal through 3 nodes (-15 Suspicion).',
+        cost: 40,
+        icon: 'Shuffle',
+        systemMessage: '>> PROXY CHAIN ROTATED. IP ADDRESS OBFUSCATED.'
+    },
+    {
+        id: 'fake_receipt',
+        name: 'Wire Receipt',
+        description: 'Send a forged transaction confirmation (+15 Trust).',
+        cost: 50,
+        icon: 'FileCheck',
+        systemMessage: '>> DOCUMENT FORGED. "TRANSACTION_SUCCESS.PDF" SENT TO TARGET DEVICE.'
+    },
+    {
         id: 'voice_changer',
-        name: 'Voice Deepfake',
-        description: 'Play a snippet of a family member/boss voice.',
+        name: 'Deepfake Audio',
+        description: 'Play a snippet of a relative\'s voice (+20 Trust).',
         cost: 60,
         icon: 'Mic',
         systemMessage: '>> AUDIO DEEPFAKE STREAMED. VOICE MATCH: 98% ACCURACY.'
+    },
+    {
+        id: 'gov_database',
+        name: 'Fed Database',
+        description: 'Flash fake government credentials (+25 Trust).',
+        cost: 65,
+        icon: 'BadgeCheck',
+        systemMessage: '>> DATABASE INJECTION. AGENT CREDENTIALS PUSHED TO TARGET SCREEN.'
     },
     {
         id: 'background_check',
@@ -42,6 +82,14 @@ export const HACK_ABILITIES: HackAbility[] = [
         cost: 75,
         icon: 'Search',
         systemMessage: '>> DATABASE LEAK DECRYPTED. NEW INTEL ACQUIRED.'
+    },
+    {
+        id: 'credential_dump',
+        name: 'Password Leak',
+        description: 'Show target their own "leaked" passwords (High Pressure).',
+        cost: 85,
+        icon: 'Key',
+        systemMessage: '>> PASSWORD HASH CRACKED. DISPLAYING PLAIN TEXT CREDENTIALS TO TARGET.'
     }
 ];
 
