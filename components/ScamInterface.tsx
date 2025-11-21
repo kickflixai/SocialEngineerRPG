@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ScamState, PlayerState, ChatMessage, ShopItem, HackAbility } from '../types';
 import { getVictimResponse, arbitrateChat, generateScamHint } from '../services/geminiService';
@@ -133,42 +134,12 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       const systemMsgText = `[${hack.name.toUpperCase()}] ${hack.systemMessage}`;
       const newHistory = [...scam.history, { sender: 'system', text: systemMsgText, timestamp: Date.now() } as ChatMessage];
       
-      // Apply side effects immediately
-      let trustMod = 0;
-      let suspicionMod = 0;
-
-      switch(hack.id) {
-          // Basics
-          case 'noise_generator': trustMod = 5; break;
-          case 'fake_receipt': trustMod = 15; break;
-          case 'voice_changer': trustMod = 20; break;
-          case 'gov_database': trustMod = 25; break;
-          
-          // Utility
-          case 'delay_packet': suspicionMod = -10; break;
-          case 'ip_scramble': suspicionMod = -15; break;
-          
-          // Chaos / Pranks
-          case 'printer_demon': suspicionMod = 5; break; // Confusion/Panic
-          case 'smart_lights': suspicionMod = 5; break; // Spooky
-          case 'bsod_sim': suspicionMod = -5; trustMod = -5; break; // Distraction (lowers suspicion but also trust)
-          case 'browser_popup': suspicionMod = 5; break; // Annoying
-          case 'rickroll': trustMod = -10; break; // Unprofessional
-          case 'cd_eject': suspicionMod = 5; break; // Spooky
-          case 'thermostat_hack': suspicionMod = 5; break; // Uncomfortable
-          case 'tts_ghost': suspicionMod = 15; break; // Very scary/suspicious
-          case 'mouse_jitter': suspicionMod = 5; break; 
-          case 'webcam_led': suspicionMod = 10; break; // Paranoia inducing
-      }
-
-      const newTrust = Math.min(100, Math.max(0, scam.trust + trustMod));
-      const newSuspicion = Math.max(0, scam.suspicion + suspicionMod);
-
+      // NOTE: Mechanical changes (trust/suspicion) have been removed.
+      // The AI Arbiter will now judge the context of this system message in the next turn.
+      
       onUpdateScam({
           ...scam,
           socialCharge: newCharge,
-          trust: newTrust,
-          suspicion: newSuspicion,
           history: newHistory
       });
 
@@ -178,7 +149,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       setProcessing(true);
       try {
           // Victim Reacts to System Message
-          const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, activeObjective, newTrust);
+          const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, activeObjective, scam.trust);
           audioManager.playMessageReceived();
           
           // Check for police/hangup triggers
@@ -202,8 +173,6 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
           onUpdateScam({
               ...scam,
               socialCharge: newCharge,
-              trust: newTrust,
-              suspicion: newSuspicion,
               history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() } as ChatMessage]
           });
       } catch (e) {
@@ -589,7 +558,9 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
            <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl flex flex-col relative overflow-hidden shadow-xl flex-1 min-h-[12rem]">
                 <div className="p-2 border-b border-zinc-800 bg-black/40 flex justify-between items-center">
                     <p className="text-green-600 uppercase font-bold text-[10px] flex items-center gap-2 tracking-widest"><Terminal size={12} className="text-green-500" /> SYS_LOG</p>
-                    <Wifi size={12} className={processing ? "animate-pulse text-green-500" : "text-zinc-600"}/>
+                    <div className="flex items-center gap-2">
+                        <Wifi size={12} className={processing ? "animate-pulse text-green-500" : "text-zinc-600"}/>
+                    </div>
                 </div>
                 <div className="flex-1 p-2 font-mono text-[10px] overflow-y-auto custom-scrollbar flex flex-col">
                      <div className="flex flex-col justify-start gap-2">

@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective } from "../types";
 import { OCCUPATIONS, QUIRKS, SPEECH_STYLES_BY_AGE, MALE_FIRST_NAMES, FEMALE_FIRST_NAMES, LAST_NAMES, VICTIM_FLAVORS } from "../constants";
@@ -464,11 +465,12 @@ export const arbitrateChat = async (
             - **SUSPICION**: Increase if the player threatens, contradicts themselves, or uses an obvious script.
             - **CREATIVITY**: Reward specific jargon, made-up codes, or creative use of hacks.
             
-            HACK SYNERGY & HIGH TRUST:
-            - Did a [SYSTEM] event (Hack) occur recently?
-            - If the player uses that event creatively to lie:
-                - If Trust > 90: The victim is BRAINWASHED. Suspicion gain should be 0. Trust gain should be high.
-                - If Trust < 50: The lie might fail, causing Suspicion.
+            HACK SYNERGY RULES (IMPORTANT):
+            - Did a [SYSTEM] event (Hack) occur recently in the logs?
+            - **Hacks themselves DO NOT affect Trust/Suspicion.** Only the player's EXPLANATION of the hack does.
+            - If the player uses that event creatively to lie (e.g. "That flickering light is a ghost" or "That printer noise is the server syncing"):
+                - If explanation is Creative + Fits Context -> BOOST TRUST (+10 to +20) and REDUCE SUSPICION.
+                - If explanation is Lazy -> No change or Slight Suspicion.
             
             CRITICAL OBJECTIVE VALIDATION RULES:
             - 'objectiveComplete' is TRUE ONLY if the VICTIM has explicitly stated/revealed the requested info in the previous messages.
@@ -578,10 +580,12 @@ export const generateScamSummary = async (history: ChatMessage[], victim: Victim
             Requirements:
             - Be sarcastic.
             - Highlight the victim's stupidity or weird trait (${victim.flavor}).
+            - STRICTLY based on what actually happened in the chat. Do not hallucinate events.
+            - CONSTRAINT: Each point must be ONE short sentence.
             - Format as a JSON array of strings.
             
             Example:
-            ["Victim believed you were Elon Musk's cousin", "Sent $5000 to a 'Prince' named Dave", "Asked if the virus was gluten-free"]
+            ["Victim believed you were Elon Musk's cousin.", "Sent $5000 to a 'Prince' named Dave.", "Asked if the virus was gluten-free."]
         `;
 
         const response = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
