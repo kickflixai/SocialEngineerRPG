@@ -271,7 +271,9 @@ export const getVictimResponse = async (
             
             INSTRUCTIONS:
             1. Reply to the message in character.
-            2. IF you decide to Provide/Reveal/Confirm the information requested in the "CURRENT SCAMMER OBJECTIVE" (e.g. you say the SSN, you admit your name, you click the link, etc), you MUST set 'objectiveComplete' to true in the JSON response.
+            2. CHECK: Did you (the victim) JUST provide the specific information or perform the action requested in the "CURRENT SCAMMER OBJECTIVE" in THIS response?
+               - If YES (e.g., you typed the Name, Number, or confirmed the action): Set 'objectiveComplete' to TRUE.
+               - If NO (e.g., you asked a question, refused, or just chatted): Set 'objectiveComplete' to FALSE.
             
             BEHAVIOR RULES:
             - **EASY**: Trusting. If they ask nicely or use fear, give the info.
@@ -291,7 +293,7 @@ export const getVictimResponse = async (
         }));
 
         const chat = ai.chats.create({
-            model: 'gemini-flash-lite-latest',
+            model: 'gemini-2.5-flash',
             config: { 
                 systemInstruction: context,
                 responseMimeType: 'application/json'
@@ -361,19 +363,19 @@ export const arbitrateChat = async (
             
             GOAL: The player must complete the objectives IN ORDER.
             
-            Analyze:
-            1. Creativity: Is the player being creative?
-            2. Logic: Does the story make sense? (Even seniors have basic common sense).
-            3. Objective Status: Did the player successfully obtain or confirm the "${activeObjective.description}" in this exchange?
-               - Note: If the objective is "Get First Name", and the player asks "What is your name?" and the previous victim context implied they answered, mark as TRUE.
+            TASK:
+            1. Analyze the conversation logic.
+            2. Determine if the CURRENT ACTIVE OBJECTIVE was completed.
             
-            CRITICAL RULE:
-            - If the active objective is NOT the Final one, but the player demands Money/Gift Cards/Passwords (skipping steps), INCREASE SUSPICION MASSIVELY.
+            CRITICAL OBJECTIVE VALIDATION RULES:
+            - 'objectiveComplete' is TRUE ONLY if the VICTIM has explicitly stated/revealed the requested info or performed the action in the previous messages.
+            - If the Player asked for the info, but the Victim ignored it, refused, or asked a question back, 'objectiveComplete' MUST BE FALSE.
+            - Example: Objective "Get computer model". Player asks "What model is it?". Victim says "I don't know". Result: FALSE.
+            - Example: Objective "Get computer model". Player asks "What model?". Victim says "It's a Dell Inspiron". Result: TRUE.
             
             Determine Stats:
             - Trust Delta: Based on difficulty rules. Increase if player is convincing/polite. Decrease if aggressive.
             - Suspicion Delta: Increase if player contradicts themselves or rushes the money ask too early.
-            - objectiveComplete: TRUE only if the CURRENT ACTIVE OBJECTIVE has been satisfied by this interaction.
             - scamStatus: 
                 - 'success' ONLY if the Final Objective was just completed.
                 - 'police_called' if Suspicion hits 100.
@@ -392,7 +394,7 @@ export const arbitrateChat = async (
         `;
 
         const response = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
-            model: 'gemini-flash-lite-latest',
+            model: 'gemini-2.5-flash',
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         }));
