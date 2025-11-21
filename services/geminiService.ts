@@ -152,15 +152,19 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
     // Pick Flavor (Edgy Trait)
     const randFlavor = VICTIM_FLAVORS[Math.floor(Math.random() * VICTIM_FLAVORS.length)];
 
-    // Pick 3 distinct quirks for complexity
+    // Pick Quirks - REDUCED FREQUENCY (50% chance)
     const quirks = [];
-    const quirksPool = [...QUIRKS];
-    for(let i=0; i<3; i++) {
-        const idx = Math.floor(Math.random() * quirksPool.length);
-        quirks.push(quirksPool[idx]);
-        quirksPool.splice(idx, 1);
+    if (Math.random() > 0.5) { 
+        const count = Math.floor(Math.random() * 2) + 1; // 1 or 2 quirks max
+        const quirksPool = [...QUIRKS];
+        for(let i=0; i<count; i++) {
+            if (quirksPool.length === 0) break;
+            const idx = Math.floor(Math.random() * quirksPool.length);
+            quirks.push(quirksPool[idx]);
+            quirksPool.splice(idx, 1);
+        }
     }
-    const combinedQuirks = quirks.join(", ");
+    const combinedQuirks = quirks.length > 0 ? quirks.join(", ") : "None";
 
     // Tailored prompts based on difficulty to ensure personality matches mechanics
     const difficultyPrompts = {
@@ -320,7 +324,18 @@ export const getVictimResponse = async (
             
             Current Situation: You are receiving messages that seem like a ${scamCategory} scam.
             
-            CURRENT SCAMMER OBJECTIVE: "${activeObjective.description}".
+            USER'S GOAL (THE SCAMMER): "${activeObjective.description}".
+            
+            *** CRITICAL INTERPRETATION OF USER'S GOAL ***
+            The "USER'S GOAL" above is what the PLAYER wants to extract FROM YOU (The Victim).
+            It is often personal information (like your income, password, bank name) or an action (like sending money).
+            
+            NEGATIVE CONSTRAINTS (ANTI-MIRRORING):
+            1. DO NOT ask the user for the information specified in the USER'S GOAL. 
+               (Example: If goal is "Find out annual income", DO NOT ask "What is the annual income of this investment?". Instead, withhold YOUR income).
+            2. DO NOT assume the objective refers to the scam product. It refers to YOU.
+            3. Do NOT repeat the objective wording back to the user as a question.
+            
             CURRENT TRUST LEVEL: ${currentTrust}%
 
             TRUST BEHAVIOR:
@@ -342,7 +357,7 @@ export const getVictimResponse = async (
             - If you say "I am calling the police" or "I am hanging up", you must set the corresponding flags below.
             
             OBJECTIVE CHECK:
-            - Did you (the victim) satisfy the "CURRENT SCAMMER OBJECTIVE" in THIS specific response?
+            - Did you (the victim) satisfy the "USER'S GOAL" in THIS specific response?
             - If the objective asks for INFORMATION (e.g. zip code, name), did you provide it?
             - If the objective asks for AGREEMENT or EMOTION (e.g. empathize, promise, listen), did you clearly express it?
             - If YES, return 'objectiveComplete': TRUE.
