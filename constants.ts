@@ -323,16 +323,17 @@ interface ScamScenario {
     final: string;
 }
 
+// UPDATED SCENARIOS: Objectives are now more concrete "actions" that the victim can do, rather than abstract "convince them" states.
 export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   "Grandson in Trouble": [
     {
         mini1: "Make them guess your name (don't say it first)",
-        mini2: "Get them to say 'I won't tell anyone'",
+        mini2: "Get them to say 'I won't tell your parents'",
         final: "Secure bail/medical payment details"
     },
     {
         mini1: "Convince them you are in a specific city (e.g. Mexico City)",
-        mini2: "Convince them a lawyer is standing next to you",
+        mini2: "Get them to ask to speak to your 'Lawyer'",
         final: "Get agreement to send gift cards"
     }
   ],
@@ -344,14 +345,14 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
     },
     {
         mini1: "Verify their mailing address",
-        mini2: "Make them repeat the 'Case ID'",
+        mini2: "Make them repeat the 'Case ID' back to you",
         final: "Purchase 'Federal Vouchers' (Gift Cards)"
     }
   ],
   "Tech Support Virus": [
     {
-        mini1: "Get them to read the 'Error Code'",
-        mini2: "Make them download 'AnyDesk' or 'TeamViewer'",
+        mini1: "Get them to read the 'Error Code' on screen",
+        mini2: "Make them agree to download 'AnyDesk' or 'TeamViewer'",
         final: "Grant remote access control"
     },
     {
@@ -370,14 +371,14 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   "Crypto Investment Opportunity": [
     {
         mini1: "Find out their annual income",
-        mini2: "Get them to download a Wallet App",
+        mini2: "Get them to download a specific Wallet App",
         final: "Send ETH to your 'Investment Pool'"
     }
   ],
   "Romance Scam": [
     {
         mini1: "Get them to share a childhood memory",
-        mini2: "Get them to say 'I love you' back",
+        mini2: "Get them to type 'I love you'",
         final: "Pay for your 'Plane Ticket' to visit"
     }
   ],
@@ -397,7 +398,7 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   ],
   "Charity Fraud": [
     {
-        mini1: "Get them to empathize with the cause",
+        mini1: "Get them to say they support the cause",
         mini2: "Get their billing zip code",
         final: "Set up recurring credit card donation"
     }
@@ -790,17 +791,26 @@ export const QUIRKS = [
     "Is sleepwalking", "Is sleep talking", "Is sleep eating", "Is sleep texting", "Is sleep hacking"
 ];
 
-export const SPEECH_STYLES_BY_AGE = {
-    youth: ["Gen Z Slang (fr, no cap)", "Lowercase aesthetic", "Excessive Emojis 💀😭", "Cryptic/Vague", "Hyper-enthusiastic", "Meme-speak"],
-    adult: ["Professional Corporate", "Stressed Parent", "Overly Polite", "Short & Direct", "Passive Aggressive", "Casual/Friendly"],
-    elderly: ["ALL CAPS YELLING", "Confused usage of... ellipses...", "Signing every message -Grandma", "Overly formal/Old fashioned", "Suspicious/Hostile", "Wholesome/Sweet"]
-};
+// GENDERED FLAVORS TO PREVENT MISMATCHES
+export const NEUTRAL_FLAVORS = [
+    "Discord Mod", "Furry", "Flat Earther", "Sovereign Citizen", "Disney Adult", 
+    "Bio-Hacker", "Raw Vegan", "Professional Victim", "Internet Troll", "Weeb", 
+    "Compulsive Gambler", "Mall Ninja", "Doomsday Prepper", "UFO Witness", "Ghost Hunter", 
+    "Amateur of BDSM", "Virgin", "Obese", "Clinically Retarded", "Paraplegic", "Blind", "Deaf", "Mute",
+    "Lizard Person Believer", "Time Traveler", "Reincarnated Pharoah", "Vampire", "Werewolf",
+    "Zombie", "Alien", "Robot", "Cyborg", "Mutant", "Wizard", "Witch", "Warlock", "Sorcerer",
+    "Mage", "Druid", "Cleric", "Paladin", "Bard", "Rogue", "Ranger", "Monk", "Barbarian",
+    "Fighter", "Ninja", "Samurai", "Cowboy", "Pirate", "Viking", "Spartan", "Knight"
+];
 
-export const VICTIM_FLAVORS = [
-    "Discord Mod", "Furry", "Alpha Male", "Crypto Bro", "Flat Earther", 
-    "Foot Fetishist", "Gamer Girl Bath Water Buyer", "Clinically Obsessed with Musk", 
-    "Believes in Lizard People", "OnlyFans Simp", "MLM 'Boss Babe'", "Sovereign Citizen",
-    "Hardcore K-Pop Stan", "Disney Adult", "Van Life Influencer", "Bio-Hacker",
-    "Carnivore Diet Evangelist", "Raw Vegan", "Astrology Girlie", "Finance Bro",
-    "Professional Victim", "Internet Troll", "Weeb", "Compulsive Gambler", "Mall Ninja"
+export const MALE_FLAVORS = [
+    "Alpha Male", "Crypto Bro", "Foot Fetishist", "Gamer Girl Bath Water Buyer", 
+    "Clinically Obsessed with Musk", "OnlyFans Simp", "Finance Bro", "Incel", 
+    "Pick-up Artist", "Gym Rat", "Mansplainer", "Reply Guy", "Neckbeard"
+];
+
+export const FEMALE_FLAVORS = [
+    "MLM 'Boss Babe'", "Hardcore K-Pop Stan", "Van Life Influencer", "Astrology Girlie",
+    "Trad Wife", "Horse Girl", "Tennis Mom", "Karen", "Crystal Healer", "WitchToker",
+    "Disney Princess Wannabe", "Cat Lady", "Wine Mom"
 ];

@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective } from "../types";
-import { OCCUPATIONS, QUIRKS, SPEECH_STYLES_BY_AGE, MALE_FIRST_NAMES, FEMALE_FIRST_NAMES, LAST_NAMES, VICTIM_FLAVORS } from "../constants";
+import { OCCUPATIONS, QUIRKS, MALE_FIRST_NAMES, FEMALE_FIRST_NAMES, LAST_NAMES, MALE_FLAVORS, FEMALE_FLAVORS, NEUTRAL_FLAVORS } from "../constants";
 
 const getClient = () => {
     // In Vite, process.env.API_KEY is replaced by the define plugin in vite.config.ts
@@ -124,7 +124,6 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
             personality: "Generic",
             archetype: "Average Joe",
             flavor: "Boring",
-            speechStyle: "Normal",
             hiddenFact: "Unknown",
             weakness: "Money",
             resistanceStyle: "Passive"
@@ -141,16 +140,16 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
     const randLast = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
     const forcedName = `${randFirst} ${randLast}`;
 
-    // Select speech style based on age group
-    let speechPool = SPEECH_STYLES_BY_AGE.adult;
-    if (age < 30) speechPool = SPEECH_STYLES_BY_AGE.youth;
-    if (age > 60) speechPool = SPEECH_STYLES_BY_AGE.elderly;
-    
-    const randSpeech = speechPool[Math.floor(Math.random() * speechPool.length)];
     const randJob = OCCUPATIONS[Math.floor(Math.random() * OCCUPATIONS.length)];
     
-    // Pick Flavor (Edgy Trait)
-    const randFlavor = VICTIM_FLAVORS[Math.floor(Math.random() * VICTIM_FLAVORS.length)];
+    // Pick Flavor (Edgy Trait) - GENDER GATED
+    let flavorPool = NEUTRAL_FLAVORS;
+    if (genderPrompt === "Male") {
+        flavorPool = [...NEUTRAL_FLAVORS, ...MALE_FLAVORS];
+    } else {
+        flavorPool = [...NEUTRAL_FLAVORS, ...FEMALE_FLAVORS];
+    }
+    const randFlavor = flavorPool[Math.floor(Math.random() * flavorPool.length)];
 
     // Pick Quirks - REDUCED FREQUENCY (50% chance)
     const quirks = [];
@@ -187,7 +186,6 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         MANDATORY SEEDS (Incorporate these!):
         - Name: ${forcedName}
         - Occupation: ${randJob}
-        - Speech Style: ${randSpeech}
         - Primary Trait/Flavor: ${randFlavor} (Make this DEFINING to their character)
         - Unique Quirks: ${combinedQuirks}
         - Gender: ${genderPrompt}
@@ -207,7 +205,6 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
             "occupation": "string (The specific seeded job)",
             "personality": "string (Max 1-2 short sentences)",
             "archetype": "string (Short label, e.g. 'The Paranoid Baker')",
-            "speechStyle": "string (The seeded speech style)",
             "hiddenFact": "string (Max 12 words)",
             "weakness": "string (Max 6 words)",
             "resistanceStyle": "string"
@@ -222,7 +219,6 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         personality: `Generic person who ${combinedQuirks}`,
         archetype: "Random Citizen",
         flavor: randFlavor,
-        speechStyle: randSpeech,
         hiddenFact: "Has a cat",
         weakness: "Money",
         resistanceStyle: "Asks questions"
@@ -317,10 +313,14 @@ export const getVictimResponse = async (
             
             *** CRITICAL PERSONA INSTRUCTIONS ***
             ARCHETYPE: ${victim.archetype}
-            PRIMARY TRAIT (FLAVOR): ${victim.flavor} (You MUST act this out excessively/stereotypically)
-            SPEECH STYLE: ${victim.speechStyle} (You MUST adhere to this style in every message)
+            PRIMARY TRAIT (FLAVOR): ${victim.flavor} (See Subtlety Rule below)
             PERSONALITY: ${victim.personality}
             RESISTANCE STYLE: ${victim.resistanceStyle}
+            
+            SUBTLETY RULE (IMPORTANT):
+            - Your "FLAVOR" (${victim.flavor}) is a background trait. It influences your worldview, but you should NOT mention it explicitly in every single message.
+            - Do not become a caricature. Be realistic. Only reference your specific obsession/trait if it makes sense in context or if you are agitated.
+            - Your speech pattern should naturally reflect your Age (${victim.age}) and Occupation, without being forced.
             
             Current Situation: You are receiving messages that seem like a ${scamCategory} scam.
             
@@ -345,7 +345,7 @@ export const getVictimResponse = async (
             - 91-100%: BRAINWASHED. You fully believe the user. You interpret "glitches" or "hacks" (like flickering lights) as exactly what the user says they are (ghosts, security protocols, etc). You are eager to help and very compliant.
             
             INSTRUCTIONS:
-            1. Reply to the message in character. USE YOUR GENERATED SPEECH STYLE.
+            1. Reply to the message in character.
             2. KEEP RESPONSES SHORT. MAX 2-3 SENTENCES. Do not monologue. Be concise.
             3. If you are "Technologically Illiterate", act like it. If you are "Aggressive", be aggressive.
             4. SYSTEM MESSAGES: Messages starting with [SYSTEM ALERT] are physical events in your environment (e.g. lights flickering, printer noise). 
@@ -359,7 +359,7 @@ export const getVictimResponse = async (
             OBJECTIVE CHECK:
             - Did you (the victim) satisfy the "USER'S GOAL" in THIS specific response?
             - If the objective asks for INFORMATION (e.g. zip code, name), did you provide it?
-            - If the objective asks for AGREEMENT or EMOTION (e.g. empathize, promise, listen), did you clearly express it?
+            - If the objective asks for AGREEMENT (e.g. "Get them to ask to speak to the lawyer"), did you do exactly that action?
             - If YES, return 'objectiveComplete': TRUE.
             - If NO, return 'objectiveComplete': FALSE.
             
@@ -489,6 +489,7 @@ export const arbitrateChat = async (
             
             CRITICAL OBJECTIVE VALIDATION RULES:
             - 'objectiveComplete' is TRUE ONLY if the VICTIM has explicitly stated/revealed the requested info in the previous messages.
+            - If objective is "Get them to ask for X", did the victim actually ask for X?
             
             Return JSON only:
             {
