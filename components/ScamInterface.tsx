@@ -333,13 +333,13 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
     }
   };
 
-  const confirmHint = () => {
+  const requestHint = () => {
+      if (scam.trust < 20) return;
       setShowHintConfirm(true);
   };
 
   const executeHint = async () => {
       setShowHintConfirm(false);
-      if (scam.trust < 20) return;
       audioManager.playClick();
       onUpdateScam({ ...scam, trust: Math.max(0, scam.trust - 10) });
       setLoadingHints(true);
@@ -519,7 +519,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         <div className="p-2 md:p-3 bg-black/80 backdrop-blur border-t border-zinc-800 shrink-0 relative z-20">
              <div className="flex gap-2">
                  <div className="relative flex gap-2">
-                    <button onClick={confirmHint} disabled={loadingHints || processing || scam.trust < 20} className={`p-3 rounded-lg border bg-black border-zinc-700 text-zinc-400 transition-all relative group ${scam.trust >= 20 ? 'hover:text-blue-400 hover:border-blue-500' : 'opacity-30 cursor-not-allowed'}`}>
+                    <button onClick={requestHint} disabled={loadingHints || processing || scam.trust < 20} className={`p-3 rounded-lg border bg-black border-zinc-700 text-zinc-400 transition-all relative group ${scam.trust >= 20 ? 'hover:text-blue-400 hover:border-blue-500' : 'opacity-30 cursor-not-allowed'}`}>
                          {loadingHints ? <Loader2 size={18} className="animate-spin"/> : <Lightbulb size={18}/>}
                     </button>
                     <button onClick={() => setInventoryOpen(true)} className="p-3 rounded-lg border bg-black border-zinc-700 text-zinc-400 hover:text-purple-400 hover:border-purple-500 transition-all relative group">

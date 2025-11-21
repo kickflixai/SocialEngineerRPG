@@ -464,6 +464,15 @@ export const arbitrateChat = async (
         result.suspicionDelta = Math.max(0, Math.round(result.suspicionDelta || 0));
         result.creativityScore = Math.round(result.creativityScore || 0);
 
+        // FALLBACK LOGIC: If objective is abstract (contains "trust" or "connection") and Trust is high, force complete
+        const objDesc = activeObjective.description.toLowerCase();
+        if (!result.objectiveComplete && (objDesc.includes('trust') || objDesc.includes('connection') || objDesc.includes('rapport'))) {
+            if (currentTrust >= 80) {
+                result.objectiveComplete = true;
+                result.internalThought += " [AUTO-COMPLETE: TRUST THRESHOLD REACHED]";
+            }
+        }
+
         return result;
     } catch (e) {
         console.error("Arbiter failed", e);

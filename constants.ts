@@ -326,13 +326,13 @@ interface ScamScenario {
 export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   "Grandson in Trouble": [
     {
-        mini1: "Get them to say 'It's me, [Name]'",
-        mini2: "Make them agree to 'Keep it secret'",
+        mini1: "Make them guess your name (don't say it first)",
+        mini2: "Get them to say 'I won't tell anyone'",
         final: "Secure bail/medical payment details"
     },
     {
-        mini1: "Get them to guess your name first",
-        mini2: "Convince them a lawyer will call next",
+        mini1: "Convince them you are in a specific city (e.g. Mexico City)",
+        mini2: "Convince them a lawyer is standing next to you",
         final: "Get agreement to send gift cards"
     }
   ],
@@ -351,12 +351,12 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   "Tech Support Virus": [
     {
         mini1: "Get them to read the 'Error Code'",
-        mini2: "Make them download 'AnyDesk'",
+        mini2: "Make them download 'AnyDesk' or 'TeamViewer'",
         final: "Grant remote access control"
     },
     {
         mini1: "Identify their Computer Model",
-        mini2: "Find the 'Windows Key' together",
+        mini2: "Find the 'Windows Key' on their keyboard",
         final: "Pay $400 'Firewall Fee' via Card"
     }
   ],
@@ -377,7 +377,7 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   "Romance Scam": [
     {
         mini1: "Get them to share a childhood memory",
-        mini2: "Get them to say 'I love you'",
+        mini2: "Get them to say 'I love you' back",
         final: "Pay for your 'Plane Ticket' to visit"
     }
   ],
@@ -397,7 +397,7 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   ],
   "Charity Fraud": [
     {
-        mini1: "Get their sympathy for the 'cause'",
+        mini1: "Get them to empathize with the cause",
         mini2: "Get their billing zip code",
         final: "Set up recurring credit card donation"
     }
