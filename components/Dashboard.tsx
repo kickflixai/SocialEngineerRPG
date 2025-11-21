@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { PlayerState, GameView } from '../types';
-import { ShieldAlert, ShoppingBag, BrainCircuit, Package, Power, Zap, Crosshair, MapPin, Activity, Trophy, Award, Lock, User, Terminal, BarChart3, Hash, Clock, Globe } from 'lucide-react';
+import { ShieldAlert, ShoppingBag, BrainCircuit, Package, Power, Zap, Crosshair, MapPin, Activity, Trophy, Award, Lock, User, Terminal, BarChart3, Hash, Clock, Globe, Home } from 'lucide-react';
 import { ACHIEVEMENTS } from '../constants';
 import { motion } from 'framer-motion';
+import HackerRoom from './HackerRoom';
 
 interface Props {
   player: PlayerState;
@@ -53,36 +54,48 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
         className="flex-1 flex flex-col gap-4 z-10 min-h-0"
       >
         {/* --- TOP ROW: HUD (Expanded) --- */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 shrink-0 min-h-[140px] md:h-[20%]">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 shrink-0 min-h-[180px] md:h-[25%]">
             
             {/* PROFILE MODULE */}
-            <motion.div variants={itemVariants} className="md:col-span-4 bg-zinc-900/20 border border-zinc-800/60 relative group p-4 flex gap-4 items-center overflow-hidden backdrop-blur-sm">
+            <motion.div variants={itemVariants} className="md:col-span-5 bg-zinc-900/20 border border-zinc-800/60 relative group p-6 flex gap-6 items-center overflow-hidden backdrop-blur-sm">
                 {renderCornerBrackets("border-green-500/30 group-hover:border-green-500/60 transition-colors")}
-                <div className="relative w-20 h-20 shrink-0">
-                    <img src={player.attributes.avatarUrl} alt="User" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 rounded-sm border border-zinc-700" />
-                    <div className="absolute -bottom-1 -right-1 bg-black border border-green-500/50 text-[9px] px-1 text-green-500 font-bold">ID Verified</div>
+                
+                <div className="relative w-32 h-32 shrink-0 rounded-xl overflow-hidden border-2 border-zinc-700 group-hover:border-green-500 transition-colors shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+                     <img src={player.attributes.avatarUrl} alt="User" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
+                     <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur px-2 py-1 border-t border-green-500/30 flex justify-center">
+                        <span className="text-[9px] text-green-500 font-bold uppercase tracking-widest">ID: {player.attributes.name.split(' ')[0].substring(0, 8)}</span>
+                     </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                    <div className="flex justify-between items-center mb-1">
-                        <span className="text-[10px] text-zinc-500 uppercase tracking-widest">OPERATIVE</span>
-                        <span className="text-[10px] text-green-800 font-bold animate-pulse">ONLINE</span>
+                
+                <div className="flex-1 min-w-0 space-y-3">
+                    <div>
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-bold">OPERATIVE PROFILE</span>
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        </div>
+                        <h2 className="text-2xl text-white font-bold truncate tracking-tight">{player.attributes.name}</h2>
+                        <p className="text-green-400 font-mono text-xs uppercase tracking-wider">{player.attributes.archetype}</p>
                     </div>
-                    <h2 className="text-xl text-white font-bold truncate tracking-tight mb-1">{player.attributes.name}</h2>
-                    <div className="flex items-center gap-2 text-xs text-zinc-400">
-                        <Globe size={12} /> {player.attributes.country}
-                    </div>
-                    <div className="mt-2 h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-green-600 w-[75%]"></div>
-                    </div>
-                    <div className="flex justify-between text-[8px] text-zinc-600 mt-0.5 font-mono">
-                        <span>XP</span>
-                        <span>LEVEL {Math.floor(player.scamsCompleted / 2) + 1}</span>
+                    
+                    <div className="grid grid-cols-2 gap-2 text-[10px] text-zinc-400 font-mono mt-2 border-t border-zinc-800 pt-3">
+                        <div className="flex items-center gap-2">
+                            <Globe size={12} className="text-blue-500"/>
+                            <span>{player.attributes.country}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Terminal size={12} className="text-purple-500"/>
+                            <span>Level {Math.floor(player.scamsCompleted / 2) + 1}</span>
+                        </div>
+                         <div className="flex items-center gap-2">
+                            <Activity size={12} className="text-orange-500"/>
+                            <span>{player.scamsCompleted} OPS COMPLETE</span>
+                        </div>
                     </div>
                 </div>
             </motion.div>
 
             {/* HEAT MONITOR */}
-            <motion.div variants={itemVariants} className="md:col-span-4 bg-zinc-900/20 border border-zinc-800/60 relative group p-4 flex flex-col justify-between backdrop-blur-sm">
+            <motion.div variants={itemVariants} className="md:col-span-3 bg-zinc-900/20 border border-zinc-800/60 relative group p-4 flex flex-col justify-between backdrop-blur-sm">
                 {renderCornerBrackets("border-red-500/30 group-hover:border-red-500/60 transition-colors")}
                 <div className="flex justify-between items-start">
                      <div>
@@ -242,10 +255,10 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
         </div>
 
         {/* --- BOTTOM ROW: SYSTEM STATUS (Expanded) --- */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 shrink-0 min-h-[140px] md:h-[25%]">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 shrink-0 min-h-[180px] md:h-[30%]">
             
-            {/* ACTIVE PROTOCOLS */}
-            <motion.div variants={itemVariants} className="md:col-span-4 bg-zinc-900/20 border border-zinc-800/60 p-4 relative overflow-hidden backdrop-blur-sm flex flex-col">
+            {/* COL 1: ACTIVE PROTOCOLS */}
+            <motion.div variants={itemVariants} className="md:col-span-3 bg-zinc-900/20 border border-zinc-800/60 p-4 relative overflow-hidden backdrop-blur-sm flex flex-col">
                 {renderCornerBrackets("border-zinc-600/50")}
                 <h4 className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-blue-900/30 pb-2">
                     <Activity size={12}/> Active Protocols
@@ -269,8 +282,21 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
                 </div>
             </motion.div>
 
-            {/* ACHIEVEMENTS */}
-            <motion.div variants={itemVariants} className="md:col-span-8 bg-zinc-900/20 border border-zinc-800/60 p-4 relative overflow-hidden backdrop-blur-sm flex flex-col">
+            {/* COL 2: HACKER ROOM (SAFEHOUSE) */}
+            <motion.div variants={itemVariants} className="md:col-span-5 bg-zinc-900/20 border border-zinc-800/60 p-0 relative overflow-hidden backdrop-blur-sm flex flex-col group">
+                {renderCornerBrackets("border-green-600/50 group-hover:border-green-500/80 transition-colors")}
+                <div className="absolute top-0 left-0 right-0 z-10 p-2 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+                    <h4 className="text-[10px] text-green-500 font-bold uppercase tracking-widest flex items-center gap-2">
+                        <Home size={12}/> Safehouse Visualizer
+                    </h4>
+                </div>
+                <div className="flex-1 relative">
+                     <HackerRoom achievements={player.achievements} scamsCompleted={player.scamsCompleted} />
+                </div>
+            </motion.div>
+
+            {/* COL 3: ACHIEVEMENTS */}
+            <motion.div variants={itemVariants} className="md:col-span-4 bg-zinc-900/20 border border-zinc-800/60 p-4 relative overflow-hidden backdrop-blur-sm flex flex-col">
                  {renderCornerBrackets("border-yellow-600/50")}
                  <div className="flex justify-between items-center mb-3 border-b border-yellow-900/20 pb-2">
                      <h4 className="text-[10px] text-yellow-500 font-bold uppercase tracking-widest flex items-center gap-2">
@@ -280,11 +306,11 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
                  </div>
                  
                  <div className="flex-1 overflow-y-auto custom-scrollbar">
-                     <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+                     <div className="grid grid-cols-3 gap-2">
                          {ACHIEVEMENTS.map(ach => {
                              const unlocked = player.achievements.includes(ach.id);
                              return (
-                                 <div key={ach.id} className={`p-2 rounded border flex flex-col items-center text-center gap-1 transition-all ${unlocked ? 'bg-yellow-900/10 border-yellow-600/40 opacity-100' : 'bg-zinc-950 border-zinc-800 opacity-30'}`}>
+                                 <div key={ach.id} className={`p-2 rounded border flex flex-col items-center text-center gap-1 transition-all ${unlocked ? 'bg-yellow-900/10 border-yellow-600/40 opacity-100' : 'bg-zinc-950 border-zinc-800 opacity-30'}`} title={ach.description}>
                                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${unlocked ? 'bg-yellow-500/20 text-yellow-500' : 'bg-zinc-900 text-zinc-700'}`}>
                                          <Award size={12} />
                                      </div>
