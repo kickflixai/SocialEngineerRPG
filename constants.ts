@@ -766,6 +766,26 @@ export const QUIRKS = [
     "Is your mom", "Is your ex", "Is your future self", "Is an AI realizing it's an AI", "Is a glitched NPC"
 ];
 
+export const VICTIM_FLAVORS = [
+    "Discord Mod", "Furry", "Alpha Male", "Crypto Bro", "Flat Earther", 
+    "Foot Fetishist", "Gamer Girl Bath Water Buyer", "Clinically Obsessed with Musk", 
+    "Believes in Lizard People", "OnlyFans Simp", "Compulsive Gambler", "Karens Final Boss",
+    "Vape Lord", "Street Pharmacist", "Lives in Mom's Basement", "Adult Baby",
+    "Raw Meat Eater", "Sovereign Citizen", "Anti-Vax Mom", "MLM Hun", 
+    "Reptilian", "Time Traveler", "Psychic Medium", "Hoarder", 
+    "Cat Lady", "Dogecoin Millionaire (Bankrupt)", "Incel", "Femcel",
+    "Weaboo", "K-Pop Stan", "Swiftie", "Horse Girl", 
+    "Disney Adult", "Crossfitter", "Vegan Warrior", "Carnivore Dieter",
+    "Ghost Hunter", "UFO Abductee", "Prepper", "Van Life Influencer",
+    "Soundcloud Rapper", "NFT Collector", "LinkedIn Lunatic", "Tech Bro",
+    "Finance Bro", "Gym Rat", "Yoga Mom", "Wine Mom",
+    "Soccer Mom", "Hockey Dad", "Baseball Dad", "Basketball Dad",
+    "Football Dad", "Tennis Mom", "Golf Dad", "Fishing Dad",
+    "Hunting Dad", "Camping Dad", "Hiking Dad", "Biking Dad",
+    "Running Dad", "Swimming Dad", "Surfing Dad", "Skating Dad",
+    "Skiing Dad", "Snowboarding Dad", "Climbing Dad", "Gaming Dad", "Retarded", "BSDM Addict", "Down Syndrome", "Obese", "Virgin"
+];
+
 export const SPEECH_STYLES_BY_AGE = {
     youth: [
         "Gen Z slang overload (fr fr no cap, bet)", "Uses way too many emojis 🤠✨", "Writes in all lowercase very chill",

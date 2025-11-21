@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { GameView, PlayerState, ScamState, PlayerAttributes, Skill, ScamObjective, ShopItem, ScamHistoryItem } from './types';
 import { INITIAL_MONEY, INITIAL_THREAT, SCAM_CATEGORIES, MAX_THREAT, SKILLS, SHOP_ITEMS, COUNTRY_DATA, SCAM_SCENARIOS, ACHIEVEMENTS } from './constants';
-import { generateVictim, generateOpener } from './services/geminiService';
+import { generateVictim, generateOpener, generateScamSummary } from './services/geminiService';
 import { audioManager } from './services/audioService';
 
 import CharacterCreator from './components/CharacterCreator';
@@ -40,7 +40,16 @@ const App: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   
   // Last Result for Result Screen
-  const [lastResult, setLastResult] = useState<{outcome: 'success' | 'failed' | 'police', moneyChange: number, threatChange: number, victimName: string, reason?: string} | null>(null);
+  const [lastResult, setLastResult] = useState<{
+      outcome: 'success' | 'failed' | 'police', 
+      moneyChange: number, 
+      threatChange: number, 
+      victimName: string, 
+      reason?: string,
+      victimAvatar: string,
+      victimFlavor: string,
+      summary: string[]
+    } | null>(null);
 
   // Save Data Summary for Landing Screen
   const [saveSummary, setSaveSummary] = useState<{name: string, money: number, threat: number} | null>(null);
@@ -332,11 +341,12 @@ const App: React.FC = () => {
       return unlocked;
   };
 
-  const handleScamEnd = (result: 'success' | 'failed' | 'police', reason?: string) => {
+  const handleScamEnd = async (result: 'success' | 'failed' | 'police', reason?: string) => {
     if (!activeScam) return;
 
     let moneyChange = 0;
     let threatChange = 0;
+    let summary: string[] = [];
 
     const countryStats = COUNTRY_DATA[player.attributes.country];
     const payoutMult = countryStats?.modifiers?.payoutMultiplier || 1.0;
@@ -350,6 +360,10 @@ const App: React.FC = () => {
         
         const totalMult = payoutMult * skillMult * hvtMult;
         moneyChange = Math.floor((baseReward + Math.floor(Math.random() * 1000)) * totalMult);
+
+        // Fetch funny summary
+        summary = await generateScamSummary(activeScam.history, activeScam.victim);
+
     } else if (result === 'police') {
         audioManager.playFailure();
         threatChange = 25;
@@ -394,21 +408,22 @@ const App: React.FC = () => {
         moneyChange,
         threatChange,
         victimName: activeScam.victim.name,
+        victimAvatar: activeScam.victim.avatarUrl,
+        victimFlavor: activeScam.victim.flavor,
+        summary,
         reason
     });
 
-    setTimeout(() => {
-        const newThreat = Math.min(MAX_THREAT, player.threatLevel + threatChange);
-        setPlayer(prev => ({ ...prev, threatLevel: newThreat }));
-        setActiveScam(null);
+    const newThreat = Math.min(MAX_THREAT, player.threatLevel + threatChange);
+    setPlayer(prev => ({ ...prev, threatLevel: newThreat }));
+    setActiveScam(null);
 
-        if (newThreat >= MAX_THREAT) {
-            setView(GameView.GAME_OVER);
-            localStorage.removeItem(STORAGE_KEY); // Clear save on game over
-        } else {
-            setView(GameView.SCAM_RESULT);
-        }
-    }, 2000);
+    if (newThreat >= MAX_THREAT) {
+        setView(GameView.GAME_OVER);
+        localStorage.removeItem(STORAGE_KEY); // Clear save on game over
+    } else {
+        setView(GameView.SCAM_RESULT);
+    }
   };
 
   const buyItem = (item: typeof SHOP_ITEMS[0]) => {

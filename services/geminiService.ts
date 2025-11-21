@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective } from "../types";
-import { OCCUPATIONS, QUIRKS, SPEECH_STYLES_BY_AGE, FIRST_NAMES, LAST_NAMES } from "../constants";
+import { OCCUPATIONS, QUIRKS, SPEECH_STYLES_BY_AGE, FIRST_NAMES, LAST_NAMES, VICTIM_FLAVORS } from "../constants";
 
 const getClient = () => {
     // In Vite, process.env.API_KEY is replaced by the define plugin in vite.config.ts
@@ -123,6 +123,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
             occupation: "Unknown",
             personality: "Generic",
             archetype: "Average Joe",
+            flavor: "Boring",
             speechStyle: "Normal",
             hiddenFact: "Unknown",
             weakness: "Money",
@@ -147,6 +148,9 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
     const randSpeech = speechPool[Math.floor(Math.random() * speechPool.length)];
     const randJob = OCCUPATIONS[Math.floor(Math.random() * OCCUPATIONS.length)];
     
+    // Pick Flavor (Edgy Trait)
+    const randFlavor = VICTIM_FLAVORS[Math.floor(Math.random() * VICTIM_FLAVORS.length)];
+
     // Pick 3 distinct quirks for complexity
     const quirks = [];
     const quirksPool = [...QUIRKS];
@@ -179,6 +183,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         - Name: ${forcedName}
         - Occupation: ${randJob}
         - Speech Style: ${randSpeech}
+        - Primary Trait/Flavor: ${randFlavor} (Make this DEFINING to their character)
         - Unique Quirks: ${combinedQuirks}
         - Gender: ${genderPrompt}
         - Age: ${age}
@@ -186,7 +191,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         CRITICAL INSTRUCTION: 
         1. Personality description must be CONCISE. Maximum 3-4 sentences.
         2. Avoid tropes. Make them feel like a real, weird human being.
-        3. The "hiddenFact" should be specific dirt.
+        3. The "hiddenFact" should be specific dirt related to their "${randFlavor}" trait.
         4. The "weakness" should be a psychological trigger.
         
         Return ONLY valid JSON matching this schema:
@@ -211,6 +216,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         occupation: randJob,
         personality: `Generic person who ${combinedQuirks}`,
         archetype: "Random Citizen",
+        flavor: randFlavor,
         speechStyle: randSpeech,
         hiddenFact: "Has a cat",
         weakness: "Money",
@@ -224,7 +230,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
             config: { responseMimeType: 'application/json' }
         }));
         const parsed = parseJSON(response.text || "{}");
-        if (parsed) data = { ...data, ...parsed };
+        if (parsed) data = { ...data, ...parsed, flavor: randFlavor };
     } catch(e) {
         console.error("Victim text gen failed", e);
     }
@@ -236,7 +242,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
             model: 'gemini-2.5-flash-image',
             contents: { parts: [{ text: `
                 Raw, photorealistic portrait of ${data.name}, a ${data.age} year old ${data.gender} ${data.occupation}.
-                Vibe: ${data.archetype}. Feature: ${data.personality}.
+                Vibe: ${data.archetype} / ${randFlavor}. Feature: ${data.personality}.
                 Style: Cinematic portrait, highly detailed, character study, imperfections, natural lighting.
                 Do NOT generate: CGI, 3D, cartoon, illustration.
             ` }] },
@@ -273,6 +279,7 @@ export const generateOpener = async (scamCategory: string, victim: Victim): Prom
             You are playing the role of a scammer initiating a conversation.
             Scam Type: ${scamCategory}.
             Target: ${victim.name}, a ${victim.occupation} who is ${victim.archetype}.
+            Trait: ${victim.flavor}.
             
             Write a single, engaging opening line.
             Make it believable but clearly an attempt at social engineering.
@@ -304,6 +311,7 @@ export const getVictimResponse = async (
             
             *** CRITICAL PERSONA INSTRUCTIONS ***
             ARCHETYPE: ${victim.archetype}
+            PRIMARY TRAIT (FLAVOR): ${victim.flavor} (You MUST act this out excessively/stereotypically)
             SPEECH STYLE: ${victim.speechStyle} (You MUST adhere to this style in every message)
             PERSONALITY: ${victim.personality}
             RESISTANCE STYLE: ${victim.resistanceStyle}
@@ -409,6 +417,7 @@ export const arbitrateChat = async (
             Act as the 'Game Master' engine for a social engineering simulation.
             
             Target: ${victim.name} (Archetype: ${victim.archetype}).
+            Trait: ${victim.flavor}.
             Difficulty Level: ${victim.difficulty.toUpperCase()}.
             Scam Strategy: ${scamCategory}.
             
@@ -500,6 +509,7 @@ export const generateScamHint = async (
             
             Current Goal: ${activeObjective}.
             Victim: ${victim.name} (${victim.archetype}).
+            Trait: ${victim.flavor}.
             Last Message from Victim: "${history[history.length - 1]?.text || 'Hello'}".
             
             Suggest 3 short, distinct, and actionable things the player could type next.
@@ -518,3 +528,38 @@ export const generateScamHint = async (
         return ["Try clarifying your request", "Ask them to verify their identity", "Offer a fake reward"];
     }
 }
+
+export const generateScamSummary = async (history: ChatMessage[], victim: Victim): Promise<string[]> => {
+    try {
+        const ai = getClient();
+        const chatText = history.map(m => `${m.sender}: ${m.text}`).join('\n');
+        
+        const prompt = `
+            Summarize this scam conversation into 3 SHORT, FUNNY, SATIRICAL bullet points.
+            
+            Victim: ${victim.name} (${victim.flavor}).
+            Context: The player successfully scammed them.
+            
+            Chat Log:
+            ${chatText}
+            
+            Requirements:
+            - Be sarcastic.
+            - Highlight the victim's stupidity or weird trait (${victim.flavor}).
+            - Format as a JSON array of strings.
+            
+            Example:
+            ["Victim believed you were Elon Musk's cousin", "Sent $5000 to a 'Prince' named Dave", "Asked if the virus was gluten-free"]
+        `;
+
+        const response = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
+            model: 'gemini-flash-lite-latest',
+            contents: prompt,
+            config: { responseMimeType: 'application/json' }
+        }));
+        
+        return parseJSON(response.text || "[]") || ["Victim was easily manipulated", "Transfer complete", "No trace left"];
+    } catch (e) {
+        return ["Operation successful", "Funds secured", "Target compromised"];
+    }
+};

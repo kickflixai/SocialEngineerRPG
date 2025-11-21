@@ -86,6 +86,7 @@ export interface Victim {
   occupation: string;
   personality: string;
   archetype: string; // New: e.g. "Conspiracy Theorist"
+  flavor: string; // New: The edgy trait
   speechStyle: string; // New: e.g. "ALL CAPS", "Very quiet", "Emojis"
   hiddenFact: string; 
   weakness: string;
