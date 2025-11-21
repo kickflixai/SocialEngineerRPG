@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { GameView, PlayerState, ScamState, PlayerAttributes, Skill, ScamObjective, ShopItem } from './types';
+import { GameView, PlayerState, ScamState, PlayerAttributes, Skill, ScamObjective, ShopItem, ScamHistoryItem } from './types';
 import { INITIAL_MONEY, INITIAL_THREAT, SCAM_CATEGORIES, MAX_THREAT, SKILLS, SHOP_ITEMS, COUNTRY_DATA, SCAM_SCENARIOS, ACHIEVEMENTS } from './constants';
 import { generateVictim, generateOpener } from './services/geminiService';
 import { audioManager } from './services/audioService';
@@ -26,7 +27,8 @@ const App: React.FC = () => {
     scamsCompleted: 0,
     inventory: [],
     skills: [],
-    achievements: []
+    achievements: [],
+    history: []
   });
   
   const [activeScam, setActiveScam] = useState<ScamState | null>(null);
@@ -137,7 +139,8 @@ const App: React.FC = () => {
         scamsCompleted: 0,
         inventory: [],
         skills: [],
-        achievements: []
+        achievements: [],
+        history: []
     });
     setActiveScam(null);
     setHighValueTargetActive(false);
@@ -161,7 +164,8 @@ const App: React.FC = () => {
         scamsCompleted: 0,
         inventory: [...countryStats.startingItems],
         skills: [...countryStats.startingSkills],
-        achievements: []
+        achievements: [],
+        history: []
     });
 
     setView(GameView.DASHBOARD);
@@ -270,7 +274,23 @@ const App: React.FC = () => {
       const penalty = 15;
       const newThreat = Math.min(MAX_THREAT, player.threatLevel + penalty);
       
-      setPlayer(prev => ({ ...prev, threatLevel: newThreat }));
+      // Record failure
+      if (activeScam) {
+           const historyItem: ScamHistoryItem = {
+              id: crypto.randomUUID(),
+              victimName: activeScam.victim.name,
+              victimAvatar: activeScam.victim.avatarUrl,
+              victimOccupation: activeScam.victim.occupation,
+              payout: 0,
+              outcome: 'failed',
+              date: Date.now(),
+              method: activeScam.category || 'Aborted'
+          };
+          setPlayer(prev => ({ ...prev, history: [historyItem, ...prev.history], threatLevel: newThreat }));
+      } else {
+          setPlayer(prev => ({ ...prev, threatLevel: newThreat }));
+      }
+
       setActiveScam(null);
       
       if (newThreat >= MAX_THREAT) {
@@ -325,24 +345,6 @@ const App: React.FC = () => {
         
         const totalMult = payoutMult * skillMult * hvtMult;
         moneyChange = Math.floor((baseReward + Math.floor(Math.random() * 1000)) * totalMult);
-        
-        const newAchievements = checkAchievements('success', activeScam, moneyChange);
-
-        setPlayer(prev => ({ 
-            ...prev, 
-            money: prev.money + moneyChange,
-            scamsCompleted: prev.scamsCompleted + 1,
-            achievements: newAchievements
-        }));
-        
-        setTimeout(() => {
-            const newThreat = Math.min(MAX_THREAT, player.threatLevel);
-            setPlayer(prev => ({ ...prev, threatLevel: newThreat }));
-            setActiveScam(null);
-            setView(GameView.DASHBOARD);
-        }, 3000);
-        return;
-
     } else if (result === 'police') {
         audioManager.playFailure();
         threatChange = 25;
@@ -358,9 +360,31 @@ const App: React.FC = () => {
     }
 
     threatChange = Math.ceil(threatChange * threatMult);
-    const newThreat = Math.min(MAX_THREAT, player.threatLevel + threatChange);
+    
+    // Create History Item
+    const historyItem: ScamHistoryItem = {
+        id: crypto.randomUUID(),
+        victimName: activeScam.victim.name,
+        victimAvatar: activeScam.victim.avatarUrl,
+        victimOccupation: activeScam.victim.occupation,
+        payout: moneyChange,
+        outcome: result,
+        date: Date.now(),
+        method: activeScam.category
+    };
+
+    const newAchievements = checkAchievements(result, activeScam, moneyChange);
+
+    setPlayer(prev => ({ 
+        ...prev, 
+        money: prev.money + moneyChange,
+        scamsCompleted: result === 'success' ? prev.scamsCompleted + 1 : prev.scamsCompleted,
+        achievements: newAchievements,
+        history: [historyItem, ...prev.history]
+    }));
     
     setTimeout(() => {
+        const newThreat = Math.min(MAX_THREAT, player.threatLevel + threatChange);
         setPlayer(prev => ({ ...prev, threatLevel: newThreat }));
         setActiveScam(null);
 

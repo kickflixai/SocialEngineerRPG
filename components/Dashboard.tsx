@@ -1,10 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { PlayerState, GameView } from '../types';
-import { ShieldAlert, ShoppingBag, BrainCircuit, Package, Power, Zap, Crosshair, MapPin, Activity, Trophy, Award, Lock, User, Terminal, BarChart3, Hash, Clock, Globe, Home } from 'lucide-react';
+import { ShieldAlert, ShoppingBag, BrainCircuit, Package, Power, Zap, Crosshair, MapPin, Activity, Trophy, Award, Lock, User, Terminal, BarChart3, Hash, Clock, Globe, History, UserX, CheckCircle2, XCircle } from 'lucide-react';
 import { ACHIEVEMENTS } from '../constants';
 import { motion } from 'framer-motion';
-import HackerRoom from './HackerRoom';
 
 interface Props {
   player: PlayerState;
@@ -83,10 +82,6 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
                             <span>{player.attributes.country}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Terminal size={12} className="text-purple-500"/>
-                            <span>Level {Math.floor(player.scamsCompleted / 2) + 1}</span>
-                        </div>
-                         <div className="flex items-center gap-2">
                             <Activity size={12} className="text-orange-500"/>
                             <span>{player.scamsCompleted} OPS COMPLETE</span>
                         </div>
@@ -285,10 +280,43 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
                 </div>
             </motion.div>
 
-            {/* COL 2: HACKER ROOM (SAFEHOUSE) */}
-            <motion.div variants={itemVariants} className="md:col-span-5 relative overflow-hidden flex flex-col group">
-                 {/* Render HackerRoom directly without extra styling wrappers to avoid double borders */}
-                 <HackerRoom achievements={player.achievements} scamsCompleted={player.scamsCompleted} />
+            {/* COL 2: VICTIM DATABASE (History Log) */}
+            <motion.div variants={itemVariants} className="md:col-span-5 bg-zinc-900/20 border border-zinc-800/60 p-4 relative overflow-hidden backdrop-blur-sm flex flex-col">
+                 {renderCornerBrackets("border-green-500/30")}
+                 <h4 className="text-[10px] text-green-500 font-bold uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-green-900/30 pb-2">
+                    <History size={12}/> Victim Database
+                </h4>
+                 <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
+                    {player.history.length === 0 ? (
+                         <div className="h-full flex flex-col items-center justify-center text-zinc-700 font-mono text-xs text-center">
+                             <UserX size={32} className="mb-2 opacity-50"/>
+                             <p>DATABASE EMPTY</p>
+                             <p className="text-[10px]">Complete operations to populate log.</p>
+                         </div>
+                    ) : (
+                        <div className="space-y-2">
+                            {player.history.map(item => (
+                                <div key={item.id} className="bg-black/40 border border-zinc-800 rounded p-2 flex gap-3 items-center group hover:border-green-500/30 transition-colors">
+                                     <div className={`w-8 h-8 rounded border flex items-center justify-center shrink-0 overflow-hidden ${item.outcome === 'success' ? 'border-green-900' : 'border-red-900'}`}>
+                                         <img src={item.victimAvatar} alt="" className="w-full h-full object-cover grayscale" />
+                                     </div>
+                                     <div className="flex-1 min-w-0">
+                                         <div className="flex justify-between items-baseline">
+                                             <h5 className="text-zinc-300 text-xs font-bold truncate">{item.victimName}</h5>
+                                             <span className={`text-[10px] font-mono ${item.outcome === 'success' ? 'text-green-500' : 'text-red-500'}`}>
+                                                 {item.outcome === 'success' ? `+$${item.payout}` : 'FAILED'}
+                                             </span>
+                                         </div>
+                                         <div className="flex justify-between items-center text-[9px] text-zinc-600 uppercase mt-0.5">
+                                             <span>{item.method}</span>
+                                             <span>{new Date(item.date).toLocaleDateString()}</span>
+                                         </div>
+                                     </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                 </div>
             </motion.div>
 
             {/* COL 3: ACHIEVEMENTS */}

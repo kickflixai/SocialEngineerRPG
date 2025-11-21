@@ -532,8 +532,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                 </div>
            </div>
 
-           {/* TERMINAL LOG (Compact) */}
-           <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl flex flex-col relative overflow-hidden shadow-xl min-h-[8rem] shrink-0">
+           {/* TERMINAL LOG (Expanded Priority) */}
+           <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl flex flex-col relative overflow-hidden shadow-xl flex-1 min-h-[12rem]">
                 <div className="p-2 border-b border-zinc-800 bg-black/40 flex justify-between items-center">
                     <p className="text-green-600 uppercase font-bold text-[10px] flex items-center gap-2 tracking-widest"><Terminal size={12}/> SYS_LOG</p>
                     <Wifi size={12} className={processing ? "animate-pulse text-green-500" : "text-zinc-600"}/>
@@ -557,8 +557,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                 </div>
            </div>
 
-           {/* HACKING DECK */}
-           <div className="bg-zinc-900/80 border border-zinc-800/60 rounded-xl p-3 flex-1 flex flex-col relative overflow-hidden shadow-xl min-h-[12rem]">
+           {/* HACKING DECK (Fixed smaller height) */}
+           <div className="bg-zinc-900/80 border border-zinc-800/60 rounded-xl p-3 flex flex-col relative overflow-hidden shadow-xl h-48 shrink-0">
                 <div className="flex items-center justify-between mb-3 shrink-0">
                     <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2"><Code size={14}/> Hacking Tools</h3>
                     <span className="text-[9px] text-zinc-500">{HACK_ABILITIES.length} AVAILABLE</span>

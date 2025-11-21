@@ -1,6 +1,7 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective } from "../types";
+import { OCCUPATIONS, QUIRKS, SPEECH_STYLES_BY_AGE } from "../constants";
 
 const getClient = () => {
     // In Vite, process.env.API_KEY is replaced by the define plugin in vite.config.ts
@@ -106,29 +107,6 @@ export const generatePlayerAvatar = async (attrs: PlayerAttributes): Promise<str
     }
 };
 
-// --- RANDOMIZERS FOR VICTIM VARIETY ---
-const OCCUPATIONS = [
-    "Underwater Welder", "Professional Dog Walker", "Failed Crypto Trader", "Antique Doll Restorer", 
-    "High School Vice Principal", "Night Shift Security Guard", "Discord Moderator", "Freelance Reiki Healer",
-    "Taxidermist", "Regional Manager for a Paper Company", "Submarine Technician", "Retired Opera Singer",
-    "Uber Driver who is also a DJ", "Landscape Architect", "Forensic Accountant", "Stay-at-home Astronaut (Aspiring)",
-    "Cat Cafe Owner", "Vintage Typewriter Repairman", "Influencer Manager", "Conspiracy Blog Writer"
-];
-
-const SPEECH_STYLES = [
-    "Uses way too many emojis 🤠✨", "Writes in all lowercase very chill", "ALL CAPS AGGRESSIVE BOOMER",
-    "Very formal, Victorian english", "Gen Z slang overload (fr fr no cap)", "Typos everywhere, bad eyesight",
-    "Suspiciously brief. Like a spy.", "Over-explains everything in paragraphs", "Uses '...' constantly...",
-    "Bro-speak (Dude, man, bro)", "Karen-speak (I want to speak to the manager)", "Tech-illiterate (What is a browser?)"
-];
-
-const QUIRKS = [
-    "Obsessed with their 12 cats", "Thinks 5G causes birds to spy on them", "Is currently cooking a complex meal",
-    "Hates technology, prefers fax machines", "Is extremely lonely and just wants to chat", "Is secretly a hacker themselves",
-    "Believes they are royalty", "Has short term memory loss", "Is in a noisy environment (airport/club)",
-    "Is extremely stingy with money", "Is overly flirtatious", "Quotes movies constantly"
-];
-
 export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Promise<Victim> => {
     let ai;
     try {
@@ -153,10 +131,26 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
     }
 
     // PROCEDURAL PERSONA SEEDING
-    const randJob = OCCUPATIONS[Math.floor(Math.random() * OCCUPATIONS.length)];
-    const randSpeech = SPEECH_STYLES[Math.floor(Math.random() * SPEECH_STYLES.length)];
-    const randQuirk = QUIRKS[Math.floor(Math.random() * QUIRKS.length)];
     const genderPrompt = Math.random() > 0.5 ? "Male" : "Female";
+    const age = difficulty === 'easy' ? Math.floor(Math.random() * 20) + 65 : difficulty === 'medium' ? Math.floor(Math.random() * 30) + 25 : Math.floor(Math.random() * 20) + 30;
+    
+    // Select speech style based on age group
+    let speechPool = SPEECH_STYLES_BY_AGE.adult;
+    if (age < 30) speechPool = SPEECH_STYLES_BY_AGE.youth;
+    if (age > 60) speechPool = SPEECH_STYLES_BY_AGE.elderly;
+    
+    const randSpeech = speechPool[Math.floor(Math.random() * speechPool.length)];
+    const randJob = OCCUPATIONS[Math.floor(Math.random() * OCCUPATIONS.length)];
+    
+    // Pick 3 distinct quirks for complexity
+    const quirks = [];
+    const quirksPool = [...QUIRKS];
+    for(let i=0; i<3; i++) {
+        const idx = Math.floor(Math.random() * quirksPool.length);
+        quirks.push(quirksPool[idx]);
+        quirksPool.splice(idx, 1);
+    }
+    const combinedQuirks = quirks.join(", ");
 
     // Tailored prompts based on difficulty to ensure personality matches mechanics
     const difficultyPrompts = {
@@ -179,10 +173,12 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         MANDATORY SEEDS (Incorporate these!):
         - Occupation: ${randJob}
         - Speech Style: ${randSpeech}
-        - Unique Quirk: ${randQuirk}
+        - Unique Quirks: ${combinedQuirks}
         - Gender: ${genderPrompt}
+        - Age: ${age}
         
         CRITICAL INSTRUCTION: Avoid tropes. Do not make them a generic "Accountant". Make them feel like a real, weird human being with a specific life.
+        Combine the quirks and occupation into a cohesive, memorable persona.
         
         The "hiddenFact" should be specific dirt (e.g. "Embezzling from the HOA fund", "Running a secret OnlyFans").
         The "weakness" should be a psychological trigger (e.g. "Fear of public humiliation", "Desperate need for validation").
@@ -193,7 +189,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
             "age": number,
             "gender": "${genderPrompt}",
             "occupation": "string (The specific seeded job)",
-            "personality": "string (Complex description incorporating the quirk)",
+            "personality": "string (Complex description incorporating the quirks)",
             "archetype": "string (Short label, e.g. 'The Paranoid Baker')",
             "speechStyle": "string (The seeded speech style)",
             "hiddenFact": "string",
@@ -204,10 +200,10 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
 
     let data: any = {
         name: "Unknown Target",
-        age: 45,
+        age: age,
         gender: genderPrompt.toLowerCase(),
         occupation: randJob,
-        personality: `Generic person who ${randQuirk}`,
+        personality: `Generic person who ${combinedQuirks}`,
         archetype: "Random Citizen",
         speechStyle: randSpeech,
         hiddenFact: "Has a cat",

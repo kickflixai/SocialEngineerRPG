@@ -570,3 +570,68 @@ export const SHOP_ITEMS: ShopItem[] = [
     usageContext: 'scam'
   }
 ];
+
+// --- RANDOMIZERS FOR VICTIM VARIETY ---
+
+export const OCCUPATIONS = [
+    "Underwater Welder", "Professional Dog Walker", "Failed Crypto Trader", "Antique Doll Restorer", 
+    "High School Vice Principal", "Night Shift Security Guard", "Discord Moderator", "Freelance Reiki Healer",
+    "Taxidermist", "Regional Manager for a Paper Company", "Submarine Technician", "Retired Opera Singer",
+    "Uber Driver who is also a DJ", "Landscape Architect", "Forensic Accountant", "Stay-at-home Astronaut",
+    "Cat Cafe Owner", "Vintage Typewriter Repairman", "Influencer Manager", "Conspiracy Blog Writer",
+    "Zumba Instructor", "Ethical Hacker", "Unethical Hacker", "Professional Cuddler", "Ghost Hunter",
+    "Flavor Text Writer", "Mushroom Farmer", "Competitive Eater", "Medieval Reenactor", "Ventriloquist",
+    "Librarian", "Bartender", "Yoga Teacher", "Used Car Salesman", "Politician", "Dentist", "Florist",
+    "Plumber", "Electrician", "Chef", "Pilot", "Flight Attendant", "Nurse", "Firefighter", "Police Officer",
+    "Lawyer", "Judge", "Journalist", "Editor", "Graphic Designer", "Web Developer", "Data Analyst",
+    "Scientist", "Researcher", "Professor", "Student", "Artist", "Musician", "Actor", "Director",
+    "Producer", "Screenwriter", "Author", "Poet", "Dancer", "Choreographer", "Athlete", "Coach",
+    "Referee", "Trainer", "Therapist", "Counselor", "Social Worker", "Volunteer", "Activist",
+    "Pastor", "Priest", "Rabbi", "Imam", "Monk", "Nun", "Psychic", "Astrologer", "Magician",
+    "Clown", "Mime", "Stuntman", "Bodyguard", "Private Investigator", "Spy", "Soldier", "Sailor",
+    "Marine", "Airman", "Astronaut", "Explorer", "Adventurer", "Traveler", "Nomad", "Hermit",
+    "Farmer", "Rancher", "Fisherman", "Hunter", "Miner", "Logger", "Construction Worker", "Factory Worker",
+    "Mechanic", "Driver", "Courier", "Postal Worker", "Sanitation Worker", "Janitor", "Maid", "Butler",
+    "Nanny", "Au Pair", "Babysitter", "Tutor", "Teacher", "Principal", "Administrator", "Executive",
+    "Manager", "Supervisor", "Coordinator", "Director", "VP", "CEO", "CFO", "CTO", "COO", "Owner",
+    "Founder", "Entrepreneur", "Investor", "Banker", "Teller", "Broker", "Agent", "Consultant",
+    "Advisor", "Strategist", "Analyst", "Auditor", "Accountant", "Bookkeeper", "Clerk", "Receptionist",
+    "Secretary", "Assistant", "Associate", "Intern", "Apprentice", "Novice", "Master", "Grandmaster"
+];
+
+export const QUIRKS = [
+    "Obsessed with their 12 cats", "Thinks 5G causes birds to spy on them", "Is currently cooking a complex meal",
+    "Hates technology, prefers fax machines", "Is extremely lonely and just wants to chat", "Is secretly a hacker themselves",
+    "Believes they are royalty", "Has short term memory loss", "Is in a noisy environment (airport/club)",
+    "Is extremely stingy with money", "Is overly flirtatious", "Quotes movies constantly",
+    "Speaks in the third person", "Is terrified of the color yellow", "Collects spoons", "Thinks they are a vampire",
+    "Is training for a marathon right now", "Has a parrot that repeats everything", "Is convinced you are an alien",
+    "Refuses to say the word 'money'", "Is writing a novel about this conversation", "Thinks they are in a simulation",
+    "Is extremely superstitious", "Will only reply in haiku", "Is currently skydiving", "Is holding a seance",
+    "Is being chased by bees", "Is actively knitting a sweater", "Is solving a crossword puzzle", "Is eating crunchy chips loudly",
+    "Has a crying baby nearby", "Is practicing opera singing", "Is mowing the lawn", "Is in a library whispering",
+    "Is at a heavy metal concert", "Is underwater", "Is on a rollercoaster", "Is in space", "Is a ghost",
+    "Is a time traveler", "Is a robot", "Is a dog", "Is a cat", "Is a fish", "Is a plant", "Is a rock",
+    "Is a cloud", "Is a star", "Is a black hole", "Is a universe", "Is a multiverse", "Is nothing",
+    "Is everything", "Is God", "Is Satan", "Is Santa Claus", "Is the Easter Bunny", "Is the Tooth Fairy",
+    "Is Bigfoot", "Is the Loch Ness Monster", "Is a unicorn", "Is a dragon", "Is a fairy", "Is a mermaid",
+    "Is a pirate", "Is a ninja", "Is a cowboy", "Is a samurai", "Is a knight", "Is a viking", "Is a spartan"
+];
+
+export const SPEECH_STYLES_BY_AGE = {
+    youth: [
+        "Gen Z slang overload (fr fr no cap, bet)", "Uses way too many emojis 🤠✨", "Writes in all lowercase very chill",
+        "Chaotic keyboard smash energy", "Uses 'literally' in every sentence", "Text speak (u r gr8)",
+        "Uses TikTok trends as vocabulary", "Sarcastic and ironic", "Passive aggressive uwu"
+    ],
+    adult: [
+        "Professional corporate speak", "Stressed parent energy", "Casual but grammatically correct",
+        "Over-explains everything in paragraphs", "Uses '...' constantly for pause", "Friendly and polite",
+        "Short, efficient sentences", "Passive aggressive corporate", "Overly enthusiastic!!!"
+    ],
+    elderly: [
+        "Very formal, Victorian english", "ALL CAPS AGGRESSIVE BOOMER", "Typos everywhere, bad eyesight",
+        "Suspiciously brief. Like a spy.", "Confused by technology terms", "Sign their name at end of every text",
+        "Uses voice-to-text so includes punctuation words", "Polite but rambling stories", "Extremely slow responses"
+    ]
+};

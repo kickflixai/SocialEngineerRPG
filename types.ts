@@ -53,6 +53,17 @@ export interface Achievement {
   isHidden?: boolean; 
 }
 
+export interface ScamHistoryItem {
+  id: string;
+  victimName: string;
+  victimAvatar: string;
+  victimOccupation: string;
+  payout: number;
+  outcome: 'success' | 'failed' | 'police';
+  date: number;
+  method: string; 
+}
+
 export interface PlayerState {
   attributes: PlayerAttributes;
   money: number;
@@ -61,6 +72,7 @@ export interface PlayerState {
   inventory: string[];
   skills: string[];
   achievements: string[];
+  history: ScamHistoryItem[];
 }
 
 export interface Victim {
