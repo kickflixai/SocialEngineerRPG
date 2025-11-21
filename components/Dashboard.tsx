@@ -1,27 +1,34 @@
 
 import React from 'react';
 import { PlayerState, GameView } from '../types';
-import { ShieldAlert, ShoppingBag, BrainCircuit, MessageSquare, Globe, Activity, Trophy, Award, Lock, Package } from 'lucide-react';
+import { ShieldAlert, ShoppingBag, BrainCircuit, MessageSquare, Globe, Activity, Trophy, Award, Lock, Package, Power } from 'lucide-react';
 import { ACHIEVEMENTS } from '../constants';
 
 interface Props {
   player: PlayerState;
   onChangeView: (view: GameView) => void;
   onOpenInventory: () => void;
+  onReset: () => void;
 }
 
-const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory }) => {
+const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onReset }) => {
   return (
     <div className="h-full p-4 md:p-6 space-y-4 overflow-hidden flex flex-col relative">
-      {/* Inventory Button Absolute Top Right within container if needed, or just part of header? 
-          Let's add it to the header area or nearby. 
-      */}
-      <button 
-        onClick={onOpenInventory}
-        className="absolute top-6 right-6 z-20 bg-zinc-900 border border-zinc-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-zinc-800 shadow-lg"
-      >
-          <Package size={16} /> <span className="text-xs font-bold font-mono">BACKPACK ({player.inventory.length})</span>
-      </button>
+      {/* Header Actions */}
+      <div className="absolute top-6 right-6 z-20 flex gap-2">
+          <button 
+            onClick={onReset}
+            className="bg-zinc-950/80 border border-red-900/50 text-red-500 px-3 py-2 rounded-lg flex items-center gap-2 hover:bg-red-950/50 hover:border-red-500 transition-colors backdrop-blur"
+          >
+              <Power size={16} /> <span className="text-xs font-bold font-mono hidden md:inline">RESET SYSTEM</span>
+          </button>
+          <button 
+            onClick={onOpenInventory}
+            className="bg-zinc-900 border border-zinc-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-zinc-800 shadow-lg"
+          >
+              <Package size={16} /> <span className="text-xs font-bold font-mono">BACKPACK ({player.inventory.length})</span>
+          </button>
+      </div>
 
       {/* Header Stats - Taller & More Prominent for Laptop */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 shrink-0 min-h-[180px]">

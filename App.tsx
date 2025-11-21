@@ -13,9 +13,13 @@ import LandingScreen from './components/LandingScreen';
 import InventoryModal from './components/InventoryModal';
 import { Siren, Skull, ArrowLeft, Cpu, AlertOctagon, Terminal, Shield, Volume2, VolumeX } from 'lucide-react';
 
+const STORAGE_KEY = 'SCAM_SIM_SAVE_V1';
+
 const App: React.FC = () => {
   // Start at LANDING view
   const [view, setView] = useState<GameView>(GameView.LANDING);
+  
+  // Initial Player State
   const [player, setPlayer] = useState<PlayerState>({
     attributes: { name: '', gender: '', age: '', country: '', archetype: '', clothing: '', facialFeatures: '', accessories: '', avatarUrl: '' },
     money: INITIAL_MONEY,
@@ -33,24 +37,64 @@ const App: React.FC = () => {
   const [highValueTargetActive, setHighValueTargetActive] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
 
+  // Save Data Summary for Landing Screen
+  const [saveSummary, setSaveSummary] = useState<{name: string, money: number, threat: number} | null>(null);
+
+  // 1. Check for Save on Mount
+  useEffect(() => {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      try {
+        const data = JSON.parse(raw);
+        if (data.player && data.player.attributes) {
+          setSaveSummary({
+            name: data.player.attributes.name || 'Unknown Agent',
+            money: data.player.money,
+            threat: data.player.threatLevel
+          });
+        }
+      } catch (e) {
+        console.error("Save file corrupt", e);
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+  }, []);
+
+  // 2. Auto-Save Logic
+  useEffect(() => {
+    // Don't save during ephemeral states or Game Over (game over is terminal)
+    if (view === GameView.LANDING || view === GameView.CHARACTER_CREATION || view === GameView.GAME_OVER) return;
+    
+    const gameState = {
+      player,
+      activeScam,
+      view,
+      highValueTargetActive,
+      timestamp: Date.now()
+    };
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
+  }, [player, activeScam, view, highValueTargetActive]);
+
+
   // Initialize Audio Logic based on View & Loading State
   useEffect(() => {
-      // 1. If in Landing, do nothing (handled by handleStart)
+      // If in Landing, do nothing (handled by handleStart/Resume)
       if (view === GameView.LANDING) return;
 
-      // 2. If in Active Scam, Dashboard music should be OFF (ScamInterface handles Hacking Theme)
+      // If in Active Scam, Dashboard music should be OFF (ScamInterface handles Hacking Theme)
       if (view === GameView.ACTIVE_SCAM) {
           audioManager.stopDashboardTheme();
           return;
       }
 
-      // 3. If Loading (Scanning), Dashboard music should be OFF (Scanning SFX plays)
+      // If Loading (Scanning), Dashboard music should be OFF (Scanning SFX plays)
       if (loadingScam) {
           audioManager.stopDashboardTheme();
           return;
       }
 
-      // 4. Otherwise (Dashboard, Menus, Dossier), play Dashboard Theme
+      // Otherwise (Dashboard, Menus, Dossier), play Dashboard Theme
       audioManager.startDashboardTheme();
   }, [view, loadingScam]);
 
@@ -59,12 +103,50 @@ const App: React.FC = () => {
       setIsMuted(muted);
   };
 
-  // Handle Start from Landing Screen
-  const handleStart = () => {
-      // Start music explicitly here
-      audioManager.startDashboardTheme();
-      audioManager.playSuccess();
-      setView(GameView.CHARACTER_CREATION);
+  // --- ACTION HANDLERS ---
+
+  const handleResumeGame = () => {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      try {
+        const data = JSON.parse(raw);
+        setPlayer(data.player);
+        setActiveScam(data.activeScam);
+        setHighValueTargetActive(data.highValueTargetActive);
+        setView(data.view); // Restore exact view
+        audioManager.playSuccess();
+      } catch (e) {
+        alert("Save data corrupted.");
+        handleNewGame();
+      }
+    }
+  };
+
+  const handleNewGame = () => {
+    if (saveSummary && !window.confirm("Starting a new system will erase your current progress. Are you sure?")) {
+      return;
+    }
+    
+    localStorage.removeItem(STORAGE_KEY);
+    setSaveSummary(null);
+    
+    // Reset Player State
+    setPlayer({
+        attributes: { name: '', gender: '', age: '', country: '', archetype: '', clothing: '', facialFeatures: '', accessories: '', avatarUrl: '' },
+        money: INITIAL_MONEY,
+        threatLevel: INITIAL_THREAT,
+        scamsCompleted: 0,
+        inventory: [],
+        skills: [],
+        achievements: []
+    });
+    setActiveScam(null);
+    setHighValueTargetActive(false);
+
+    // Start
+    audioManager.startDashboardTheme();
+    audioManager.playSuccess();
+    setView(GameView.CHARACTER_CREATION);
   };
 
   const handleCharacterComplete = (attrs: PlayerAttributes) => {
@@ -111,31 +193,26 @@ const App: React.FC = () => {
           setHighValueTargetActive(true);
           alert("Data leak purchased. Next target will be High Value.");
       }
-      // Local scam effects are handled by ScamInterface callback response, 
-      // but InventoryModal calls this to remove the item first.
-      // We return the item so the caller can perform additional logic if needed.
       return item;
   };
 
-  // Step 1: Find a Target (Generates Victim, goes to Dossier)
+  // Step 1: Find a Target
   const findTarget = async (difficulty: 'easy' | 'medium' | 'hard') => {
-    audioManager.startScanLoop(); // Start looping sound
+    audioManager.startScanLoop(); 
     setLoadingScam(true);
     try {
         const victim = await generateVictim(difficulty);
         
-        // Apply Country Trust/Suspicion Modifiers
         const countryStats = COUNTRY_DATA[player.attributes.country];
         const trustMod = countryStats?.modifiers?.trustBonus || 0;
         const suspicionMod = countryStats?.modifiers?.suspicionStart || 0;
 
-        // BASE TRUST LEVELS: Easy=40, Medium=20, Hard=0
         let baseTrust = difficulty === 'easy' ? 40 : difficulty === 'medium' ? 20 : 0;
         
         setActiveScam({
             victim,
-            category: '', // Selected in Dossier
-            objectives: [], // Set in finalizeScam
+            category: '', 
+            objectives: [], 
             history: [],
             trust: Math.max(0, Math.min(100, baseTrust + trustMod)),
             suspicion: Math.max(0, Math.min(100, suspicionMod)),
@@ -145,19 +222,19 @@ const App: React.FC = () => {
         });
 
         if (highValueTargetActive) {
-            setHighValueTargetActive(false); // Consume the buff
+            setHighValueTargetActive(false); 
         }
         
         setView(GameView.VICTIM_DOSSIER);
     } catch (e) {
         alert("Failed to find target. Network busy or API Key invalid.");
     } finally {
-        audioManager.stopScanLoop(); // Stop looping sound
+        audioManager.stopScanLoop(); 
         setLoadingScam(false);
     }
   };
 
-  // Step 2: Launch Scam (Generates Opener, goes to Chat)
+  // Step 2: Launch Scam
   const finalizeScam = async (category: string) => {
       if (!activeScam) return;
       audioManager.playSuccess();
@@ -165,11 +242,9 @@ const App: React.FC = () => {
       try {
           const opener = await generateOpener(category, activeScam.victim);
           
-          // Select a random scenario based on the category
           const scenarios = SCAM_SCENARIOS[category] || SCAM_SCENARIOS["Grandson in Trouble"];
           const randomScenario = scenarios[Math.floor(Math.random() * scenarios.length)];
 
-          // Build the 3-step objective array
           const objectives: ScamObjective[] = [
               { id: '1', description: randomScenario.mini1, isCompleted: false, isFinal: false, order: 1 },
               { id: '2', description: randomScenario.mini2, isCompleted: false, isFinal: false, order: 2 },
@@ -193,7 +268,6 @@ const App: React.FC = () => {
 
   const handleAbortScam = () => {
       audioManager.playFailure();
-      // Removed native confirm to let ScamInterface handle UI confirmation
       const penalty = 15;
       const newThreat = Math.min(MAX_THREAT, player.threatLevel + penalty);
       
@@ -202,6 +276,7 @@ const App: React.FC = () => {
       
       if (newThreat >= MAX_THREAT) {
           setView(GameView.GAME_OVER);
+          localStorage.removeItem(STORAGE_KEY); // Clear save on game over
       } else {
           setView(GameView.DASHBOARD);
       }
@@ -216,7 +291,7 @@ const App: React.FC = () => {
           if (player.money + moneyChange >= 20000) add('high_roller');
           if (currentScam.suspicion === 0) add('untouchable');
           if (currentScam.suspicion > 90) add('close_call');
-          // ... other achievements logic ...
+          
           if (currentScam.category === "Grandson in Trouble") add('ach_grandson');
           if (currentScam.category === "IRS Tax Audit") add('ach_irs');
           if (currentScam.category === "Tech Support Virus") add('ach_tech');
@@ -239,7 +314,6 @@ const App: React.FC = () => {
     let moneyChange = 0;
     let threatChange = 0;
 
-    // Retrieve stats
     const countryStats = COUNTRY_DATA[player.attributes.country];
     const payoutMult = countryStats?.modifiers?.payoutMultiplier || 1.0;
     const threatMult = countryStats?.modifiers?.threatMultiplier || 1.0;
@@ -248,15 +322,11 @@ const App: React.FC = () => {
         audioManager.playSuccess();
         const baseReward = activeScam.victim.difficulty === 'easy' ? 1500 : activeScam.victim.difficulty === 'medium' ? 5000 : 15000;
         const skillMult = player.skills.includes('money_laundering') ? 1.15 : 1.0;
-        
-        // High Value Target Buff
         const hvtMult = activeScam.isHighValue ? 2.5 : 1.0;
         
-        // Calculate final reward with multipliers
         const totalMult = payoutMult * skillMult * hvtMult;
         moneyChange = Math.floor((baseReward + Math.floor(Math.random() * 1000)) * totalMult);
         
-        // Check Achievements
         const newAchievements = checkAchievements('success', activeScam, moneyChange);
 
         setPlayer(prev => ({ 
@@ -265,7 +335,7 @@ const App: React.FC = () => {
             scamsCompleted: prev.scamsCompleted + 1,
             achievements: newAchievements
         }));
-        // Delay for effect is handled by UI overlay
+        
         setTimeout(() => {
             const newThreat = Math.min(MAX_THREAT, player.threatLevel);
             setPlayer(prev => ({ ...prev, threatLevel: newThreat }));
@@ -288,7 +358,6 @@ const App: React.FC = () => {
         if (player.skills.includes('vpn_tunnel')) threatChange = 5;
     }
 
-    // Apply Threat Multiplier
     threatChange = Math.ceil(threatChange * threatMult);
     const newThreat = Math.min(MAX_THREAT, player.threatLevel + threatChange);
     
@@ -298,6 +367,7 @@ const App: React.FC = () => {
 
         if (newThreat >= MAX_THREAT) {
             setView(GameView.GAME_OVER);
+            localStorage.removeItem(STORAGE_KEY); // Clear save on game over
         } else {
             setView(GameView.DASHBOARD);
         }
@@ -311,7 +381,6 @@ const App: React.FC = () => {
       const finalCost = Math.floor(item.cost * costMultiplier);
 
       if (player.money >= finalCost) {
-          // Simply Add to Inventory now, effects happen on use
           setPlayer(prev => ({ 
               ...prev, 
               money: prev.money - finalCost,
@@ -331,6 +400,13 @@ const App: React.FC = () => {
               money: prev.money - finalCost,
               skills: [...prev.skills, skill.id]
           }));
+      }
+  };
+
+  const resetGame = () => {
+      if (window.confirm("WARNING: This will completely wipe your current save and return you to the main menu. Are you sure?")) {
+          localStorage.removeItem(STORAGE_KEY);
+          window.location.reload(); // Easiest way to clear all React state cleanly
       }
   };
 
@@ -394,7 +470,13 @@ const App: React.FC = () => {
         <main className="flex-1 overflow-hidden relative z-40">
             
             {view === GameView.LANDING && (
-                <LandingScreen onStart={handleStart} isMuted={isMuted} toggleAudio={toggleAudio} />
+                <LandingScreen 
+                    onNewGame={handleNewGame} 
+                    onResume={handleResumeGame}
+                    saveSummary={saveSummary}
+                    isMuted={isMuted} 
+                    toggleAudio={toggleAudio} 
+                />
             )}
 
             {view === GameView.CHARACTER_CREATION && (
@@ -414,6 +496,7 @@ const App: React.FC = () => {
                         audioManager.playClick();
                         setShowInventory(true);
                     }}
+                    onReset={resetGame}
                 />
             )}
             

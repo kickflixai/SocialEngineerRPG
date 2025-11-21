@@ -1,15 +1,17 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Play, Terminal, Bot, UserCheck, Volume2, VolumeX } from 'lucide-react';
+import { Play, Terminal, Bot, UserCheck, Volume2, VolumeX, Disc, RefreshCw } from 'lucide-react';
 
 interface Props {
-  onStart: () => void;
+  onNewGame: () => void;
+  onResume: () => void;
+  saveSummary: { name: string; money: number; threat: number } | null;
   isMuted: boolean;
   toggleAudio: () => void;
 }
 
-const LandingScreen: React.FC<Props> = ({ onStart, isMuted, toggleAudio }) => {
+const LandingScreen: React.FC<Props> = ({ onNewGame, onResume, saveSummary, isMuted, toggleAudio }) => {
   return (
     <div className="min-h-screen w-full bg-black text-white relative overflow-hidden flex items-center justify-center p-4 md:p-8 font-sans">
       {/* Background Grid and Scanlines */}
@@ -48,10 +50,6 @@ const LandingScreen: React.FC<Props> = ({ onStart, isMuted, toggleAudio }) => {
               <strong className="text-white block mb-1">MISSION BRIEFING:</strong>
               You are a digital con artist. Your goal is to extract funds from <span className="text-green-400 font-bold">AI-generated targets</span> using social engineering, charisma, and black-market tools.
             </p>
-            <p>
-              <strong className="text-white block mb-1">MECHANICS:</strong>
-              Unlike standard RPGs, there are no scripted dialogues. You type your own messages. An AI Arbiter judges your creativity, persuasion, and logic in real-time.
-            </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                <div className="bg-zinc-900/50 p-3 rounded border border-zinc-800 flex gap-3 items-center">
                   <Bot className="text-purple-500" size={20} />
@@ -71,7 +69,7 @@ const LandingScreen: React.FC<Props> = ({ onStart, isMuted, toggleAudio }) => {
           </div>
         </motion.div>
 
-        {/* Right Column: Authentication */}
+        {/* Right Column: Authentication / Load Save */}
         <motion.div 
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -92,18 +90,51 @@ const LandingScreen: React.FC<Props> = ({ onStart, isMuted, toggleAudio }) => {
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <p className="text-zinc-400 text-sm mb-4">
-                   Establish secure uplink to the Dark Web mainframe. 
-                </p>
+              {saveSummary ? (
+                <div className="space-y-4">
+                    <div className="p-4 bg-green-900/10 border border-green-500/30 rounded-lg">
+                        <p className="text-green-400 text-[10px] font-bold uppercase tracking-widest mb-2">SUSPENDED SESSION FOUND</p>
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="text-white font-bold font-mono">{saveSummary.name}</span>
+                            <span className="text-green-400 font-mono">${saveSummary.money.toLocaleString()}</span>
+                        </div>
+                        <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden mt-2">
+                            <div className="bg-red-500 h-full" style={{width: `${saveSummary.threat}%`}}></div>
+                        </div>
+                        <div className="flex justify-between text-[10px] text-zinc-500 mt-1">
+                            <span>HEAT LEVEL</span>
+                            <span>{Math.round(saveSummary.threat)}%</span>
+                        </div>
+                    </div>
 
-                <button 
-                    onClick={onStart}
-                    className="w-full py-4 bg-green-600 hover:bg-green-500 text-black font-bold rounded-lg transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] hover:scale-[1.02]"
-                >
-                    <Play size={18} fill="currentColor" /> INITIALIZE SYSTEM
-                </button>
-              </div>
+                    <button 
+                        onClick={onResume}
+                        className="w-full py-4 bg-green-600 hover:bg-green-500 text-black font-bold rounded-lg transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] hover:scale-[1.02]"
+                    >
+                        <Disc size={18} fill="currentColor" /> RESUME SESSION
+                    </button>
+
+                    <button 
+                        onClick={onNewGame}
+                        className="w-full py-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2 text-xs"
+                    >
+                        <RefreshCw size={14} /> WIPE DATA & RESTART
+                    </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                    <p className="text-zinc-400 text-sm mb-4">
+                    Establish secure uplink to the Dark Web mainframe. 
+                    </p>
+
+                    <button 
+                        onClick={onNewGame}
+                        className="w-full py-4 bg-green-600 hover:bg-green-500 text-black font-bold rounded-lg transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] hover:scale-[1.02]"
+                    >
+                        <Play size={18} fill="currentColor" /> INITIALIZE SYSTEM
+                    </button>
+                </div>
+              )}
 
             </div>
           </div>
