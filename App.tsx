@@ -106,7 +106,7 @@ const App: React.FC = () => {
 
   // Step 1: Find a Target (Generates Victim, goes to Dossier)
   const findTarget = async (difficulty: 'easy' | 'medium' | 'hard') => {
-    audioManager.playScan();
+    audioManager.startScanLoop(); // Start looping sound
     setLoadingScam(true);
     try {
         const victim = await generateVictim(difficulty);
@@ -139,6 +139,7 @@ const App: React.FC = () => {
     } catch (e) {
         alert("Failed to find target. Network busy or API Key invalid.");
     } finally {
+        audioManager.stopScanLoop(); // Stop looping sound
         setLoadingScam(false);
     }
   };

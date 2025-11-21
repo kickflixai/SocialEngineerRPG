@@ -3,6 +3,7 @@ class AudioService {
   private ctx: AudioContext | null = null;
   private bgmNodes: { osc1: OscillatorNode, osc2: OscillatorNode, gain: GainNode } | null = null;
   private hackingNodes: AudioNode[] = [];
+  private scanNodes: AudioNode[] = [];
   private isMuted: boolean = false;
   private bgmStarted: boolean = false;
 
@@ -48,7 +49,7 @@ class AudioService {
     filter.type = 'lowpass';
     filter.frequency.value = 200; // Dark muffling
 
-    gain.gain.value = 0.03; // Very Quiet background
+    gain.gain.value = 0.015; // Extremely quiet background
 
     osc1.connect(filter);
     osc2.connect(filter);
@@ -63,43 +64,51 @@ class AudioService {
   }
 
   public startHackingTheme() {
-      if (this.hackingNodes.length > 0 || this.isMuted || !this.ctx) return;
+      if (this.hackingNodes.length > 0 || this.isMuted) return;
       this.init();
       if (!this.ctx) return;
 
-      // Add a rhythmic tension layer for the active scam
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      const filter = this.ctx.createBiquadFilter();
+      const masterGain = this.ctx.createGain();
+      masterGain.gain.value = 0.03; // Quiet enough to chat over
+      masterGain.connect(this.ctx.destination);
+
+      // Layer 1: Deep Triangle Drone (cleaner than saw)
+      const drone = this.ctx.createOscillator();
+      drone.type = 'triangle'; 
+      drone.frequency.value = 50; 
+      const droneGain = this.ctx.createGain();
+      droneGain.gain.value = 0.4;
+      drone.connect(droneGain);
+      droneGain.connect(masterGain);
+
+      // Layer 2: Rhythmic Tech Pulse (Filtered Noise Simulation)
+      const arpCarrier = this.ctx.createOscillator();
+      arpCarrier.type = 'sawtooth';
+      arpCarrier.frequency.value = 100; // Base freq
       
-      // Bass pulse
-      osc.type = 'sawtooth';
-      osc.frequency.value = 55; // A1
+      const arpFilter = this.ctx.createBiquadFilter();
+      arpFilter.type = 'lowpass';
+      arpFilter.frequency.value = 200;
+      arpFilter.Q.value = 5;
 
-      filter.type = 'lowpass';
-      filter.frequency.value = 300;
-
-      // LFO for rhythm (fast pulse)
+      // LFO to open/close filter rhythmically
       const lfo = this.ctx.createOscillator();
       lfo.type = 'square';
-      lfo.frequency.value = 8; // 8Hz pulse
+      lfo.frequency.value = 4; // 4Hz rhythm
       const lfoGain = this.ctx.createGain();
-      lfoGain.gain.value = 0.15; // Depth
+      lfoGain.gain.value = 500; // Filter sweep depth
 
-      osc.connect(filter);
-      filter.connect(gain);
-      
-      // Modulate volume with LFO
       lfo.connect(lfoGain);
-      lfoGain.connect(gain.gain);
-      
-      gain.gain.value = 0.02; // Base volume
-      gain.connect(this.ctx.destination);
+      lfoGain.connect(arpFilter.frequency);
 
-      osc.start();
+      arpCarrier.connect(arpFilter);
+      arpFilter.connect(masterGain);
+
+      drone.start();
+      arpCarrier.start();
       lfo.start();
 
-      this.hackingNodes = [osc, gain, filter, lfo, lfoGain];
+      this.hackingNodes = [drone, droneGain, arpCarrier, arpFilter, lfo, lfoGain, masterGain];
   }
 
   public stopHackingTheme() {
@@ -108,6 +117,47 @@ class AudioService {
           node.disconnect();
       });
       this.hackingNodes = [];
+  }
+
+  public startScanLoop() {
+      if (this.scanNodes.length > 0 || this.isMuted) return;
+      this.init();
+      if (!this.ctx) return;
+
+      // Sci-Fi Data Stream Sound
+      const masterGain = this.ctx.createGain();
+      masterGain.gain.value = 0.015; // Very subtle
+      masterGain.connect(this.ctx.destination);
+
+      const carrier = this.ctx.createOscillator();
+      carrier.type = 'square';
+      carrier.frequency.value = 800; // High pitch data sound
+
+      const modulator = this.ctx.createOscillator();
+      modulator.type = 'sawtooth';
+      modulator.frequency.value = 12; // Fast modulation
+
+      const modGain = this.ctx.createGain();
+      modGain.gain.value = 1000; // Wide frequency sweep
+
+      // Connect Modulator -> Carrier Frequency (FM Synthesis)
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+
+      carrier.connect(masterGain);
+
+      carrier.start();
+      modulator.start();
+
+      this.scanNodes = [carrier, modulator, modGain, masterGain];
+  }
+
+  public stopScanLoop() {
+      this.scanNodes.forEach(node => {
+          if (node instanceof OscillatorNode) node.stop();
+          node.disconnect();
+      });
+      this.scanNodes = [];
   }
 
   private playTone(freq: number, type: OscillatorType, duration: number, vol: number = 0.1) {
@@ -132,65 +182,38 @@ class AudioService {
   }
 
   public playClick() {
-      this.playTone(800, 'square', 0.05, 0.02);
+      this.playTone(800, 'square', 0.05, 0.01);
   }
 
   public playType() {
-      // Kept for legacy, but unused in chat typing now
-      const freq = 600 + Math.random() * 200;
-      this.playTone(freq, 'sine', 0.03, 0.03);
+      // Unused
   }
 
   public playMessageSent() {
-      this.playTone(400, 'sine', 0.1, 0.1);
-      setTimeout(() => this.playTone(800, 'sine', 0.2, 0.05), 100);
+      this.playTone(400, 'sine', 0.1, 0.05);
+      setTimeout(() => this.playTone(800, 'sine', 0.2, 0.02), 100);
   }
 
   public playMessageReceived() {
-      this.playTone(1200, 'sine', 0.1, 0.05);
-      setTimeout(() => this.playTone(1800, 'sine', 0.3, 0.05), 100);
+      this.playTone(1200, 'sine', 0.1, 0.02);
+      setTimeout(() => this.playTone(1800, 'sine', 0.3, 0.02), 100);
   }
 
   public playSuccess() {
-      this.playTone(440, 'triangle', 0.1, 0.1);
-      setTimeout(() => this.playTone(554, 'triangle', 0.1, 0.1), 100); // C#
-      setTimeout(() => this.playTone(659, 'triangle', 0.4, 0.1), 200); // E
+      this.playTone(440, 'triangle', 0.1, 0.05);
+      setTimeout(() => this.playTone(554, 'triangle', 0.1, 0.05), 100); // C#
+      setTimeout(() => this.playTone(659, 'triangle', 0.4, 0.05), 200); // E
   }
 
   public playFailure() {
-      this.playTone(150, 'sawtooth', 0.3, 0.1);
-      setTimeout(() => this.playTone(100, 'sawtooth', 0.5, 0.1), 150);
+      this.playTone(150, 'sawtooth', 0.3, 0.05);
+      setTimeout(() => this.playTone(100, 'sawtooth', 0.5, 0.05), 150);
   }
   
+  // Deprecated one-shot scan
   public playScan() {
-     // Digital "Scanning" Sequence
-     if (this.isMuted) return;
-     this.init();
-     if(!this.ctx) return;
-     
-     const now = this.ctx.currentTime;
-     const count = 12;
-     
-     for(let i=0; i<count; i++) {
-         const osc = this.ctx.createOscillator();
-         const gain = this.ctx.createGain();
-         
-         osc.type = 'square';
-         // Rapid random frequencies
-         osc.frequency.value = 400 + Math.random() * 1200;
-         
-         osc.connect(gain);
-         gain.connect(this.ctx.destination);
-         
-         const startTime = now + (i * 0.08);
-         const duration = 0.05;
-
-         gain.gain.setValueAtTime(0.05, startTime);
-         gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-         
-         osc.start(startTime);
-         osc.stop(startTime + duration);
-     }
+     this.startScanLoop();
+     setTimeout(() => this.stopScanLoop(), 2000);
   }
 }
 
