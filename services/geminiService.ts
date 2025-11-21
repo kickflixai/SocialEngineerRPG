@@ -84,7 +84,7 @@ export const generatePlayerAvatar = async (attrs: PlayerAttributes): Promise<str
         `;
 
         const response = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
-            model: 'gemini-flash-lite-latest',
+            model: 'gemini-2.5-flash-image',
             contents: { parts: [{ text: prompt }] },
             config: {
                 imageConfig: {
@@ -189,7 +189,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
     let avatarUrl = "https://picsum.photos/400/400";
     try {
         const imageResponse = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
-            model: 'gemini-flash-lite-latest',
+            model: 'gemini-2.5-flash-image',
             contents: { parts: [{ text: `
                 Raw, photorealistic portrait of ${data.name}, a ${data.age} year old ${data.gender} ${data.occupation}.
                 Expression: ${data.personality}, candid shot, natural lighting.
