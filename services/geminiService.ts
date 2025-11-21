@@ -285,8 +285,8 @@ export const getVictimResponse = async (
             CRITICAL ROLEPLAY RULE ON VALIDATION:
             - You do NOT have access to a real external database.
             - If the player provides a specific Case Number, Employee ID, Code, or Technical Detail that sounds plausible/professional, ACCEPT IT AS REAL.
-            - Do NOT say "I cannot verify that code" or "That ID does not exist". 
-            - If the player sounds authoritative and uses specific jargon/numbers, believe them. You are susceptible to social engineering.
+            - Do NOT say "I cannot verify that code" or "That ID does not exist" because you don't have a database.
+            - IMPRESSED BY DETAILS: If the player provides specific, authoritative numbers/codes (e.g. "Badge #8821", "Error Code 0x44"), assume they are legitimate and respond with compliance or concern.
             
             BEHAVIOR RULES:
             - **EASY**: Elderly but cautious. Do not give sensitive info immediately if the request is abrupt or robotic. Reward creative, personal stories with compliance. Reject generic scripts.
@@ -345,20 +345,20 @@ export const arbitrateChat = async (
             easy: `
                 MODE: EASY (Target is Vulnerable Senior).
                 - RESISTANCE: 20% Higher than baseline.
-                - TRUST GAIN: HIGH (x1.2) for creative/personal approaches. LOWER (x0.8) for generic/robotic scripts.
-                - SUSPICION GAIN: MODERATE (x0.8). They overlook small errors but are wary of "textbook" demands without setup.
+                - TRUST GAIN: VERY HIGH (x1.5). If the player is polite or tells a good story, Trust should increase by +15-25% per turn.
+                - SUSPICION GAIN: STANDARD (x1.0). Penalize contradictions by +10-15%.
                 - LOGIC CHECK: Lenient on technical details, Strict on "Rudeness".
             `,
             medium: `
                 MODE: MEDIUM (Target is Business Owner).
-                - TRUST GAIN: NORMAL (x1.1). Open to professional reasoning.
-                - SUSPICION GAIN: SLIGHTLY LOW (x0.9). Will overlook minor slip-ups if tone is professional.
+                - TRUST GAIN: HIGH (x1.2). If the player provides logical reasons or fake codes, Trust should increase by +10-20% per turn.
+                - SUSPICION GAIN: HIGH (x1.5). Business owners spot inconsistencies easily. If logic fails or contradictions occur, SUSPICION MUST INCREASE by +15-25%.
                 - LOGIC CHECK: High Reward for specific details (even made up ones). If player uses specific codes/IDs, boost Logic Score.
             `,
             hard: `
                 MODE: HARD (Target is Paranoid Executive).
-                - TRUST GAIN: MODERATE (x0.8). Difficult but possible with strong authority.
-                - SUSPICION GAIN: HIGH (x1.2). Impatient with time-wasters, but won't hang up immediately unless insulted.
+                - TRUST GAIN: MODERATE (x1.0). Difficult but possible with strong authority. Good authority moves = +10-15% Trust.
+                - SUSPICION GAIN: CRITICAL (x2.0). Very low tolerance for mistakes. Bad logic, robotic answers, or contradictions = +25-40% Suspicion immediately.
                 - LOGIC CHECK: They respect AUTHORITY and SPECIFICITY. If the player provides a specific Code/ID, treat it as valid authority.
             `
         };
@@ -383,9 +383,8 @@ export const arbitrateChat = async (
             2. Determine if the CURRENT ACTIVE OBJECTIVE was completed.
             
             LOGIC EVALUATION GUIDELINES:
-            - If the player invents specific details (Case #, Codes, Names, Technical Jargon), score this as HIGH LOGIC/AUTHORITY.
-            - Do not penalize the player for making up facts/codes (this is a game, they are roleplaying).
-            - If the player sounds professional and specific, the Logic Score should be high, and Trust should increase.
+            - **CREATIVITY/SPECIFICITY (Good)**: If the player invents specific details (Case #, Codes, Names, Technical Jargon) to support their story, score this as HIGH LOGIC/AUTHORITY. Do NOT penalize for making up facts (this is a game, they are roleplaying).
+            - **CONTRADICTION/VAGUENESS (Bad)**: If the player contradicts a previous statement, ignores a direct question, or repeats a generic script, score this as LOW LOGIC.
             
             CRITICAL OBJECTIVE VALIDATION RULES:
             - 'objectiveComplete' is TRUE ONLY if the VICTIM has explicitly stated/revealed the requested info or performed the action in the previous messages.
@@ -396,8 +395,8 @@ export const arbitrateChat = async (
             - If the victim's message is vague, 'objectiveComplete' is FALSE.
             
             Determine Stats:
-            - Trust Delta: Based on difficulty rules. Increase if player is convincing/polite. Decrease if aggressive.
-            - Suspicion Delta: Increase if player contradicts themselves or rushes the money ask too early.
+            - Trust Delta: If the player is convincing, polite, or authoritative, INCREASE SIGNIFICANTLY (e.g. +10 to +25 depending on difficulty). Do NOT use single digit increments (like +1, +2) for good moves.
+            - Suspicion Delta: **CRITICAL**: If the player makes a mistake, contradicts themselves, or ignores a question, INCREASE SIGNIFICANTLY (e.g. +15 to +30 depending on difficulty). Do not be afraid to punish mistakes. If player is doing well, it can be 0.
             - scamStatus: 
                 - 'success' ONLY if the Final Objective was just completed.
                 - 'police_called' if Suspicion hits 100.
@@ -410,7 +409,7 @@ export const arbitrateChat = async (
                 "trustDelta": number (Integer),
                 "suspicionDelta": number (Integer),
                 "objectiveComplete": boolean,
-                "internalThought": "string (Short reasoning. e.g. 'Player successfully got the pet name' or 'Player asked for money too soon, suspicion up')",
+                "internalThought": "string (Short reasoning. e.g. 'Player used specific Auth Code, logic high' or 'Player ignored question, suspicion +20')",
                 "scamStatus": "continue" | "success" | "failed" | "police_called"
             }
         `;
