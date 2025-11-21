@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { GameView, PlayerState, ScamState, PlayerAttributes, Skill, ScamObjective, ShopItem } from './types';
 import { INITIAL_MONEY, INITIAL_THREAT, SCAM_CATEGORIES, MAX_THREAT, SKILLS, SHOP_ITEMS, COUNTRY_DATA, SCAM_SCENARIOS, ACHIEVEMENTS } from './constants';
 import { generateVictim, generateOpener } from './services/geminiService';
+import { audioManager } from './services/audioService';
 
 import CharacterCreator from './components/CharacterCreator';
 import Dashboard from './components/Dashboard';
@@ -9,7 +11,7 @@ import ScamInterface from './components/ScamInterface';
 import VictimDossier from './components/VictimDossier';
 import LandingScreen from './components/LandingScreen'; 
 import InventoryModal from './components/InventoryModal';
-import { Siren, Skull, ArrowLeft, Cpu, AlertOctagon, Terminal, Shield } from 'lucide-react';
+import { Siren, Skull, ArrowLeft, Cpu, AlertOctagon, Terminal, Shield, Volume2, VolumeX } from 'lucide-react';
 
 const App: React.FC = () => {
   // Start at LANDING view
@@ -29,13 +31,31 @@ const App: React.FC = () => {
   const [generatingOpener, setGeneratingOpener] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [highValueTargetActive, setHighValueTargetActive] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+
+  // Initialize Audio
+  useEffect(() => {
+      const interactHandler = () => {
+          audioManager.startBGM();
+          document.removeEventListener('click', interactHandler);
+      };
+      document.addEventListener('click', interactHandler);
+      return () => document.removeEventListener('click', interactHandler);
+  }, []);
+
+  const toggleAudio = () => {
+      const muted = audioManager.toggleMute();
+      setIsMuted(muted);
+  };
 
   // Handle Start from Landing Screen
   const handleStart = () => {
+      audioManager.playSuccess();
       setView(GameView.CHARACTER_CREATION);
   };
 
   const handleCharacterComplete = (attrs: PlayerAttributes) => {
+    audioManager.playSuccess();
     // Retrieve Country Data
     const countryStats = COUNTRY_DATA[attrs.country] || COUNTRY_DATA['USA'];
 
@@ -55,6 +75,7 @@ const App: React.FC = () => {
 
   // Handle Item Usage
   const handleConsumeItem = (item: ShopItem) => {
+      audioManager.playClick();
       // Remove 1 instance of the item from inventory
       const newInventory = [...player.inventory];
       const index = newInventory.indexOf(item.id);
@@ -85,6 +106,7 @@ const App: React.FC = () => {
 
   // Step 1: Find a Target (Generates Victim, goes to Dossier)
   const findTarget = async (difficulty: 'easy' | 'medium' | 'hard') => {
+    audioManager.playScan();
     setLoadingScam(true);
     try {
         const victim = await generateVictim(difficulty);
@@ -94,6 +116,7 @@ const App: React.FC = () => {
         const trustMod = countryStats?.modifiers?.trustBonus || 0;
         const suspicionMod = countryStats?.modifiers?.suspicionStart || 0;
 
+        // BASE TRUST LEVELS: Easy=40, Medium=20, Hard=0
         let baseTrust = difficulty === 'easy' ? 40 : difficulty === 'medium' ? 20 : 0;
         
         setActiveScam({
@@ -123,6 +146,7 @@ const App: React.FC = () => {
   // Step 2: Launch Scam (Generates Opener, goes to Chat)
   const finalizeScam = async (category: string) => {
       if (!activeScam) return;
+      audioManager.playSuccess();
       setGeneratingOpener(true);
       try {
           const opener = await generateOpener(category, activeScam.victim);
@@ -154,6 +178,7 @@ const App: React.FC = () => {
   };
 
   const handleAbortScam = () => {
+      audioManager.playFailure();
       // Removed native confirm to let ScamInterface handle UI confirmation
       const penalty = 15;
       const newThreat = Math.min(MAX_THREAT, player.threatLevel + penalty);
@@ -206,6 +231,7 @@ const App: React.FC = () => {
     const threatMult = countryStats?.modifiers?.threatMultiplier || 1.0;
 
     if (result === 'success') {
+        audioManager.playSuccess();
         const baseReward = activeScam.victim.difficulty === 'easy' ? 1500 : activeScam.victim.difficulty === 'medium' ? 5000 : 15000;
         const skillMult = player.skills.includes('money_laundering') ? 1.15 : 1.0;
         
@@ -235,6 +261,7 @@ const App: React.FC = () => {
         return;
 
     } else if (result === 'police') {
+        audioManager.playFailure();
         threatChange = 25;
         if (player.skills.includes('vpn_tunnel')) threatChange = 12;
         if (player.skills.includes('legal_retainer') && Math.random() < 0.1) {
@@ -242,6 +269,7 @@ const App: React.FC = () => {
             alert("Legal Team blocked the police report!");
         }
     } else {
+        audioManager.playFailure();
         threatChange = 10;
         if (player.skills.includes('vpn_tunnel')) threatChange = 5;
     }
@@ -263,6 +291,7 @@ const App: React.FC = () => {
   };
 
   const buyItem = (item: typeof SHOP_ITEMS[0]) => {
+      audioManager.playClick();
       const countryStats = COUNTRY_DATA[player.attributes.country];
       const costMultiplier = player.attributes.country === 'China' ? 1.2 : 1.0;
       const finalCost = Math.floor(item.cost * costMultiplier);
@@ -278,6 +307,7 @@ const App: React.FC = () => {
   };
 
   const buySkill = (skill: typeof SKILLS[0]) => {
+      audioManager.playClick();
       const costMultiplier = player.attributes.country === 'China' ? 1.2 : 1.0;
       const finalCost = Math.floor(skill.cost * costMultiplier);
 
@@ -324,6 +354,9 @@ const App: React.FC = () => {
                     </div>
                 </div>
                 <div className="flex items-center gap-2 md:gap-4">
+                    <button onClick={toggleAudio} className="p-2 rounded bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-white hover:border-zinc-600 transition-colors">
+                        {isMuted ? <VolumeX size={16}/> : <Volume2 size={16}/>}
+                    </button>
                     <div className="text-right">
                         <p className="text-[10px] text-zinc-500 font-bold uppercase hidden md:block">Available Funds</p>
                         <p className="text-sm md:text-xl font-mono text-white font-bold">${player.money.toLocaleString()}</p>
@@ -331,7 +364,10 @@ const App: React.FC = () => {
                     {/* Hide Dashboard button in Dossier and Active Scam to prevent easy exit */}
                     {view !== GameView.DASHBOARD && view !== GameView.VICTIM_DOSSIER && view !== GameView.ACTIVE_SCAM && (
                         <button 
-                            onClick={() => setView(GameView.DASHBOARD)} 
+                            onClick={() => {
+                                audioManager.playClick();
+                                setView(GameView.DASHBOARD);
+                            }} 
                             className="px-3 py-2 md:px-4 md:py-2 bg-zinc-900 border border-zinc-700 hover:border-white rounded text-xs md:text-sm text-zinc-300 hover:text-white flex items-center gap-2 transition-colors"
                         >
                             <ArrowLeft size={14}/> <span className="hidden md:inline">Dashboard</span>
@@ -356,8 +392,14 @@ const App: React.FC = () => {
             {view === GameView.DASHBOARD && (
                 <Dashboard 
                     player={player} 
-                    onChangeView={setView} 
-                    onOpenInventory={() => setShowInventory(true)}
+                    onChangeView={(v) => {
+                        audioManager.playClick();
+                        setView(v);
+                    }} 
+                    onOpenInventory={() => {
+                        audioManager.playClick();
+                        setShowInventory(true);
+                    }}
                 />
             )}
             
@@ -378,7 +420,10 @@ const App: React.FC = () => {
                     onUpdateScam={setActiveScam} 
                     onScamEnd={handleScamEnd} 
                     onAbort={handleAbortScam}
-                    onOpenInventory={() => setShowInventory(true)}
+                    onOpenInventory={() => {
+                        audioManager.playClick();
+                        setShowInventory(true);
+                    }}
                     onConsumeItem={handleConsumeItem}
                 />
             )}

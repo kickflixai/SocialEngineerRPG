@@ -1,8 +1,11 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ScamState, PlayerState, ChatMessage, ShopItem } from '../types';
 import { getVictimResponse, arbitrateChat, generateScamHint } from '../services/geminiService';
+import { audioManager } from '../services/audioService';
 import { Send, Terminal, Wifi, Radio, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Circle, Package, ChevronDown, ChevronUp, Target, Lightbulb } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import InventoryModal from './InventoryModal';
 
 interface Props {
   scam: ScamState;
@@ -27,6 +30,9 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   const [hints, setHints] = useState<string[]>([]);
   const [loadingHints, setLoadingHints] = useState(false);
 
+  // Inventory Modal Local State
+  const [inventoryOpen, setInventoryOpen] = useState(false);
+
   const chatEndRef = useRef<HTMLDivElement>(null);
   const initRef = useRef(false);
 
@@ -36,6 +42,17 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
     scrollToBottom();
   }, [scam.history, processing, hints]);
 
+  // Start Hacking Ambient Music
+  useEffect(() => {
+      audioManager.startHackingTheme();
+      return () => {
+          audioManager.stopHackingTheme();
+      };
+  }, []);
+
+  const activeObjective = scam.objectives.find(o => !o.isCompleted) || scam.objectives[scam.objectives.length - 1];
+  const allCompleted = scam.objectives.every(o => o.isCompleted);
+
   // Handle initial Victim Message
   useEffect(() => {
      if (!initRef.current && scam.history.length === 1 && scam.history[0].sender === 'player') {
@@ -43,8 +60,9 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
          const fetchFirstReply = async () => {
              setProcessing(true);
              try {
-                 const reply = await getVictimResponse(scam.history, scam.victim, scam.category);
-                 const newHistory = [...scam.history, { sender: 'victim', text: reply, timestamp: Date.now() } as ChatMessage];
+                 const replyData = await getVictimResponse(scam.history, scam.victim, scam.category, activeObjective);
+                 audioManager.playMessageReceived();
+                 const newHistory = [...scam.history, { sender: 'victim', text: replyData.text, timestamp: Date.now() } as ChatMessage];
                  onUpdateScam({
                      ...scam,
                      history: newHistory
@@ -54,10 +72,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
          };
          fetchFirstReply();
      }
-  }, [scam, onUpdateScam]);
-
-  const activeObjective = scam.objectives.find(o => !o.isCompleted) || scam.objectives[scam.objectives.length - 1];
-  const allCompleted = scam.objectives.every(o => o.isCompleted);
+  }, [scam, onUpdateScam, activeObjective]);
 
   // Intercept consumption to handle local state
   const handleUseItem = (item: ShopItem) => {
@@ -88,28 +103,11 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
      }
   };
 
-  // Since InventoryModal is in App.tsx but triggered here via onOpenInventory, 
-  // we actually need to pass the 'handleUseItem' logic up to App OR pass a specific callback to InventoryModal.
-  // The current architecture has InventoryModal in App.tsx receiving `handleConsumeItem`.
-  // `handleConsumeItem` in App.tsx returns the item.
-  // So we need to modify `handleConsumeItem` in App.tsx to accept a callback or handle the item context there?
-  // Actually, App.tsx renders InventoryModal. InventoryModal calls `onUseItem` prop.
-  // If we want ScamInterface local state to update, App.tsx needs to know about `setActiveScam` or `ScamInterface` needs to render its own modal?
-  // Rendeing InventoryModal inside App.tsx makes it hard to update Scam state directly.
-  // LET'S CHANGE: Render InventoryModal inside ScamInterface for the 'scam' context usage.
-  // But wait, InventoryModal is used in Dashboard too.
-  // Okay, let's revert InventoryModal in App.tsx and render it locally in Dashboard and ScamInterface.
-  // I will remove InventoryModal from App.tsx return, and import it in Dashboard and ScamInterface.
-
-  // Updated strategy: InventoryModal is rendered in ScamInterface.
-
-  const [inventoryOpen, setInventoryOpen] = useState(false);
-
   const handleSend = async (textOverride?: string) => {
-    // ... existing logic ...
     const msgToSend = textOverride || input;
     if (!msgToSend.trim() || processing) return;
 
+    audioManager.playMessageSent();
     setHints([]);
     const playerMsg: ChatMessage = { sender: 'player', text: msgToSend, timestamp: Date.now() };
     const newHistory = [...scam.history, playerMsg];
@@ -132,25 +130,29 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         
         setLastThought(analysis.internalThought);
 
-        let newTrust = Math.max(0, Math.min(100, scam.trust + analysis.trustDelta));
-        let newSuspicion = Math.max(0, Math.min(100, scam.suspicion + analysis.suspicionDelta));
+        let newTrust = Math.round(Math.max(0, Math.min(100, scam.trust + analysis.trustDelta)));
+        let newSuspicion = Math.round(Math.max(0, Math.min(100, scam.suspicion + analysis.suspicionDelta)));
         
         if (player.skills.includes('silver_tongue') && analysis.suspicionDelta > 0) {
-             newSuspicion -= Math.floor(analysis.suspicionDelta * 0.2);
+             newSuspicion = Math.round(newSuspicion - (analysis.suspicionDelta * 0.2));
         }
         if (player.skills.includes('empathy_mirror') && analysis.trustDelta > 0) {
-             newTrust += Math.ceil(analysis.trustDelta * 0.25);
+             newTrust = Math.round(newTrust + (analysis.trustDelta * 0.25));
         }
 
-        const updatedObjectives = [...scam.objectives];
-        if (analysis.objectiveComplete) {
+        let updatedObjectives = [...scam.objectives];
+        let isObjectiveComplete = analysis.objectiveComplete;
+
+        // Check if Arbiter triggered completion
+        if (isObjectiveComplete) {
+            audioManager.playSuccess(); 
             const objIndex = updatedObjectives.findIndex(o => o.id === activeObjective.id);
             if (objIndex !== -1) {
                 updatedObjectives[objIndex] = { ...updatedObjectives[objIndex], isCompleted: true };
             }
         }
 
-        const updatedScam = {
+        let updatedScam = {
             ...scam,
             history: newHistory,
             trust: newTrust,
@@ -168,10 +170,30 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             return;
         }
 
-        const reply = await getVictimResponse(newHistory, scam.victim, scam.category);
+        // Get Victim Response
+        // Pass the updated objective list to determine the "Active" one for the victim prompt
+        const nextActiveObjective = updatedObjectives.find(o => !o.isCompleted) || updatedObjectives[updatedObjectives.length - 1];
+        const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, nextActiveObjective);
+        
+        audioManager.playMessageReceived();
+
+        // Check if Victim triggered completion (Self-report)
+        if (replyData.objectiveComplete && !isObjectiveComplete) {
+             audioManager.playSuccess();
+             const objIndex = updatedObjectives.findIndex(o => o.id === nextActiveObjective.id);
+             if (objIndex !== -1) {
+                updatedObjectives[objIndex] = { ...updatedObjectives[objIndex], isCompleted: true };
+                // Update scam state with new objective completion
+                updatedScam = {
+                    ...updatedScam,
+                    objectives: updatedObjectives
+                };
+             }
+        }
+
         onUpdateScam({
             ...updatedScam,
-            history: [...newHistory, { sender: 'victim', text: reply, timestamp: Date.now() }]
+            history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() }]
         });
 
     } catch (error) {
@@ -183,6 +205,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
 
   const requestHints = async () => {
       if (scam.trust < 20) return;
+      audioManager.playClick();
       onUpdateScam({ ...scam, trust: Math.max(0, scam.trust - 20) });
       setLoadingHints(true);
       try {
@@ -191,13 +214,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       } catch (e) { console.error(e); } finally { setLoadingHints(false); }
   };
 
-  // Import InventoryModal dynamically or use the prop passed down? 
-  // Since I can't edit the import easily without rewriting the whole file, assume I update imports.
-  // Wait, I am rewriting the whole file. I will import InventoryModal.
-
   return (
     <div className="flex flex-col md:grid md:grid-cols-3 h-full gap-4 md:gap-6 p-2 md:p-6 bg-black overflow-hidden relative">
-       {/* ... existing layout code ... */}
        {/* Mobile Header - Collapsible Stats (Visible only on Mobile) */}
        <div className="md:hidden z-20 bg-zinc-950 border border-zinc-800 rounded-xl p-3 shrink-0 relative">
           <div className="flex items-center justify-between" onClick={() => setMobileStatsExpanded(!mobileStatsExpanded)}>
@@ -209,10 +227,10 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                       <h2 className="text-sm font-bold text-white font-mono">{scam.victim.name}</h2>
                       <div className="flex gap-2">
                           <div className="w-16 h-1.5 bg-zinc-900 rounded-full mt-1 overflow-hidden border border-zinc-800">
-                              <div className="h-full bg-green-500" style={{width: `${scam.trust}%`}}></div>
+                              <div className="h-full bg-green-500" style={{width: `${Math.round(scam.trust)}%`}}></div>
                           </div>
                           <div className="w-16 h-1.5 bg-zinc-900 rounded-full mt-1 overflow-hidden border border-zinc-800">
-                              <div className="h-full bg-red-500" style={{width: `${scam.suspicion}%`}}></div>
+                              <div className="h-full bg-red-500" style={{width: `${Math.round(scam.suspicion)}%`}}></div>
                           </div>
                       </div>
                   </div>
@@ -228,8 +246,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                     className="overflow-hidden pt-3 border-t border-zinc-800 mt-2 space-y-2"
                 >
                      <div className="grid grid-cols-2 gap-2 text-xs font-mono text-zinc-400">
-                        <div><span className="block text-[10px] uppercase text-zinc-600">Trust</span><span className="text-green-400">{scam.trust}%</span></div>
-                        <div><span className="block text-[10px] uppercase text-zinc-600">Suspicion</span><span className="text-red-400">{scam.suspicion}%</span></div>
+                        <div><span className="block text-[10px] uppercase text-zinc-600">Trust</span><span className="text-green-400">{Math.round(scam.trust)}%</span></div>
+                        <div><span className="block text-[10px] uppercase text-zinc-600">Suspicion</span><span className="text-red-400">{Math.round(scam.suspicion)}%</span></div>
                         <div><span className="block text-[10px] uppercase text-zinc-600">Active Obj</span><span className="text-blue-400">{activeObjective.description}</span></div>
                     </div>
                  </motion.div>
@@ -261,7 +279,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             <div className="space-y-2 relative">
                 <div className="flex justify-between text-xs font-mono">
                     <span className="text-green-500 font-bold tracking-widest flex items-center gap-2"><Lock size={12}/> TRUST_LEVEL</span>
-                    <span className="text-white font-bold">{scam.trust}%</span>
+                    <span className="text-white font-bold">{Math.round(scam.trust)}%</span>
                 </div>
                 <div className="h-3 bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden flex gap-0.5">
                     {Array.from({length: 20}).map((_, i) => (
@@ -273,7 +291,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             <div className="space-y-2 relative">
                 <div className="flex justify-between text-xs font-mono">
                     <span className="text-red-500 font-bold tracking-widest flex items-center gap-2"><AlertTriangle size={12}/> SUSPICION</span>
-                    <span className="text-white font-bold">{scam.suspicion}%</span>
+                    <span className="text-white font-bold">{Math.round(scam.suspicion)}%</span>
                 </div>
                 <div className="h-3 bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden flex gap-0.5">
                      {Array.from({length: 20}).map((_, i) => (
@@ -370,7 +388,17 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                     </button>
                  </div>
 
-                 <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} disabled={processing} placeholder="Type payload..." className="flex-1 bg-black border border-zinc-700 rounded-lg p-3 text-white placeholder-zinc-600 focus:border-green-500 focus:ring-1 focus:ring-green-500/20 outline-none transition-all font-mono text-xs"/>
+                 <input 
+                    type="text" 
+                    value={input} 
+                    onChange={(e) => {
+                        setInput(e.target.value);
+                    }} 
+                    onKeyDown={(e) => e.key === 'Enter' && handleSend()} 
+                    disabled={processing} 
+                    placeholder="Type payload..." 
+                    className="flex-1 bg-black border border-zinc-700 rounded-lg p-3 text-white placeholder-zinc-600 focus:border-green-500 focus:ring-1 focus:ring-green-500/20 outline-none transition-all font-mono text-xs"
+                 />
                  <button onClick={() => handleSend()} disabled={processing || !input.trim()} className="bg-green-600 hover:bg-green-500 disabled:bg-zinc-900 disabled:text-zinc-700 disabled:border-zinc-800 text-black font-bold px-4 rounded-lg transition-all flex items-center justify-center"><Send size={18} /></button>
              </div>
         </div>
@@ -446,26 +474,6 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             )}
        </AnimatePresence>
        
-       {/* Import InventoryModal Dynamically? No, we can import at top. 
-           We need to import InventoryModal in this file. 
-           But since I am replacing content, I'll add import statement at top.
-       */}
-       {/* RENDER INVENTORY MODAL */}
-       {/* Since I am editing the file content, I need to make sure InventoryModal is imported. I added it to import list at top. */}
-       
-       {/* We need to import InventoryModal at top of this file */}
-       
-       {/* Actually, I cannot inject the Modal component here because it is not imported. 
-           The prompt asked me to update files. 
-           If I update App.tsx to render it, I pass props.
-           If I render here, I need to import. 
-           I will assume I can add the import at the top.
-       */}
-
-       {/* BUT WAIT. InventoryModal is a new component. I need to import it. */}
-       {/* Adding the InventoryModal usage here */}
-        {/* Import statement was added at the top of the file content block */}
-        
         <InventoryModal 
             isOpen={inventoryOpen} 
             onClose={() => setInventoryOpen(false)} 
@@ -476,8 +484,5 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
     </div>
   );
 };
-
-// Need to import InventoryModal in this file as well
-import InventoryModal from './InventoryModal';
 
 export default ScamInterface;

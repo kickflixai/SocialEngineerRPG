@@ -247,7 +247,12 @@ export const generateOpener = async (scamCategory: string, victim: Victim): Prom
     }
 };
 
-export const getVictimResponse = async (history: ChatMessage[], victim: Victim, scamCategory: string): Promise<string> => {
+export const getVictimResponse = async (
+    history: ChatMessage[], 
+    victim: Victim, 
+    scamCategory: string,
+    activeObjective: ScamObjective
+): Promise<{ text: string, objectiveComplete: boolean }> => {
     try {
         const ai = getClient();
         
@@ -262,20 +267,22 @@ export const getVictimResponse = async (history: ChatMessage[], victim: Victim, 
             
             Current Situation: You are receiving messages that seem like a ${scamCategory} scam.
             
-            INSTRUCTIONS FOR AI BASED ON DIFFICULTY:
-            - **EASY (Senior/Elderly)**: You are generally trusting. If the player explains a technical step clearly (like "click the blue button"), you SHOULD eventually succeed. Do NOT get stuck in an infinite loop of "I can't find it" if the player's instructions are clear. You can be slow, but you must progress the story.
-            - **MEDIUM (Business Owner)**: You are busy. You respond shortly. You need a logical reason to continue. You are skeptical but open to "opportunities" if phrased well.
-            - **HARD (Executive/Rich)**: You are hostile to cold calls. You ask for immediate credentials. You mock valid attempts. You threaten legal action. It is very hard to make you happy.
+            CURRENT SCAMMER OBJECTIVE: "${activeObjective.description}".
             
-            GAME FLOW RULE:
-            - Do NOT block the game forever.
-            - If the player is making sense and addressing your concerns, allow the conversation to move forward.
-            - If the player is rude or nonsensical, then you can stonewall them.
-
-            General Rules:
-            1. Be unique to your character.
-            2. If they mention your specific Weakness or Hidden Fact, you soften up significantly (even if Hard).
-            3. Keep responses concise (1-3 sentences).
+            INSTRUCTIONS:
+            1. Reply to the message in character.
+            2. IF you decide to Provide/Reveal/Confirm the information requested in the "CURRENT SCAMMER OBJECTIVE" (e.g. you say the SSN, you admit your name, you click the link, etc), you MUST set 'objectiveComplete' to true in the JSON response.
+            
+            BEHAVIOR RULES:
+            - **EASY**: Trusting. If they ask nicely or use fear, give the info.
+            - **MEDIUM**: Skeptical. Need a reason.
+            - **HARD**: Hostile. Require specific proof or doxxing.
+            
+            Return JSON:
+            {
+                "text": "Your chat response string",
+                "objectiveComplete": boolean
+            }
         `;
 
         const chatHistory = history.map(h => ({
@@ -285,17 +292,24 @@ export const getVictimResponse = async (history: ChatMessage[], victim: Victim, 
 
         const chat = ai.chats.create({
             model: 'gemini-flash-lite-latest',
-            config: { systemInstruction: context },
+            config: { 
+                systemInstruction: context,
+                responseMimeType: 'application/json'
+            },
             history: chatHistory.slice(0, -1) 
         });
 
         const lastMsg = history[history.length - 1].text;
         const result = await retryOperation<GenerateContentResponse>(() => chat.sendMessage({ message: lastMsg }));
         
-        return result.text || "...";
+        const parsed = parseJSON(result.text || "{}");
+        return {
+            text: parsed?.text || "...",
+            objectiveComplete: parsed?.objectiveComplete || false
+        };
     } catch (e) {
         console.error("Victim response failed", e);
-        return "I'm not sure I understand.";
+        return { text: "I'm not sure I understand.", objectiveComplete: false };
     }
 };
 
@@ -369,8 +383,8 @@ export const arbitrateChat = async (
             {
                 "logicScore": number (0-100),
                 "emotionalImpact": number (0-100),
-                "trustDelta": number,
-                "suspicionDelta": number,
+                "trustDelta": number (Integer),
+                "suspicionDelta": number (Integer),
                 "objectiveComplete": boolean,
                 "internalThought": "string (Short reasoning. e.g. 'Player successfully got the pet name' or 'Player asked for money too soon, suspicion up')",
                 "scamStatus": "continue" | "success" | "failed" | "police_called"
@@ -383,7 +397,7 @@ export const arbitrateChat = async (
             config: { responseMimeType: 'application/json' }
         }));
 
-        return parseJSON(response.text || "{}") || {
+        const result = parseJSON(response.text || "{}") || {
             logicScore: 50,
             emotionalImpact: 0,
             trustDelta: 0,
@@ -392,6 +406,12 @@ export const arbitrateChat = async (
             internalThought: "Analyzing...",
             scamStatus: 'continue'
         };
+
+        // Enforce integer rounding
+        result.trustDelta = Math.round(result.trustDelta || 0);
+        result.suspicionDelta = Math.round(result.suspicionDelta || 0);
+
+        return result;
     } catch (e) {
         console.error("Arbiter failed", e);
         return {

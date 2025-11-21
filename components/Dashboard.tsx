@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { PlayerState, GameView } from '../types';
 import { ShieldAlert, ShoppingBag, BrainCircuit, MessageSquare, Globe, Activity, Trophy, Award, Lock, Package } from 'lucide-react';
@@ -75,13 +76,13 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory }) =
            
            <div className="relative z-10 mt-4">
                <div className="flex items-baseline gap-1 mb-2">
-                    <p className="text-4xl md:text-5xl font-bold font-mono text-white tracking-tighter">{player.threatLevel}</p>
+                    <p className="text-4xl md:text-5xl font-bold font-mono text-white tracking-tighter">{Math.round(player.threatLevel)}</p>
                     <span className="text-sm text-zinc-500 font-mono">%</span>
                </div>
                <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
                    <div 
                     className={`h-full transition-all duration-1000 ease-out ${player.threatLevel > 80 ? 'bg-red-600 shadow-[0_0_10px_red]' : 'bg-red-500'}`} 
-                    style={{ width: `${player.threatLevel}%` }}
+                    style={{ width: `${Math.round(player.threatLevel)}%` }}
                    />
                </div>
            </div>

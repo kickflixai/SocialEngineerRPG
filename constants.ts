@@ -1,3 +1,4 @@
+
 import { Skill, ShopItem, CountryStats, Achievement } from './types';
 
 export const INITIAL_MONEY = 1000;
@@ -150,37 +151,37 @@ interface ScamScenario {
 export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   "Grandson in Trouble": [
     {
-        mini1: "Get the 'Grandson's' first name",
-        mini2: "Get the city where he is 'arrested'",
-        final: "Wire $2,500 for 'Bail Money'"
+        mini1: "Confirm identity as family member",
+        mini2: "Establish the emergency (Jail/Hospital)",
+        final: "Secure bail/medical payment details"
     },
     {
-        mini1: "Verify their home address",
-        mini2: "Get their cell phone number",
-        final: "Send photos of Target Gift Cards"
+        mini1: "Gain trust as a relative",
+        mini2: "Explain the urgent accident",
+        final: "Get agreement to send gift cards"
     }
   ],
   "IRS Tax Audit": [
     {
         mini1: "Confirm their Full Legal Name",
-        mini2: "Get the last 4 digits of SSN",
+        mini2: "Establish fear of imminent arrest",
         final: "Pay 'back taxes' via Bitcoin ATM"
     },
     {
         mini1: "Verify their mailing address",
-        mini2: "Get them to admit to filing late",
+        mini2: "Get them to admit to a filing error",
         final: "Purchase 'Federal Vouchers' (Gift Cards)"
     }
   ],
   "Tech Support Virus": [
     {
-        mini1: "Get them to open the 'Event Viewer'",
-        mini2: "Get them to read their 'IP Address'",
+        mini1: "Convince them their PC is infected",
+        mini2: "Get them to grant remote access",
         final: "Install 'AnyDesk' remote software"
     },
     {
         mini1: "Identify their Computer Model",
-        mini2: "Get them to find the 'Windows Key'",
+        mini2: "Find the 'Windows Key' together",
         final: "Pay $400 'Firewall Fee' via Card"
     }
   ],
@@ -200,7 +201,7 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   ],
   "Romance Scam": [
     {
-        mini1: "Learn the name of their first pet",
+        mini1: "Establish deep emotional connection",
         mini2: "Get them to say 'I love you'",
         final: "Pay for your 'Plane Ticket' to visit"
     }
@@ -215,7 +216,7 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   "Kidnapping Hoax": [
     {
         mini1: "Confirm their child's name",
-        mini2: "Confirm they are alone right now",
+        mini2: "Isolate them from other contact",
         final: "Drop cash at the specific location"
     }
   ],
