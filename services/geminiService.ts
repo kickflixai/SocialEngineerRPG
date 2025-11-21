@@ -295,7 +295,7 @@ export const getVictimResponse = async (
     victim: Victim, 
     scamCategory: string, 
     activeObjective: ScamObjective
-): Promise<{ text: string, objectiveComplete: boolean }> => {
+): Promise<{ text: string, objectiveComplete: boolean, policeTriggered: boolean, callTerminated: boolean }> => {
     try {
         const ai = getClient();
         
@@ -318,6 +318,10 @@ export const getVictimResponse = async (
             3. If you are "Technologically Illiterate", act like it. If you are "Aggressive", be aggressive.
             4. SYSTEM MESSAGES: If you see a message from 'system', REACT TO IT realistically.
             
+            GAME OVER CONDITIONS (FAIL STATE):
+            - If you feel extremely threatened, scared, or angry, you should HANG UP or CALL THE POLICE.
+            - If you say "I am calling the police" or "I am hanging up", you must set the corresponding flags below.
+            
             OBJECTIVE CHECK:
             - Did you (the victim) EXPLICITLY provide the information requested in the "CURRENT SCAMMER OBJECTIVE" in THIS specific response?
             - If YES (you surrendered the info), return 'objectiveComplete': TRUE.
@@ -330,7 +334,9 @@ export const getVictimResponse = async (
             Return JSON:
             {
                 "text": "Your chat response string",
-                "objectiveComplete": boolean
+                "objectiveComplete": boolean,
+                "policeTriggered": boolean, // Set TRUE if you are calling authorities/police/lawyer
+                "callTerminated": boolean // Set TRUE if you are hanging up in anger/fear
             }
         `;
 
@@ -356,11 +362,13 @@ export const getVictimResponse = async (
         const parsed = parseJSON(result.text || "{}");
         return {
             text: parsed?.text || "...",
-            objectiveComplete: parsed?.objectiveComplete || false
+            objectiveComplete: parsed?.objectiveComplete || false,
+            policeTriggered: parsed?.policeTriggered || false,
+            callTerminated: parsed?.callTerminated || false
         };
     } catch (e) {
         console.error("Victim response failed", e);
-        return { text: "I'm not sure I understand.", objectiveComplete: false };
+        return { text: "I'm not sure I understand.", objectiveComplete: false, policeTriggered: false, callTerminated: false };
     }
 };
 

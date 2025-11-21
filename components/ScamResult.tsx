@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CheckCircle2, ShieldAlert, Banknote, AlertTriangle, ArrowRight, Home } from 'lucide-react';
 
@@ -7,6 +8,7 @@ interface Props {
       moneyChange: number;
       threatChange: number;
       victimName: string;
+      reason?: string;
   };
   onContinue: () => void;
 }
@@ -41,7 +43,7 @@ const ScamResult: React.FC<Props> = ({ result, onContinue }) => {
                 {isSuccess ? 'MISSION ACCOMPLISHED' : isPolice ? 'AUTHORITIES ALERTED' : 'CONNECTION LOST'}
             </h2>
             <p className={`text-lg font-mono uppercase tracking-widest mb-12 ${isSuccess ? 'text-green-500' : 'text-red-500'}`}>
-                {isSuccess ? 'Payload Delivered Successfully' : isPolice ? 'Emergency Evasion Protocol Active' : 'Target Terminated Connection'}
+                {isSuccess ? 'Payload Delivered Successfully' : result.reason || (isPolice ? 'Emergency Evasion Protocol Active' : 'Target Terminated Connection')}
             </p>
 
             {/* Stats Grid */}

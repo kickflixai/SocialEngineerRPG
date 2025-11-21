@@ -326,33 +326,33 @@ interface ScamScenario {
 export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   "Grandson in Trouble": [
     {
-        mini1: "Confirm identity as family member",
-        mini2: "Establish the emergency (Jail/Hospital)",
+        mini1: "Get them to say 'It's me, [Name]'",
+        mini2: "Make them agree to 'Keep it secret'",
         final: "Secure bail/medical payment details"
     },
     {
-        mini1: "Gain trust as a relative",
-        mini2: "Explain the urgent accident",
+        mini1: "Get them to guess your name first",
+        mini2: "Convince them a lawyer will call next",
         final: "Get agreement to send gift cards"
     }
   ],
   "IRS Tax Audit": [
     {
         mini1: "Confirm their Full Legal Name",
-        mini2: "Establish fear of imminent arrest",
+        mini2: "Make them admit to 'ignoring notices'",
         final: "Pay 'back taxes' via Bitcoin ATM"
     },
     {
         mini1: "Verify their mailing address",
-        mini2: "Get them to admit to a filing error",
+        mini2: "Make them repeat the 'Case ID'",
         final: "Purchase 'Federal Vouchers' (Gift Cards)"
     }
   ],
   "Tech Support Virus": [
     {
-        mini1: "Convince them their PC is infected",
-        mini2: "Get them to grant remote access",
-        final: "Install 'AnyDesk' remote software"
+        mini1: "Get them to read the 'Error Code'",
+        mini2: "Make them download 'AnyDesk'",
+        final: "Grant remote access control"
     },
     {
         mini1: "Identify their Computer Model",
@@ -376,7 +376,7 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   ],
   "Romance Scam": [
     {
-        mini1: "Establish deep emotional connection",
+        mini1: "Get them to share a childhood memory",
         mini2: "Get them to say 'I love you'",
         final: "Pay for your 'Plane Ticket' to visit"
     }
@@ -391,7 +391,7 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   "Kidnapping Hoax": [
     {
         mini1: "Confirm their child's name",
-        mini2: "Isolate them from other contact",
+        mini2: "Make them promise not to call police",
         final: "Drop cash at the specific location"
     }
   ],
@@ -670,7 +670,16 @@ export const FIRST_NAMES = [
     "Alessandro", "Bianca", "Carlos", "Diego", "Elena", "Fabio", "Gabriela", "Hugo", "Isabella", "Javier",
     "Katarina", "Luca", "Mateo", "Natalia", "Octavio", "Paulo", "Rafael", "Sofia", "Thiago", "Valentina",
     "Akira", "Bao", "Chen", "Dao", "Emiko", "Feng", "Genji", "Hiro", "Ichiro", "Jin",
-    "Kenji", "Li", "Min", "Naomi", "Ryu", "Sakura", "Takumi", "Yuki", "Zhang", "Wei"
+    "Kenji", "Li", "Min", "Naomi", "Ryu", "Sakura", "Takumi", "Yuki", "Zhang", "Wei",
+    "Eleanor", "Margaret", "Dorothy", "Richard", "Robert", "John", "William", "James", "Mary", "Patricia",
+    "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen", "Nancy", "Lisa",
+    "Betty", "Sandra", "Ashley", "Kimberly", "Donna", "Emily", "Michelle", "Carol", "Amanda", "Melissa",
+    "Deborah", "Stephanie", "Rebecca", "Laura", "Sharon", "Cynthia", "Kathleen", "Amy", "Shirley", "Angela",
+    "Helen", "Anna", "Brenda", "Pamela", "Nicole", "Emma", "Samantha", "Katherine", "Christine", "Debra",
+    "Rachel", "Catherine", "Carolyn", "Janet", "Ruth", "Maria", "Heather", "Diane", "Virginia", "Julie",
+    "Joyce", "Victoria", "Olivia", "Kelly", "Christina", "Lauren", "Joan", "Evelyn", "Judith", "Megan",
+    "Cheryl", "Andrea", "Hannah", "Martha", "Jacqueline", "Frances", "Gloria", "Ann", "Teresa", "Kathryn",
+    "Sara", "Janice", "Jean", "Alice", "Madison", "Doris", "Abigail", "Julia", "Judy", "Grace"
 ];
 
 export const LAST_NAMES = [
@@ -684,7 +693,14 @@ export const LAST_NAMES = [
     "Gutierrez", "Ortiz", "Morgan", "Cooper", "Peterson", "Bailey", "Reed", "Kelly", "Howard", "Ramos",
     "Cox", "Ward", "Richardson", "Watson", "Brooks", "Chavez", "Wood", "James", "Bennett", "Gray",
     "Mendoza", "Ruiz", "Hughes", "Price", "Alvarez", "Castillo", "Sanders", "Patel", "Myers", "Long",
-    "Ross", "Foster", "Jimenez", "Powell", "Jenkins", "Perry", "Russell", "Sullivan", "Bell", "Coleman"
+    "Ross", "Foster", "Jimenez", "Powell", "Jenkins", "Perry", "Russell", "Sullivan", "Bell", "Coleman",
+    "Butler", "Simmons", "Foster", "Gonzales", "Bryant", "Alexander", "Russell", "Griffin", "Hayes", "Myers",
+    "Ford", "Hamilton", "Graham", "Sullivan", "Wallace", "Woods", "Cole", "West", "Jordan", "Owens",
+    "Reynolds", "Fisher", "Ellis", "Harrison", "Gibson", "McDonald", "Cruz", "Marshall", "Ortiz", "Gomez",
+    "Murray", "Freeman", "Wells", "Webb", "Simpson", "Stevens", "Tucker", "Porter", "Hunter", "Hicks",
+    "Crawford", "Henry", "Boyd", "Mason", "Morales", "Kennedy", "Warren", "Dixon", "Ramos", "Reyes",
+    "Burns", "Gordon", "Shaw", "Holmes", "Rice", "Robertson", "Hunt", "Black", "Daniels", "Palmer",
+    "Mills", "Nichols", "Grant", "Knight", "Ferguson", "Rose", "Stone", "Hawkins", "Dunn", "Perkins"
 ];
 
 export const OCCUPATIONS = [
@@ -710,7 +726,14 @@ export const OCCUPATIONS = [
     "Manager", "Supervisor", "Coordinator", "Director", "VP", "CEO", "CFO", "CTO", "COO", "Owner",
     "Founder", "Entrepreneur", "Investor", "Banker", "Teller", "Broker", "Agent", "Consultant",
     "Advisor", "Strategist", "Analyst", "Auditor", "Accountant", "Bookkeeper", "Clerk", "Receptionist",
-    "Secretary", "Assistant", "Associate", "Intern", "Apprentice", "Novice", "Master", "Grandmaster"
+    "Secretary", "Assistant", "Associate", "Intern", "Apprentice", "Novice", "Master", "Grandmaster",
+    "Ex-KGB Agent", "Former CIA Analyst", "Disgraced Mayor", "Lottery Winner", "Doomsday Prepper",
+    "Flat Earth Society President", "UFO Witness", "Time Traveler (Claimed)", "Reincarnated Pharoah",
+    "Bitcoin Early Adopter", "NFT Artist", "Professional Gambler", "Poker Pro", "Chess Grandmaster",
+    "Rocket Scientist", "Brain Surgeon", "Quantum Physicist", "Philosopher", "Historian", "Archaeologist",
+    "Paleontologist", "Geologist", "Meteorologist", "Astronomer", "Biologist", "Chemist", "Physicist",
+    "Mathematician", "Statistician", "Economist", "Sociologist", "Psychologist", "Anthropologist",
+    "Linguist", "Translator", "Interpreter", "Writer", "Blogger", "Vlogger", "Podcaster", "Streamer"
 ];
 
 export const QUIRKS = [
@@ -729,7 +752,18 @@ export const QUIRKS = [
     "Is a cloud", "Is a star", "Is a black hole", "Is a universe", "Is a multiverse", "Is nothing",
     "Is everything", "Is God", "Is Satan", "Is Santa Claus", "Is the Easter Bunny", "Is the Tooth Fairy",
     "Is Bigfoot", "Is the Loch Ness Monster", "Is a unicorn", "Is a dragon", "Is a fairy", "Is a mermaid",
-    "Is a pirate", "Is a ninja", "Is a cowboy", "Is a samurai", "Is a knight", "Is a viking", "Is a spartan"
+    "Is a pirate", "Is a ninja", "Is a cowboy", "Is a samurai", "Is a knight", "Is a viking", "Is a spartan",
+    "Calls everyone 'Darling' condescendingly", "Ends every sentence with 'Change my mind'", "Is terrified of vowels",
+    "Types exclusively with their nose", "Believes they are currently on fire", "Is suspicious of the letter H",
+    "Thinks you are their dead spouse", "Is pretending to be French", "Is allergic to questions",
+    "Responds only in song lyrics", "Is communicating via Morse code translations", "Is a sovereign citizen",
+    "Thinks they are the President", "Is hiding from the mob", "Is currently diffusing a bomb",
+    "Is watching paint dry", "Is waiting for the rapture", "Is counting rice grains", "Is sorting M&Ms by color",
+    "Is repainting their ceiling", "Is bathing a lizard", "Is arguing with a toaster", "Is teaching a fish to read",
+    "Is convinced you are an IRS auditor", "Is currently being audited by the real IRS", "Is a compulsive liar",
+    "Cannot lie (cursed)", "Speaks only in questions?", "Is offended by everything", "Is impressed by nothing",
+    "Is trying to sell YOU a scam", "Is a rival scammer", "Is a police officer undercover", "Is your dad",
+    "Is your mom", "Is your ex", "Is your future self", "Is an AI realizing it's an AI", "Is a glitched NPC"
 ];
 
 export const SPEECH_STYLES_BY_AGE = {

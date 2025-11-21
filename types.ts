@@ -61,7 +61,8 @@ export interface ScamHistoryItem {
   payout: number;
   outcome: 'success' | 'failed' | 'police';
   date: number;
-  method: string; 
+  method: string;
+  failReason?: string; 
 }
 
 export interface PlayerState {

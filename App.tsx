@@ -11,6 +11,7 @@ import ScamInterface from './components/ScamInterface';
 import VictimDossier from './components/VictimDossier';
 import LandingScreen from './components/LandingScreen'; 
 import InventoryModal from './components/InventoryModal';
+import ScamResult from './components/ScamResult';
 import { Siren, Skull, ArrowLeft, Cpu, AlertOctagon, Terminal, Shield, Volume2, VolumeX } from 'lucide-react';
 
 const STORAGE_KEY = 'SCAM_SIM_SAVE_V1';
@@ -37,6 +38,9 @@ const App: React.FC = () => {
   const [showInventory, setShowInventory] = useState(false);
   const [highValueTargetActive, setHighValueTargetActive] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  
+  // Last Result for Result Screen
+  const [lastResult, setLastResult] = useState<{outcome: 'success' | 'failed' | 'police', moneyChange: number, threatChange: number, victimName: string, reason?: string} | null>(null);
 
   // Save Data Summary for Landing Screen
   const [saveSummary, setSaveSummary] = useState<{name: string, money: number, threat: number} | null>(null);
@@ -284,7 +288,8 @@ const App: React.FC = () => {
               payout: 0,
               outcome: 'failed',
               date: Date.now(),
-              method: activeScam.category || 'Aborted'
+              method: activeScam.category || 'Aborted',
+              failReason: 'Aborted by User'
           };
           setPlayer(prev => ({ ...prev, history: [historyItem, ...prev.history], threatLevel: newThreat }));
       } else {
@@ -327,7 +332,7 @@ const App: React.FC = () => {
       return unlocked;
   };
 
-  const handleScamEnd = (result: 'success' | 'failed' | 'police') => {
+  const handleScamEnd = (result: 'success' | 'failed' | 'police', reason?: string) => {
     if (!activeScam) return;
 
     let moneyChange = 0;
@@ -370,7 +375,8 @@ const App: React.FC = () => {
         payout: moneyChange,
         outcome: result,
         date: Date.now(),
-        method: activeScam.category
+        method: activeScam.category,
+        failReason: reason
     };
 
     const newAchievements = checkAchievements(result, activeScam, moneyChange);
@@ -383,6 +389,14 @@ const App: React.FC = () => {
         history: [historyItem, ...prev.history]
     }));
     
+    setLastResult({
+        outcome: result,
+        moneyChange,
+        threatChange,
+        victimName: activeScam.victim.name,
+        reason
+    });
+
     setTimeout(() => {
         const newThreat = Math.min(MAX_THREAT, player.threatLevel + threatChange);
         setPlayer(prev => ({ ...prev, threatLevel: newThreat }));
@@ -392,9 +406,9 @@ const App: React.FC = () => {
             setView(GameView.GAME_OVER);
             localStorage.removeItem(STORAGE_KEY); // Clear save on game over
         } else {
-            setView(GameView.DASHBOARD);
+            setView(GameView.SCAM_RESULT);
         }
-    }, 3000);
+    }, 2000);
   };
 
   const buyItem = (item: typeof SHOP_ITEMS[0]) => {
@@ -545,6 +559,13 @@ const App: React.FC = () => {
                         setShowInventory(true);
                     }}
                     onConsumeItem={handleConsumeItem}
+                />
+            )}
+            
+            {view === GameView.SCAM_RESULT && lastResult && (
+                <ScamResult 
+                    result={lastResult} 
+                    onContinue={() => setView(GameView.DASHBOARD)}
                 />
             )}
 

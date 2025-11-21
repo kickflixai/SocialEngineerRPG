@@ -13,7 +13,7 @@ interface Props {
   scam: ScamState;
   player: PlayerState;
   onUpdateScam: (scam: ScamState) => void;
-  onScamEnd: (result: 'success' | 'failed' | 'police') => void;
+  onScamEnd: (result: 'success' | 'failed' | 'police', reason?: string) => void;
   onAbort: () => void;
   onOpenInventory: () => void;
   onConsumeItem: (item: ShopItem) => ShopItem;
@@ -35,6 +35,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   // Hint System
   const [hints, setHints] = useState<string[]>([]);
   const [loadingHints, setLoadingHints] = useState(false);
+  const [showHintConfirm, setShowHintConfirm] = useState(false);
 
   // Inventory Modal Local State
   const [inventoryOpen, setInventoryOpen] = useState(false);
@@ -180,6 +181,25 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
           // Victim Reacts to System Message
           const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, activeObjective);
           audioManager.playMessageReceived();
+          
+          // Check for police/hangup triggers
+          if (replyData.policeTriggered) {
+               onUpdateScam({
+                  ...scam,
+                  history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() }]
+              });
+              onScamEnd('police', 'Target contacted authorities');
+              return;
+          }
+          if (replyData.callTerminated) {
+               onUpdateScam({
+                  ...scam,
+                  history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() }]
+              });
+              onScamEnd('failed', 'Target disconnected call');
+              return;
+          }
+
           onUpdateScam({
               ...scam,
               socialCharge: newCharge,
@@ -261,7 +281,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         onUpdateScam(updatedScam);
 
         if (analysis.scamStatus === 'police_called' || newSuspicion >= 100) {
-            onScamEnd('police');
+            onScamEnd('police', newSuspicion >= 100 ? 'Suspicion threshold breached' : 'Target alerted authorities');
             return;
         }
         if (analysis.scamStatus === 'success') {
@@ -272,6 +292,23 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         const nextActiveObjective = updatedObjectives.find(o => !o.isCompleted) || updatedObjectives[updatedObjectives.length - 1];
         const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, nextActiveObjective);
         audioManager.playMessageReceived();
+
+        if (replyData.policeTriggered) {
+              onUpdateScam({
+                  ...updatedScam,
+                  history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() }]
+              });
+              onScamEnd('police', 'Target contacted authorities');
+              return;
+        }
+        if (replyData.callTerminated) {
+             onUpdateScam({
+                  ...updatedScam,
+                  history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() }]
+              });
+              onScamEnd('failed', 'Target disconnected call');
+              return;
+        }
 
         if (replyData.objectiveComplete && !isObjectiveComplete) {
              audioManager.playSuccess();
@@ -296,7 +333,12 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
     }
   };
 
-  const requestHints = async () => {
+  const confirmHint = () => {
+      setShowHintConfirm(true);
+  };
+
+  const executeHint = async () => {
+      setShowHintConfirm(false);
       if (scam.trust < 20) return;
       audioManager.playClick();
       onUpdateScam({ ...scam, trust: Math.max(0, scam.trust - 10) });
@@ -477,7 +519,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         <div className="p-2 md:p-3 bg-black/80 backdrop-blur border-t border-zinc-800 shrink-0 relative z-20">
              <div className="flex gap-2">
                  <div className="relative flex gap-2">
-                    <button onClick={requestHints} disabled={loadingHints || processing || scam.trust < 20} className={`p-3 rounded-lg border bg-black border-zinc-700 text-zinc-400 transition-all relative group ${scam.trust >= 20 ? 'hover:text-blue-400 hover:border-blue-500' : 'opacity-30 cursor-not-allowed'}`}>
+                    <button onClick={confirmHint} disabled={loadingHints || processing || scam.trust < 20} className={`p-3 rounded-lg border bg-black border-zinc-700 text-zinc-400 transition-all relative group ${scam.trust >= 20 ? 'hover:text-blue-400 hover:border-blue-500' : 'opacity-30 cursor-not-allowed'}`}>
                          {loadingHints ? <Loader2 size={18} className="animate-spin"/> : <Lightbulb size={18}/>}
                     </button>
                     <button onClick={() => setInventoryOpen(true)} className="p-3 rounded-lg border bg-black border-zinc-700 text-zinc-400 hover:text-purple-400 hover:border-purple-500 transition-all relative group">
@@ -583,6 +625,22 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                     </div>
                 </motion.div>
             )}
+            
+             {showHintConfirm && (
+                <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-zinc-950 border border-blue-600 p-6 md:p-8 rounded-2xl max-w-md w-full text-center shadow-[0_0_50px_rgba(37,99,235,0.3)] relative overflow-hidden">
+                         <div className="absolute inset-0 bg-blue-500/5 pointer-events-none"></div>
+                         <Lightbulb size={48} className="text-blue-500 mx-auto mb-4 animate-pulse"/>
+                         <h3 className="text-xl md:text-2xl font-bold text-white font-mono mb-2">REQUEST AI ASSISTANCE?</h3>
+                         <p className="text-zinc-400 text-sm mb-6 leading-relaxed">Analyzing potential response vectors consumes processing power. <br/><span className="text-red-500 font-bold">COST: 10 TRUST POINTS.</span></p>
+                         <div className="flex gap-4 justify-center">
+                             <button onClick={() => setShowHintConfirm(false)} className="px-4 py-2 md:px-6 md:py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded font-mono text-xs md:text-sm">CANCEL</button>
+                             <button onClick={executeHint} className="px-4 py-2 md:px-6 md:py-3 bg-blue-600 hover:bg-blue-500 text-black font-bold rounded font-mono text-xs md:text-sm">PROCEED</button>
+                         </div>
+                    </div>
+                </motion.div>
+            )}
+
              {scam.objectives.every(o => o.isCompleted) && (
                 <motion.div initial={{opacity: 0}} animate={{opacity: 1}} className="absolute inset-0 z-50 bg-green-950/90 flex items-center justify-center backdrop-blur-sm p-4">
                     <div className="text-center space-y-6 p-8 md:p-12 border-2 border-green-500 rounded-2xl bg-black shadow-[0_0_50px_rgba(34,197,94,0.5)] max-w-lg w-full">
@@ -617,7 +675,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                             onClick={() => {
                                 if (isExiting) return;
                                 setIsExiting(true);
-                                onScamEnd('police');
+                                onScamEnd('police', 'Suspicion Threshold Exceeded');
                             }}
                             disabled={isExiting}
                             className={`w-full py-4 rounded-xl shadow-[0_0_30px_rgba(239,68,68,0.3)] transition-all font-mono text-lg flex items-center justify-center gap-2 ${isExiting ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-red-600 hover:bg-red-500 text-white font-bold hover:scale-[1.02]'}`}
