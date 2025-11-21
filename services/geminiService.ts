@@ -194,10 +194,10 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         - Age: ${age}
         
         CRITICAL INSTRUCTION: 
-        1. Personality description must be CONCISE. Maximum 3-4 sentences.
+        1. Personality description must be EXTREMELY CONCISE. Maximum 1-2 short sentences.
         2. Avoid tropes. Make them feel like a real, weird human being.
-        3. The "hiddenFact" should be specific dirt related to their "${randFlavor}" trait.
-        4. The "weakness" should be a psychological trigger.
+        3. The "hiddenFact" must be a single short sentence (Max 12 words).
+        4. The "weakness" must be a short phrase (Max 6 words).
         
         Return ONLY valid JSON matching this schema:
         {
@@ -205,11 +205,11 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
             "age": number,
             "gender": "${genderPrompt}",
             "occupation": "string (The specific seeded job)",
-            "personality": "string (Max 3-4 sentences)",
+            "personality": "string (Max 1-2 short sentences)",
             "archetype": "string (Short label, e.g. 'The Paranoid Baker')",
             "speechStyle": "string (The seeded speech style)",
-            "hiddenFact": "string",
-            "weakness": "string",
+            "hiddenFact": "string (Max 12 words)",
+            "weakness": "string (Max 6 words)",
             "resistanceStyle": "string"
         }
     `;
