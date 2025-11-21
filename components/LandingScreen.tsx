@@ -1,19 +1,26 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Play, Terminal, Bot, UserCheck } from 'lucide-react';
+import { Play, Terminal, Bot, UserCheck, Volume2, VolumeX } from 'lucide-react';
 
 interface Props {
   onStart: () => void;
+  isMuted: boolean;
+  toggleAudio: () => void;
 }
 
-const LandingScreen: React.FC<Props> = ({ onStart }) => {
+const LandingScreen: React.FC<Props> = ({ onStart, isMuted, toggleAudio }) => {
   return (
     <div className="min-h-screen w-full bg-black text-white relative overflow-hidden flex items-center justify-center p-4 md:p-8 font-sans">
       {/* Background Grid and Scanlines */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:30px_30px] pointer-events-none"></div>
       <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%)] bg-[length:100%_4px] pointer-events-none opacity-40"></div>
       <div className="absolute top-0 left-0 w-full h-1 bg-green-500/20 animate-scan pointer-events-none"></div>
+      
+      {/* Mute Button */}
+      <button onClick={toggleAudio} className="absolute top-4 right-4 z-50 p-2 rounded bg-zinc-900/50 border border-zinc-800 text-zinc-500 hover:text-white hover:border-zinc-600 transition-colors">
+            {isMuted ? <VolumeX size={20}/> : <Volume2 size={20}/>}
+      </button>
 
       <div className="max-w-5xl w-full z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
         

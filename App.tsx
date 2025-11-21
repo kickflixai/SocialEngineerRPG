@@ -33,15 +33,15 @@ const App: React.FC = () => {
   const [highValueTargetActive, setHighValueTargetActive] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
 
-  // Initialize Audio
+  // Initialize Audio Logic based on View
   useEffect(() => {
-      const interactHandler = () => {
-          audioManager.startBGM();
-          document.removeEventListener('click', interactHandler);
-      };
-      document.addEventListener('click', interactHandler);
-      return () => document.removeEventListener('click', interactHandler);
-  }, []);
+      // If we are NOT in active scam, play dashboard theme
+      // If we ARE in active scam, ScamInterface component handles starting the Hacking Theme
+      // IMPORTANT: Only play if not in Landing (handled by handleStart)
+      if (view !== GameView.ACTIVE_SCAM && view !== GameView.LANDING) {
+          audioManager.startDashboardTheme();
+      }
+  }, [view]);
 
   const toggleAudio = () => {
       const muted = audioManager.toggleMute();
@@ -50,6 +50,8 @@ const App: React.FC = () => {
 
   // Handle Start from Landing Screen
   const handleStart = () => {
+      // Start music explicitly here
+      audioManager.startDashboardTheme();
       audioManager.playSuccess();
       setView(GameView.CHARACTER_CREATION);
   };
@@ -381,12 +383,12 @@ const App: React.FC = () => {
         <main className="flex-1 overflow-hidden relative z-40">
             
             {view === GameView.LANDING && (
-                <LandingScreen onStart={handleStart} />
+                <LandingScreen onStart={handleStart} isMuted={isMuted} toggleAudio={toggleAudio} />
             )}
 
             {view === GameView.CHARACTER_CREATION && (
                 <div className="h-full flex items-center justify-center p-4 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-black overflow-y-auto custom-scrollbar">
-                    <CharacterCreator onComplete={handleCharacterComplete} />
+                    <CharacterCreator onComplete={handleCharacterComplete} isMuted={isMuted} toggleAudio={toggleAudio} />
                 </div>
             )}
 
@@ -433,9 +435,32 @@ const App: React.FC = () => {
             {view === GameView.SCAM_SELECTION && (
                 <div className="flex items-center justify-center h-full p-4 md:p-8 overflow-y-auto custom-scrollbar">
                     {loadingScam ? (
-                        <div className="flex flex-col items-center gap-4">
-                            <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-                            <div className="text-green-500 font-mono animate-pulse text-lg md:text-xl text-center">SCANNING DARK WEB DIRECTORY...</div>
+                        <div className="fixed inset-0 z-[60] bg-black flex flex-col items-center justify-center overflow-hidden font-mono">
+                            {/* Matrix Code Background */}
+                            <div className="absolute inset-0 opacity-30">
+                                <div className="w-full h-full text-green-500 text-xs leading-none break-all opacity-50 animate-pulse" style={{writingMode: 'vertical-rl', textOrientation: 'upright'}}>
+                                    {Array(50).fill("01 10 AF 3C 22 ROOT ACCESS GRANTED SYSTEM BREACH 0x44F ").join(' ')}
+                                </div>
+                            </div>
+                            <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(0,0,0,0.9),rgba(0,255,0,0.1),rgba(0,0,0,0.9))] animate-scan"></div>
+
+                            <div className="relative z-10 flex flex-col items-center gap-6 bg-black/80 p-8 border border-green-500/30 rounded-xl backdrop-blur-md">
+                                <div className="w-24 h-24 relative">
+                                    <div className="absolute inset-0 border-4 border-t-green-500 border-r-green-500/50 border-b-green-500/20 border-l-transparent rounded-full animate-spin"></div>
+                                    <div className="absolute inset-2 border-4 border-t-transparent border-r-green-500 border-b-green-500/50 border-l-green-500/20 rounded-full animate-spin-slow"></div>
+                                    <Terminal size={32} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-green-500 animate-pulse"/>
+                                </div>
+                                <div className="text-center space-y-2">
+                                    <div className="text-green-500 font-bold text-2xl tracking-widest animate-pulse">ACQUIRING TARGET</div>
+                                    <div className="text-green-800 text-xs">DECRYPTING PUBLIC RECORDS...</div>
+                                    <div className="flex gap-1 justify-center mt-2">
+                                        <div className="w-1 h-4 bg-green-500 animate-[pulse_0.5s_infinite]"></div>
+                                        <div className="w-1 h-4 bg-green-500 animate-[pulse_0.5s_infinite_0.1s]"></div>
+                                        <div className="w-1 h-4 bg-green-500 animate-[pulse_0.5s_infinite_0.2s]"></div>
+                                        <div className="w-1 h-4 bg-green-500 animate-[pulse_0.5s_infinite_0.3s]"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     ) : (
                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 max-w-6xl w-full pb-8">

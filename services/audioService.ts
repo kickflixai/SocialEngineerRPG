@@ -1,21 +1,23 @@
 
-import { HACKING_MUSIC_URL } from '../constants';
+import { HACKING_MUSIC_URL, DASHBOARD_MUSIC_URL } from '../constants';
 
 class AudioService {
   private ctx: AudioContext | null = null;
-  private bgmNodes: { osc1: OscillatorNode, osc2: OscillatorNode, gain: GainNode } | null = null;
+  private bgmNodes: AudioNode[] = [];
   private hackingNodes: AudioNode[] = [];
   private scanNodes: AudioNode[] = [];
   
-  // Hacking Music - External File
+  // External File Elements
   private hackingAudio: HTMLAudioElement | null = null;
+  private dashboardAudio: HTMLAudioElement | null = null;
 
   private isMuted: boolean = false;
-  private bgmStarted: boolean = false;
+  private currentTheme: 'dashboard' | 'hacking' | 'none' = 'none';
   
   // For melody sequencing
   private scanInterval: number | null = null;
   private hackingInterval: number | null = null;
+  private dashboardInterval: number | null = null;
 
   private init() {
     if (!this.ctx) {
@@ -32,10 +34,9 @@ class AudioService {
         if (mute) this.ctx.suspend();
         else this.ctx.resume();
     }
-    // Handle HTML5 Audio Element
-    if (this.hackingAudio) {
-        this.hackingAudio.muted = mute;
-    }
+    // Handle HTML5 Audio Elements
+    if (this.hackingAudio) this.hackingAudio.muted = mute;
+    if (this.dashboardAudio) this.dashboardAudio.muted = mute;
   }
 
   public toggleMute() {
@@ -43,42 +44,110 @@ class AudioService {
       return this.isMuted;
   }
 
-  public startBGM() {
-    if (this.bgmStarted) return;
-    this.init();
-    if (!this.ctx) return;
+  public startDashboardTheme() {
+      if (this.currentTheme === 'dashboard') return;
+      
+      // Stop Hacking Theme if playing
+      this.stopHackingTheme();
 
-    // Extremely minimal dark drone (Dashboard)
-    const osc1 = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    
-    osc1.type = 'sine';
-    osc1.frequency.value = 50; // Low hum
-    
-    gain.gain.value = 0.005; // Almost imperceptible
+      // External URL logic
+      if (DASHBOARD_MUSIC_URL) {
+          if (!this.dashboardAudio) {
+              this.dashboardAudio = new Audio(DASHBOARD_MUSIC_URL);
+              this.dashboardAudio.loop = true;
+              this.dashboardAudio.volume = 0.2;
+          }
+          this.dashboardAudio.muted = this.isMuted;
+          this.dashboardAudio.play().catch(e => console.error("Dashboard audio play failed:", e));
+          this.currentTheme = 'dashboard';
+          return;
+      }
 
-    osc1.connect(gain);
-    gain.connect(this.ctx.destination);
+      // Fallback Generative Dashboard Synth (Dark Ambient Drone)
+      this.init();
+      if (!this.ctx) return;
 
-    osc1.start();
-    this.bgmNodes = { osc1, osc2: osc1, gain }; // osc2 ref same for now
-    this.bgmStarted = true;
+      const masterGain = this.ctx.createGain();
+      masterGain.gain.value = 0.03;
+      masterGain.connect(this.ctx.destination);
+
+      // 1. Low Drone
+      const osc1 = this.ctx.createOscillator();
+      osc1.type = 'sine';
+      osc1.frequency.value = 55; // A1
+      osc1.start();
+
+      const osc2 = this.ctx.createOscillator();
+      osc2.type = 'triangle';
+      osc2.frequency.value = 110; // A2
+      osc2.detune.value = 5; // Slight detune for warmth
+      osc2.start();
+
+      osc1.connect(masterGain);
+      osc2.connect(masterGain);
+
+      // 2. Occasional High Blips (Menu sounds)
+      const playBlip = () => {
+          if (!this.ctx || this.currentTheme !== 'dashboard') return;
+          const blipOsc = this.ctx.createOscillator();
+          const blipGain = this.ctx.createGain();
+          
+          blipOsc.type = 'sine';
+          blipOsc.frequency.setValueAtTime(880, this.ctx.currentTime);
+          blipOsc.frequency.exponentialRampToValueAtTime(1760, this.ctx.currentTime + 0.1);
+          
+          blipGain.gain.setValueAtTime(0, this.ctx.currentTime);
+          blipGain.gain.linearRampToValueAtTime(0.05, this.ctx.currentTime + 0.05);
+          blipGain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+          
+          blipOsc.connect(blipGain);
+          blipGain.connect(masterGain);
+          
+          blipOsc.start();
+          blipOsc.stop(this.ctx.currentTime + 0.4);
+          
+          this.dashboardInterval = window.setTimeout(playBlip, 4000 + Math.random() * 4000);
+      };
+      playBlip();
+
+      this.bgmNodes = [osc1, osc2, masterGain];
+      this.currentTheme = 'dashboard';
+  }
+
+  public stopDashboardTheme() {
+      if (this.dashboardAudio) {
+          this.dashboardAudio.pause();
+          this.dashboardAudio.currentTime = 0;
+      }
+      if (this.dashboardInterval) clearTimeout(this.dashboardInterval);
+      this.bgmNodes.forEach(node => {
+          if (node instanceof OscillatorNode) node.stop();
+          node.disconnect();
+      });
+      this.bgmNodes = [];
+      if (this.currentTheme === 'dashboard') this.currentTheme = 'none';
   }
 
   public startHackingTheme() {
+      if (this.currentTheme === 'hacking') return;
+      
+      // Stop Dashboard Theme if playing
+      this.stopDashboardTheme();
+
       // If external URL is provided in constants, play that instead
       if (HACKING_MUSIC_URL) {
-          if (this.hackingAudio) return; // Already playing or initialized
-          this.hackingAudio = new Audio(HACKING_MUSIC_URL);
-          this.hackingAudio.loop = true;
-          this.hackingAudio.volume = 0.3; 
+          if (!this.hackingAudio) {
+              this.hackingAudio = new Audio(HACKING_MUSIC_URL);
+              this.hackingAudio.loop = true;
+              this.hackingAudio.volume = 0.3; 
+          }
           this.hackingAudio.muted = this.isMuted;
-          this.hackingAudio.play().catch(e => console.error("External audio play failed:", e));
+          this.hackingAudio.play().catch(e => console.error("Hacking audio play failed:", e));
+          this.currentTheme = 'hacking';
           return;
       }
 
       // Fallback to Generative Synth
-      if (this.hackingNodes.length > 0 || this.isMuted) return;
       this.init();
       if (!this.ctx) return;
 
@@ -101,7 +170,7 @@ class AudioService {
       const scale = [293.66, 329.63, 349.23, 392.00, 440.00, 466.16, 523.25]; 
       
       const playNote = () => {
-          if (!this.ctx) return;
+          if (!this.ctx || this.currentTheme !== 'hacking') return;
           const osc = this.ctx.createOscillator();
           const oscGain = this.ctx.createGain();
           
@@ -131,23 +200,22 @@ class AudioService {
       loop();
 
       this.hackingNodes = [bass, bassGain, masterGain];
+      this.currentTheme = 'hacking';
   }
 
   public stopHackingTheme() {
-      // Stop external audio
       if (this.hackingAudio) {
           this.hackingAudio.pause();
           this.hackingAudio.currentTime = 0;
-          this.hackingAudio = null;
       }
 
-      // Stop generative synth
       if (this.hackingInterval) clearTimeout(this.hackingInterval);
       this.hackingNodes.forEach(node => {
           if (node instanceof OscillatorNode) node.stop();
           node.disconnect();
       });
       this.hackingNodes = [];
+      if (this.currentTheme === 'hacking') this.currentTheme = 'none';
   }
 
   public startScanLoop() {

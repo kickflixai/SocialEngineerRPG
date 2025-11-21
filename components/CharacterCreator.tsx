@@ -2,15 +2,17 @@
 import React, { useState } from 'react';
 import { PlayerAttributes } from '../types';
 import { generatePlayerAvatar } from '../services/geminiService';
-import { Loader2, Sparkles, ChevronRight, User, Hash, Globe, Shirt, Smile, Glasses, ChevronLeft, CheckCircle2, Edit3 } from 'lucide-react';
+import { Loader2, Sparkles, ChevronRight, User, Hash, Globe, Shirt, Smile, Glasses, ChevronLeft, CheckCircle2, Edit3, Volume2, VolumeX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { COUNTRIES, CLOTHING_STYLES, FACIAL_FEATURES, ACCESSORIES, AGES, COUNTRY_DATA } from '../constants';
 
 interface Props {
   onComplete: (attrs: PlayerAttributes) => void;
+  isMuted: boolean;
+  toggleAudio: () => void;
 }
 
-const CharacterCreator: React.FC<Props> = ({ onComplete }) => {
+const CharacterCreator: React.FC<Props> = ({ onComplete, isMuted, toggleAudio }) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<PlayerAttributes>({
@@ -63,6 +65,11 @@ const CharacterCreator: React.FC<Props> = ({ onComplete }) => {
       {/* Decorative Elements */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+      
+      {/* Mute Button */}
+      <button onClick={toggleAudio} className="absolute top-4 right-4 z-50 p-2 rounded bg-zinc-900/50 border border-zinc-800 text-zinc-500 hover:text-white hover:border-zinc-600 transition-colors">
+            {isMuted ? <VolumeX size={18}/> : <Volume2 size={18}/>}
+      </button>
 
       <div className="text-center mb-6 shrink-0 pt-4 md:pt-0">
         <h2 className="text-3xl md:text-4xl font-mono font-bold text-white mb-2 tracking-tight">IDENTITY SYNTHESIS</h2>
