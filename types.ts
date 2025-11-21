@@ -72,6 +72,8 @@ export interface Victim {
   avatarUrl: string; 
   occupation: string;
   personality: string;
+  archetype: string; // New: e.g. "Conspiracy Theorist"
+  speechStyle: string; // New: e.g. "ALL CAPS", "Very quiet", "Emojis"
   hiddenFact: string; 
   weakness: string;
   resistanceStyle: string; 

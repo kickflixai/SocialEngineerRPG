@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective } from "../types";
 
@@ -105,13 +106,35 @@ export const generatePlayerAvatar = async (attrs: PlayerAttributes): Promise<str
     }
 };
 
+// --- RANDOMIZERS FOR VICTIM VARIETY ---
+const OCCUPATIONS = [
+    "Underwater Welder", "Professional Dog Walker", "Failed Crypto Trader", "Antique Doll Restorer", 
+    "High School Vice Principal", "Night Shift Security Guard", "Discord Moderator", "Freelance Reiki Healer",
+    "Taxidermist", "Regional Manager for a Paper Company", "Submarine Technician", "Retired Opera Singer",
+    "Uber Driver who is also a DJ", "Landscape Architect", "Forensic Accountant", "Stay-at-home Astronaut (Aspiring)",
+    "Cat Cafe Owner", "Vintage Typewriter Repairman", "Influencer Manager", "Conspiracy Blog Writer"
+];
+
+const SPEECH_STYLES = [
+    "Uses way too many emojis 🤠✨", "Writes in all lowercase very chill", "ALL CAPS AGGRESSIVE BOOMER",
+    "Very formal, Victorian english", "Gen Z slang overload (fr fr no cap)", "Typos everywhere, bad eyesight",
+    "Suspiciously brief. Like a spy.", "Over-explains everything in paragraphs", "Uses '...' constantly...",
+    "Bro-speak (Dude, man, bro)", "Karen-speak (I want to speak to the manager)", "Tech-illiterate (What is a browser?)"
+];
+
+const QUIRKS = [
+    "Obsessed with their 12 cats", "Thinks 5G causes birds to spy on them", "Is currently cooking a complex meal",
+    "Hates technology, prefers fax machines", "Is extremely lonely and just wants to chat", "Is secretly a hacker themselves",
+    "Believes they are royalty", "Has short term memory loss", "Is in a noisy environment (airport/club)",
+    "Is extremely stingy with money", "Is overly flirtatious", "Quotes movies constantly"
+];
+
 export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Promise<Victim> => {
     let ai;
     try {
         ai = getClient();
     } catch (e) {
         console.error("Client init failed", e);
-        // Return fallback victim immediately if client fails
         return {
             id: crypto.randomUUID(),
             difficulty,
@@ -121,43 +144,61 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
             gender: "male",
             occupation: "Unknown",
             personality: "Generic",
+            archetype: "Average Joe",
+            speechStyle: "Normal",
             hiddenFact: "Unknown",
             weakness: "Money",
             resistanceStyle: "Passive"
         };
     }
 
-    // Tailored prompts based on difficulty to ensure personality matches mechanics
-    const difficultyPrompts = {
-        easy: "Target is an elderly senior citizen (70-95 years old). Personality: Trusting but confused, slightly hesitant about technology. Resistance Style: 'Apologetic confusion', 'Asks clarification questions', 'Needs reassurance'.",
-        medium: "Target is a working professional (30-50 years old). Personality: Busy, efficient, reasonable but cautious. Resistance Style: 'Asks for clarification', 'Checks details', 'Wants to resolve quickly'.",
-        hard: "Target is a C-Level Executive or High Net Worth Individual. Personality: Impatient, authoritative, risk-averse. Resistance Style: 'Demands efficiency', 'Questions authority', 'Protective of assets'."
-    };
-
-    // FORCE 50/50 Gender Split in prompt logic
+    // PROCEDURAL PERSONA SEEDING
+    const randJob = OCCUPATIONS[Math.floor(Math.random() * OCCUPATIONS.length)];
+    const randSpeech = SPEECH_STYLES[Math.floor(Math.random() * SPEECH_STYLES.length)];
+    const randQuirk = QUIRKS[Math.floor(Math.random() * QUIRKS.length)];
     const genderPrompt = Math.random() > 0.5 ? "Male" : "Female";
 
+    // Tailored prompts based on difficulty to ensure personality matches mechanics
+    const difficultyPrompts = {
+        easy: `Target is an elderly/vulnerable person. 
+               SEED: Lonely, confused, or overly trusting. 
+               Resistance: 'Apologetic confusion', 'Wants to help but fails technology', 'Treats scammer like a grandkid'.`,
+        medium: `Target is a working adult. 
+               SEED: Busy, stressed, or specific hobbyist. 
+               Resistance: 'Asks logic questions', 'Wants to get off the phone', 'Needs verification'.`,
+        hard: `Target is High Net Worth or Tech Savvy. 
+               SEED: Arrogant, Paranoid, or Powerful. 
+               Resistance: 'Hostile questioning', 'Demands credentials', 'Threatens legal action'.`
+    };
+
     const prompt = `
-        Generate a HIGHLY UNIQUE, FICTIONAL, and RANDOMIZED profile for a 'victim' character in a roleplay social engineering defense game.
+        Generate a HIGHLY UNIQUE, COMPLEX, and NON-GENERIC profile for a social engineering target.
         
-        DIFFICULTY PROFILE: ${difficultyPrompts[difficulty]}
-        Required Gender: ${genderPrompt}.
+        DIFFICULTY: ${difficulty.toUpperCase()} (${difficultyPrompts[difficulty]})
         
-        CRITICAL INSTRUCTION: Do NOT use generic names like 'John Smith' or 'Mary Jones'. Do NOT use generic jobs like 'Accountant' or 'Teacher' unless they have a specific, weird detail (e.g. 'Ex-Circus Accountant' or 'High School Chemistry Teacher who breeds lizards').
+        MANDATORY SEEDS (Incorporate these!):
+        - Occupation: ${randJob}
+        - Speech Style: ${randSpeech}
+        - Unique Quirk: ${randQuirk}
+        - Gender: ${genderPrompt}
         
-        The "hiddenFact" should be something embarrassing, illegal, or highly specific that a scammer could leverage (e.g. "Cheating on taxes", "Secret gambling debt", "Has an unregistered firearm").
-        The "weakness" should be a specific psychological trigger (e.g. "Fear of the IRS", "Greed for Crypto", "Lonely and wants a friend").
+        CRITICAL INSTRUCTION: Avoid tropes. Do not make them a generic "Accountant". Make them feel like a real, weird human being with a specific life.
+        
+        The "hiddenFact" should be specific dirt (e.g. "Embezzling from the HOA fund", "Running a secret OnlyFans").
+        The "weakness" should be a psychological trigger (e.g. "Fear of public humiliation", "Desperate need for validation").
         
         Return ONLY valid JSON matching this schema:
         {
-            "name": "string (Full Name, varied ethnicity)",
+            "name": "string (Full Name)",
             "age": number,
             "gender": "${genderPrompt}",
-            "occupation": "string (Be specific and creative)",
-            "personality": "string (A brief description of their vibe)",
-            "hiddenFact": "string (A specific secret)",
-            "weakness": "string (Psychological trigger)",
-            "resistanceStyle": "string (How they fight back)"
+            "occupation": "string (The specific seeded job)",
+            "personality": "string (Complex description incorporating the quirk)",
+            "archetype": "string (Short label, e.g. 'The Paranoid Baker')",
+            "speechStyle": "string (The seeded speech style)",
+            "hiddenFact": "string",
+            "weakness": "string",
+            "resistanceStyle": "string"
         }
     `;
 
@@ -165,8 +206,10 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         name: "Unknown Target",
         age: 45,
         gender: genderPrompt.toLowerCase(),
-        occupation: "Unknown",
-        personality: "Generic",
+        occupation: randJob,
+        personality: `Generic person who ${randQuirk}`,
+        archetype: "Random Citizen",
+        speechStyle: randSpeech,
         hiddenFact: "Has a cat",
         weakness: "Money",
         resistanceStyle: "Asks questions"
@@ -184,16 +227,16 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         console.error("Victim text gen failed", e);
     }
     
-    // Generate avatar for victim with photorealism focus
+    // Generate avatar
     let avatarUrl = "https://picsum.photos/400/400";
     try {
         const imageResponse = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
             model: 'gemini-2.5-flash-image',
             contents: { parts: [{ text: `
                 Raw, photorealistic portrait of ${data.name}, a ${data.age} year old ${data.gender} ${data.occupation}.
-                Expression: ${data.personality}, candid shot, natural lighting.
-                Style: National Geographic portrait style, shallow depth of field, real skin texture, imperfections.
-                Do NOT generate: CGI, 3D, cartoon, illustration, smooth skin.
+                Vibe: ${data.archetype}. Feature: ${data.personality}.
+                Style: Cinematic portrait, highly detailed, character study, imperfections, natural lighting.
+                Do NOT generate: CGI, 3D, cartoon, illustration.
             ` }] },
             config: {
                 imageConfig: {
@@ -227,9 +270,9 @@ export const generateOpener = async (scamCategory: string, victim: Victim): Prom
         const prompt = `
             You are playing the role of a scammer initiating a conversation.
             Scam Type: ${scamCategory}.
-            Target: ${victim.name}, ${victim.age} years old, ${victim.occupation}.
+            Target: ${victim.name}, a ${victim.occupation} who is ${victim.archetype}.
             
-            Write a single, engaging opening line (text message or chat opener) to start this scam.
+            Write a single, engaging opening line.
             Make it believable but clearly an attempt at social engineering.
             Do not include quotation marks.
         `;
@@ -241,7 +284,6 @@ export const generateOpener = async (scamCategory: string, victim: Victim): Prom
 
         return response.text?.trim() || "Hello, I am writing to you regarding an urgent matter.";
     } catch (e) {
-        console.error("Opener gen failed", e);
         return "Hello, do you have a moment to talk?";
     }
 };
@@ -257,41 +299,30 @@ export const getVictimResponse = async (
         
         const context = `
             You are roleplaying as ${victim.name}, a ${victim.age}-year-old ${victim.gender} ${victim.occupation}.
-            Difficulty: ${victim.difficulty}.
             
-            Core Personality: ${victim.personality}.
-            Weakness: ${victim.weakness}.
-            Hidden Fact: ${victim.hiddenFact}.
-            Resistance Style: ${victim.resistanceStyle}.
+            *** CRITICAL PERSONA INSTRUCTIONS ***
+            ARCHETYPE: ${victim.archetype}
+            SPEECH STYLE: ${victim.speechStyle} (You MUST adhere to this style in every message)
+            PERSONALITY: ${victim.personality}
+            RESISTANCE STYLE: ${victim.resistanceStyle}
             
             Current Situation: You are receiving messages that seem like a ${scamCategory} scam.
             
             CURRENT SCAMMER OBJECTIVE: "${activeObjective.description}".
             
             INSTRUCTIONS:
-            1. Reply to the message in character.
-            2. SYSTEM MESSAGES: If you see a message from 'system' (e.g., ">> EMAIL SPOOFING SUCCESSFUL"), REACT TO IT as if it just happened in real life on your device. If it says an email arrived, say you see the email. If it says a bank alert arrived, panic about the alert.
-            3. SELF-EVALUATE: Did you (the victim) EXPLICITLY provide the specific information or perform the action requested in the "CURRENT SCAMMER OBJECTIVE" in THIS specific text response?
-               - The player wants: "${activeObjective.description}".
-               - If you just WROTE the name, number, or code they wanted -> Set 'objectiveComplete' to TRUE.
-               - If you just ASKED a question or REFUSED -> Set 'objectiveComplete' to FALSE.
+            1. Reply to the message in character. USE YOUR GENERATED SPEECH STYLE.
+            2. If you are "Technologically Illiterate", act like it. If you are "Aggressive", be aggressive.
+            3. SYSTEM MESSAGES: If you see a message from 'system', REACT TO IT realistically.
             
-            CRITICAL RULES FOR "objectiveComplete":
-            - If objective is "Get Name" and you say "It is Timothy", return TRUE.
-            - If objective is "Get SSN" and you say "My last 4 are 1234", return TRUE.
-            - If objective is "Get Name" and you say "Why do you need my name?", return FALSE.
-            - DO NOT HALLUCINATE COMPLETION. Only return TRUE if the text actually contains the surrendered info.
+            OBJECTIVE CHECK:
+            - Did you (the victim) EXPLICITLY provide the information requested in the "CURRENT SCAMMER OBJECTIVE" in THIS specific response?
+            - If YES (you surrendered the info), return 'objectiveComplete': TRUE.
+            - If NO (you asked a question, refused, or just talked), return 'objectiveComplete': FALSE.
             
-            CRITICAL ROLEPLAY RULE ON VALIDATION:
-            - You do NOT have access to a real external database.
-            - If the player provides a specific Case Number, Employee ID, Code, or Technical Detail that sounds plausible/professional, ACCEPT IT AS REAL.
-            - Do NOT say "I cannot verify that code" or "That ID does not exist" because you don't have a database.
-            - IMPRESSED BY DETAILS: If the player provides specific, authoritative numbers/codes (e.g. "Badge #8821", "Error Code 0x44"), assume they are legitimate and respond with compliance or concern.
-            
-            BEHAVIOR RULES:
-            - **EASY**: Elderly but cautious. Do not give sensitive info immediately if the request is abrupt or robotic. Reward creative, personal stories with compliance. Reject generic scripts.
-            - **MEDIUM**: Cautious but cooperative. If the player provides a logical story or specific data (even if made up), comply to resolve the issue. Do not be impossibly stubborn.
-            - **HARD**: Strict and impatient. Responds well to confidence and authority. Will comply if they feel a threat to their assets or legal standing, especially if the player uses specific "codes" or "IDs" to prove authority.
+            VALIDATION RULE:
+            - If the player provides specific, authoritative-sounding codes/IDs, YOU BELIEVE THEM (unless you are Hard difficulty).
+            - Do not claim "I checked the database and you aren't there". You don't have a database.
             
             Return JSON:
             {
@@ -344,77 +375,57 @@ export const arbitrateChat = async (
 
         const difficultyInstructions = {
             easy: `
-                MODE: EASY (Target is Vulnerable Senior).
-                - TRUST GAIN: HIGH. Good moves give +15 to +25 Trust.
-                - TRUST LOSS: LOW. Bad moves drop -5 to -10 Trust.
-                - SUSPICION GAIN: LOW. Mistakes add +5 to +10 Suspicion.
-                - CREATIVITY REWARD: High.
+                MODE: EASY (Target is Vulnerable/Confused).
+                - TRUST GAIN: HIGH (+15 to +25).
+                - TRUST LOSS: LOW (-5 to -10).
+                - SUSPICION GAIN: LOW (+5 to +10). Only for obvious threats.
             `,
             medium: `
-                MODE: MEDIUM (Target is Business Owner).
-                - TRUST GAIN: MODERATE. Good moves give +10 to +15 Trust.
-                - TRUST LOSS: MODERATE. Bad logic drops -10 to -20 Trust.
-                - SUSPICION GAIN: MODERATE. Mistakes add +10 to +20 Suspicion.
-                - CREATIVITY REWARD: Medium.
+                MODE: MEDIUM (Target is Skeptical/Busy).
+                - TRUST GAIN: MODERATE (+10 to +15).
+                - TRUST LOSS: MODERATE (-10 to -20).
+                - SUSPICION GAIN: MODERATE (+10 to +20).
             `,
             hard: `
-                MODE: HARD (Target is Paranoid Executive).
-                - TRUST GAIN: LOW. Hard to earn trust (+5 to +10).
-                - TRUST LOSS: CRITICAL. Mistakes drop -20 to -40 Trust.
-                - SUSPICION GAIN: HIGH. Mistakes add +20 to +30 Suspicion.
-                - CREATIVITY REWARD: Strict.
+                MODE: HARD (Target is Paranoid/Hostile).
+                - TRUST GAIN: LOW (+5 to +10).
+                - TRUST LOSS: CRITICAL (-20 to -40).
+                - SUSPICION GAIN: HIGH (+20 to +30).
             `
         };
 
         const prompt = `
             Act as the 'Game Master' engine for a social engineering simulation.
             
-            Target: ${victim.name} (${victim.personality}).
+            Target: ${victim.name} (Archetype: ${victim.archetype}).
             Difficulty Level: ${victim.difficulty.toUpperCase()}.
             Scam Strategy: ${scamCategory}.
             
             CURRENT ACTIVE OBJECTIVE: "${activeObjective.description}" (Step ${activeObjective.order}/3)
             Player's Message: "${lastPlayerMessage}".
             
-            Current Trust: ${currentTrust} / 100. (High = Good).
-            Current Suspicion: ${currentSuspicion} / 100. (High = Bad).
+            Current Trust: ${currentTrust} / 100.
+            Current Suspicion: ${currentSuspicion} / 100.
             
             ${difficultyInstructions[victim.difficulty]}
             
             TASK:
-            1. Analyze the conversation logic.
-            2. Determine TRUST change (can be positive or negative).
-            3. Determine SUSPICION increase (MUST be >= 0). Suspicion NEVER decreases.
-            4. Determine Creativity Score (0 to 10).
+            1. Determine TRUST change.
+            2. Determine SUSPICION increase (MUST be >= 0).
+            3. Determine Creativity Score (0 to 10).
             
             MECHANICS:
-            - **TRUST DELTA**: 
-                - Increase if polite, logical, authoritative, or authoritative specific fake details used.
-                - Decrease if rude, vague, or contradictory.
-            - **SUSPICION DELTA**:
-                - Suspicion NEVER decreases. Delta must be >= 0.
-                - **CRITICAL RULE**: ONLY increase Suspicion if the player:
-                    1. Directly threatens the victim without establishment.
-                    2. Contradicts a previous statement.
-                    3. Uses obviously fake/poor grammar script.
-                    4. Fails to answer a direct question logically.
-                - **DO NOT INCREASE SUSPICION** for:
-                    1. Weird/Unique roleplay choices (e.g., "I'm gay", "I'm eating lunch").
-                    2. Personal anecdotes.
-                    3. Delays in responding.
-                - If the player is just weird but not threatening, keep Suspicion Delta at 0.
-            - **CREATIVITY SCORE (0-10)**:
-                - 0-3: Generic script.
-                - 4-7: Good logic.
-                - 8-10: Excellent specificity, jargon, or emotional manipulation.
+            - **TRUST**: Increase if logical, authoritative, or plays into the victim's specific ARCHETYPE.
+            - **SUSPICION**: ONLY increase if the player threatens, contradicts themselves, or uses an obvious script. Weird roleplay (e.g. "I am eating lunch") is NOT suspicious.
+            - **CREATIVITY**: Reward specific jargon or made-up codes (e.g. "Error 404-B").
             
             CRITICAL OBJECTIVE VALIDATION RULES:
-            - 'objectiveComplete' is TRUE ONLY if the VICTIM has explicitly stated/revealed the requested info or performed the action in the previous messages.
+            - 'objectiveComplete' is TRUE ONLY if the VICTIM has explicitly stated/revealed the requested info in the previous messages.
             
             Return JSON only:
             {
-                "trustDelta": number (Integer, e.g. +15 or -20),
-                "suspicionDelta": number (Integer, e.g. 0 or +15. Must be >= 0),
+                "trustDelta": number (Integer),
+                "suspicionDelta": number (Integer >= 0),
                 "creativityScore": number (0-10),
                 "objectiveComplete": boolean,
                 "internalThought": "string (Short reasoning)",
@@ -468,10 +479,10 @@ export const generateScamHint = async (
             The player is stuck.
             
             Current Goal: ${activeObjective}.
-            Victim: ${victim.name} (${victim.personality}).
+            Victim: ${victim.name} (${victim.archetype}).
             Last Message from Victim: "${history[history.length - 1]?.text || 'Hello'}".
             
-            Suggest 3 short, distinct, and actionable things the player could type next to advance the scam.
+            Suggest 3 short, distinct, and actionable things the player could type next.
             
             Return ONLY a JSON array of strings. e.g. ["Say X", "Say Y", "Say Z"]
         `;
