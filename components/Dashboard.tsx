@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { PlayerState, GameView } from '../types';
-import { ShieldAlert, ShoppingBag, BrainCircuit, MessageSquare, Globe, Activity, Trophy, Award, Lock, Package, Power } from 'lucide-react';
+import { ShieldAlert, ShoppingBag, BrainCircuit, MessageSquare, Globe, Activity, Trophy, Award, Lock, Package, Power, Zap, Crosshair, MapPin, TrendingUp, User } from 'lucide-react';
 import { ACHIEVEMENTS } from '../constants';
 
 interface Props {
@@ -12,202 +12,216 @@ interface Props {
 }
 
 const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onReset }) => {
-  return (
-    <div className="h-full p-4 md:p-6 space-y-4 overflow-hidden flex flex-col relative">
-      {/* Header Actions */}
-      <div className="absolute top-6 right-6 z-20 flex gap-2">
-          <button 
-            onClick={onReset}
-            className="bg-zinc-950/80 border border-red-900/50 text-red-500 px-3 py-2 rounded-lg flex items-center gap-2 hover:bg-red-950/50 hover:border-red-500 transition-colors backdrop-blur"
-          >
-              <Power size={16} /> <span className="text-xs font-bold font-mono hidden md:inline">RESET SYSTEM</span>
-          </button>
-          <button 
-            onClick={onOpenInventory}
-            className="bg-zinc-900 border border-zinc-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-zinc-800 shadow-lg"
-          >
-              <Package size={16} /> <span className="text-xs font-bold font-mono">BACKPACK ({player.inventory.length})</span>
-          </button>
-      </div>
+  
+  // Helper for rendering heat bar segments
+  const renderHeatSegments = () => {
+    const segments = 20;
+    const fillCount = Math.ceil((player.threatLevel / 100) * segments);
+    return Array.from({ length: segments }).map((_, i) => (
+      <div 
+        key={i} 
+        className={`h-full w-1 rounded-sm transition-all duration-500 ${
+          i < fillCount 
+            ? i > 15 ? 'bg-red-500 shadow-[0_0_5px_red]' : i > 10 ? 'bg-orange-500' : 'bg-red-900' 
+            : 'bg-zinc-900'
+        }`}
+      />
+    ));
+  };
 
-      {/* Header Stats - Taller & More Prominent for Laptop */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 shrink-0 min-h-[180px]">
-        {/* Profile Card */}
-        <div className="md:col-span-4 bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 flex flex-col justify-between relative overflow-hidden backdrop-blur-sm shadow-lg">
-            <div className="absolute inset-0 bg-gradient-to-b from-green-500/5 to-transparent"></div>
-            <div className="flex items-start gap-4 relative z-10">
-                <img src={player.attributes.avatarUrl} className="w-20 h-20 rounded-xl border-2 border-zinc-700 object-cover shadow-lg" />
-                <div className="min-w-0 flex-1">
-                    <p className="text-xl md:text-2xl font-bold text-white font-mono tracking-tighter truncate">{player.attributes.name}</p>
-                    <p className="text-xs text-green-500 font-bold uppercase tracking-widest mb-2">{player.attributes.archetype}</p>
-                    <div className="flex flex-wrap gap-2">
-                        <span className="flex items-center gap-1 bg-zinc-950/50 px-2 py-1 rounded border border-zinc-700/50 text-[10px] text-zinc-400">
-                            <Globe size={10} /> {player.attributes.country}
-                        </span>
-                    </div>
+  return (
+    <div className="h-full flex flex-col bg-black relative overflow-hidden font-sans selection:bg-green-500/30">
+      
+      {/* BACKGROUND FX */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none opacity-50"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0)_0%,rgba(0,0,0,0.8)_100%)] pointer-events-none"></div>
+
+      {/* --- TOP HUD: STATS & PROFILE --- */}
+      <header className="shrink-0 p-4 md:p-6 grid grid-cols-1 md:grid-cols-12 gap-4 items-start relative z-20 border-b border-zinc-800/50 bg-zinc-950/80 backdrop-blur-md">
+        
+        {/* Profile Section */}
+        <div className="md:col-span-4 flex items-center gap-4 group cursor-default">
+            <div className="relative w-16 h-16 shrink-0">
+                <div className="absolute inset-0 rounded-xl border border-zinc-700 group-hover:border-green-500/50 transition-colors"></div>
+                <img src={player.attributes.avatarUrl} alt="Profile" className="w-full h-full rounded-xl object-cover p-1 opacity-80 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute -bottom-1 -right-1 bg-zinc-900 border border-zinc-700 text-[10px] font-mono px-1.5 rounded text-zinc-400">LVL {Math.floor(player.scamsCompleted / 2) + 1}</div>
+            </div>
+            <div className="min-w-0">
+                <h2 className="text-xl font-bold text-white font-mono tracking-tighter truncate">{player.attributes.name}</h2>
+                <div className="flex items-center gap-2 text-xs text-zinc-500 font-mono uppercase tracking-widest">
+                    <span className="text-green-500">{player.attributes.archetype}</span>
+                    <span className="w-1 h-1 bg-zinc-600 rounded-full"></span>
+                    <span className="flex items-center gap-1"><Globe size={10}/> {player.attributes.country}</span>
                 </div>
             </div>
-            <div className="flex items-center gap-2 mt-4 relative z-10 bg-zinc-950/30 p-2 rounded-lg border border-zinc-800/50">
-                 <Trophy size={14} className="text-yellow-500" />
-                 <span className="text-xs text-zinc-400 uppercase font-bold">Successful Hacks:</span>
-                 <span className="text-yellow-400 font-mono font-bold">{player.scamsCompleted}</span>
+        </div>
+
+        {/* Central Status / Heat */}
+        <div className="md:col-span-4 flex flex-col justify-center">
+            <div className="flex justify-between items-center mb-1">
+                <span className="text-[10px] font-bold text-red-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <ShieldAlert size={12} className={player.threatLevel > 80 ? 'animate-pulse' : ''}/> Global Heat
+                </span>
+                <span className="text-xs font-mono text-white">{Math.round(player.threatLevel)}%</span>
+            </div>
+            <div className="h-3 flex gap-0.5 w-full bg-zinc-950/50 p-0.5 rounded border border-zinc-800">
+                {renderHeatSegments()}
             </div>
         </div>
 
-        {/* Money Card */}
-        <div className="md:col-span-4 bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 flex flex-col justify-center relative overflow-hidden backdrop-blur-sm shadow-lg">
-           <div className="flex items-center justify-between mb-2">
-               <span className="text-zinc-400 text-xs uppercase tracking-widest font-bold">Untraceable Funds</span>
-               <div className="p-2 bg-green-500/10 rounded-lg border border-green-500/20">
-                   <Activity size={18} className="text-green-500" />
-               </div>
-           </div>
-           <p className="text-4xl md:text-5xl font-bold font-mono text-white tracking-tighter drop-shadow-[0_0_15px_rgba(34,197,94,0.4)] mt-2">
-               ${player.money.toLocaleString()}
-           </p>
-        </div>
-
-        {/* Threat Card */}
-        <div className="md:col-span-4 bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 flex flex-col justify-between relative overflow-hidden backdrop-blur-sm group shadow-lg">
-           <div className={`absolute inset-0 transition-opacity duration-1000 ${player.threatLevel > 80 ? 'bg-red-500/10 opacity-100' : 'bg-red-500/5 opacity-0 group-hover:opacity-100'}`}></div>
-           
-           <div className="flex items-center justify-between relative z-10">
-               <span className="text-zinc-400 text-xs uppercase tracking-widest font-bold flex items-center gap-2">
-                   <ShieldAlert size={14} className={player.threatLevel > 80 ? 'text-red-500 animate-pulse' : 'text-red-500'} />
-                   Global Heat
-               </span>
-               <span className={`text-xs font-bold px-2 py-1 rounded border ${player.threatLevel > 80 ? 'bg-red-500/20 border-red-500 text-red-400 animate-pulse' : 'bg-zinc-950 border-zinc-800 text-zinc-500'}`}>
-                   {player.threatLevel > 80 ? 'CRITICAL' : player.threatLevel > 50 ? 'HIGH' : 'LOW'}
-               </span>
-           </div>
-           
-           <div className="relative z-10 mt-4">
-               <div className="flex items-baseline gap-1 mb-2">
-                    <p className="text-4xl md:text-5xl font-bold font-mono text-white tracking-tighter">{Math.round(player.threatLevel)}</p>
-                    <span className="text-sm text-zinc-500 font-mono">%</span>
-               </div>
-               <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
-                   <div 
-                    className={`h-full transition-all duration-1000 ease-out ${player.threatLevel > 80 ? 'bg-red-600 shadow-[0_0_10px_red]' : 'bg-red-500'}`} 
-                    style={{ width: `${Math.round(player.threatLevel)}%` }}
-                   />
-               </div>
-           </div>
-        </div>
-      </div>
-
-      {/* Main Actions - Compact Height (h-32) to save space */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
-        <button 
-          onClick={() => onChangeView(GameView.SCAM_SELECTION)}
-          className="group relative bg-zinc-950 border border-zinc-800 rounded-xl p-4 hover:border-green-500/50 transition-all duration-300 text-left flex flex-row items-center justify-between overflow-hidden shadow-lg h-24 md:h-32"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          
-          <div className="relative z-10 flex flex-row items-center gap-4 w-full">
-            <div className="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center border border-zinc-700 group-hover:border-green-500 group-hover:text-green-500 transition-colors shrink-0 shadow-lg">
-                <MessageSquare size={20} />
-            </div>
-            <div>
-                <h3 className="text-lg md:text-xl font-bold text-white font-mono leading-none mb-1">ACQUIRE TARGET</h3>
-                <p className="text-zinc-500 text-xs">Access directory. Select mark.</p>
-            </div>
-          </div>
-          <div className="relative z-10 text-green-500 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-4 group-hover:translate-x-0 duration-300">
-               <MessageSquare size={16} />
-          </div>
-        </button>
-
-        <button 
-          onClick={() => onChangeView(GameView.SKILL_TREE)}
-          className="group relative bg-zinc-950 border border-zinc-800 rounded-xl p-4 hover:border-blue-500/50 transition-all duration-300 text-left flex flex-row items-center justify-between overflow-hidden shadow-lg h-24 md:h-32"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          
-          <div className="relative z-10 flex flex-row items-center gap-4 w-full">
-            <div className="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center border border-zinc-700 group-hover:border-blue-500 group-hover:text-blue-500 transition-colors shrink-0 shadow-lg">
-                <BrainCircuit size={20} />
-            </div>
-             <div>
-                <h3 className="text-lg md:text-xl font-bold text-white font-mono leading-none mb-1">NEURAL UPGRADES</h3>
-                <p className="text-zinc-500 text-xs">Enhance capabilities.</p>
+        {/* Money & Actions */}
+        <div className="md:col-span-4 flex justify-between md:justify-end items-center gap-6">
+             <div className="text-right">
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">Untraceable Funds</span>
+                <div className="text-2xl md:text-3xl font-mono font-bold text-white drop-shadow-[0_0_10px_rgba(34,197,94,0.5)]">
+                    ${player.money.toLocaleString()}
+                </div>
              </div>
-          </div>
-          <div className="relative z-10 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-4 group-hover:translate-x-0 duration-300">
-               <BrainCircuit size={16} />
-          </div>
-        </button>
+             <div className="flex gap-2">
+                <button onClick={onOpenInventory} className="p-3 rounded-lg bg-zinc-900 border border-zinc-700 hover:border-white hover:bg-zinc-800 transition-all text-zinc-400 hover:text-white group relative">
+                    <Package size={20} />
+                    {player.inventory.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-purple-600 text-white text-[9px] font-bold flex items-center justify-center rounded-full">{player.inventory.length}</span>}
+                </button>
+                <button onClick={onReset} className="p-3 rounded-lg bg-red-950/30 border border-red-900/50 hover:border-red-500 hover:bg-red-900/50 transition-all text-red-500 group" title="Reset System">
+                    <Power size={20} />
+                </button>
+             </div>
+        </div>
+      </header>
 
+      {/* --- HERO SECTION: MAIN ACTIONS (Tallest) --- */}
+      <main className="flex-1 p-4 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 min-h-0 overflow-y-auto custom-scrollbar z-10">
+        
+        {/* CARD 1: ACQUIRE TARGET */}
         <button 
-           onClick={() => onChangeView(GameView.SHOP)}
-           className="group relative bg-zinc-950 border border-zinc-800 rounded-xl p-4 hover:border-purple-500/50 transition-all duration-300 text-left flex flex-row items-center justify-between overflow-hidden shadow-lg h-24 md:h-32"
+            onClick={() => onChangeView(GameView.SCAM_SELECTION)}
+            className="group relative flex flex-col justify-between bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800 hover:border-green-500/50 rounded-2xl p-6 md:p-8 transition-all duration-500 overflow-hidden text-left shadow-2xl"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          
-          <div className="relative z-10 flex flex-row items-center gap-4 w-full">
-            <div className="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center border border-zinc-700 group-hover:border-purple-500 group-hover:text-purple-500 transition-colors shrink-0 shadow-lg">
-                <ShoppingBag size={20} />
-            </div>
-            <div>
-                <h3 className="text-lg md:text-xl font-bold text-white font-mono leading-none mb-1">BLACK MARKET</h3>
-                <p className="text-zinc-500 text-xs">Hardware and services.</p>
-            </div>
-          </div>
-          <div className="relative z-10 text-purple-500 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-4 group-hover:translate-x-0 duration-300">
-               <ShoppingBag size={16} />
-          </div>
-        </button>
-      </div>
-      
-      {/* Bottom Section: Achievements & Active Effects - Flex fill */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 flex-1 min-h-0">
-          {/* Active Effects */}
-          <div className="md:col-span-4 bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 overflow-y-auto custom-scrollbar relative">
-              <h4 className="text-zinc-500 text-[10px] font-bold uppercase mb-3 sticky top-0 bg-zinc-900/95 backdrop-blur py-1 z-10 border-b border-zinc-800/50 w-full">Active Protocols</h4>
-              <div className="flex flex-wrap gap-2">
-                  {player.skills.length === 0 && player.inventory.length === 0 && <span className="text-zinc-600 italic text-xs">No active enhancements.</span>}
-                  {player.skills.map(s => (
-                      <span key={s} className="px-2 py-1 bg-blue-900/30 border border-blue-800 text-blue-400 rounded text-[10px] font-mono">{s.replace('_', ' ')}</span>
-                  ))}
-              </div>
-          </div>
+            {/* Hover Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-b from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="absolute -right-10 -top-10 w-40 h-40 bg-green-500/10 rounded-full blur-3xl group-hover:bg-green-500/20 transition-all duration-500"></div>
 
-           {/* Achievements Panel */}
-           <div className="md:col-span-8 bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 flex flex-col min-h-0">
-              <div className="flex items-center justify-between mb-3 shrink-0 sticky top-0 z-10">
-                  <h4 className="text-zinc-500 text-[10px] font-bold uppercase flex items-center gap-2">
-                      <Award size={12} /> Career Achievements
-                  </h4>
-                  <span className="text-[10px] text-zinc-500 font-mono">
-                      {player.achievements.length}/{ACHIEVEMENTS.length}
-                  </span>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 overflow-y-auto custom-scrollbar flex-1 pr-1">
-                  {ACHIEVEMENTS.map(ach => {
-                      const unlocked = player.achievements.includes(ach.id);
-                      return (
-                          <div 
-                            key={ach.id} 
-                            className={`p-2 rounded border flex items-center gap-3 transition-colors ${
-                                unlocked 
-                                ? 'bg-yellow-900/10 border-yellow-600/30' 
-                                : 'bg-zinc-950/50 border-zinc-800/50 opacity-50'
-                            }`}
-                          >
-                              <div className={`w-8 h-8 rounded flex items-center justify-center shrink-0 ${unlocked ? 'bg-yellow-500/20 text-yellow-500' : 'bg-zinc-800 text-zinc-600'}`}>
-                                  {unlocked ? <Trophy size={14} /> : <Lock size={14} />}
-                              </div>
-                              <div className="min-w-0 overflow-hidden">
-                                  <h5 className={`text-[10px] font-bold truncate ${unlocked ? 'text-yellow-500' : 'text-zinc-500'}`}>{ach.title}</h5>
-                                  {unlocked && <p className="text-[9px] text-zinc-400 truncate">{ach.description}</p>}
-                              </div>
-                          </div>
-                      );
-                  })}
-              </div>
-           </div>
-      </div>
+            <div className="relative z-10">
+                <div className="w-14 h-14 bg-zinc-950 border border-zinc-700 group-hover:border-green-500 text-zinc-500 group-hover:text-green-500 rounded-xl flex items-center justify-center mb-6 transition-colors shadow-lg">
+                    <Crosshair size={28} />
+                </div>
+                <h3 className="text-3xl md:text-4xl font-black text-white font-mono tracking-tighter mb-2 group-hover:text-green-400 transition-colors">ACQUIRE<br/>TARGET</h3>
+                <p className="text-zinc-500 text-sm font-mono border-l-2 border-zinc-800 pl-3 group-hover:border-green-500/50 transition-colors">
+                    Access directory.<br/>Select mark.<br/>Initiate Protocol.
+                </p>
+            </div>
+            
+            <div className="relative z-10 mt-8 flex items-center gap-2 text-xs font-bold font-mono text-zinc-600 group-hover:text-green-500 transition-colors uppercase tracking-widest">
+                <MapPin size={14} /> 
+                <span>Global Database Online</span>
+            </div>
+            
+            {/* Decorative Lines */}
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-green-500/0 via-green-500/50 to-green-500/0 scale-x-0 group-hover:scale-x-100 transition-transform duration-700"></div>
+        </button>
+
+        {/* CARD 2: NEURAL UPGRADES */}
+        <button 
+            onClick={() => onChangeView(GameView.SKILL_TREE)}
+            className="group relative flex flex-col justify-between bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800 hover:border-blue-500/50 rounded-2xl p-6 md:p-8 transition-all duration-500 overflow-hidden text-left shadow-2xl"
+        >
+            <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="absolute -right-10 -top-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all duration-500"></div>
+
+            <div className="relative z-10">
+                <div className="w-14 h-14 bg-zinc-950 border border-zinc-700 group-hover:border-blue-500 text-zinc-500 group-hover:text-blue-500 rounded-xl flex items-center justify-center mb-6 transition-colors shadow-lg">
+                    <BrainCircuit size={28} />
+                </div>
+                <h3 className="text-3xl md:text-4xl font-black text-white font-mono tracking-tighter mb-2 group-hover:text-blue-400 transition-colors">NEURAL<br/>UPGRADES</h3>
+                <p className="text-zinc-500 text-sm font-mono border-l-2 border-zinc-800 pl-3 group-hover:border-blue-500/50 transition-colors">
+                    Enhance cognitive<br/>functions & social<br/>engineering algorithms.
+                </p>
+            </div>
+
+            <div className="relative z-10 mt-8 flex items-center gap-2 text-xs font-bold font-mono text-zinc-600 group-hover:text-blue-500 transition-colors uppercase tracking-widest">
+                <Zap size={14} /> 
+                <span>{player.skills.length} Enhancements Active</span>
+            </div>
+
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500/0 via-blue-500/50 to-blue-500/0 scale-x-0 group-hover:scale-x-100 transition-transform duration-700"></div>
+        </button>
+
+        {/* CARD 3: BLACK MARKET */}
+        <button 
+            onClick={() => onChangeView(GameView.SHOP)}
+            className="group relative flex flex-col justify-between bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800 hover:border-purple-500/50 rounded-2xl p-6 md:p-8 transition-all duration-500 overflow-hidden text-left shadow-2xl"
+        >
+            <div className="absolute inset-0 bg-gradient-to-b from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="absolute -right-10 -top-10 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-all duration-500"></div>
+
+            <div className="relative z-10">
+                <div className="w-14 h-14 bg-zinc-950 border border-zinc-700 group-hover:border-purple-500 text-zinc-500 group-hover:text-purple-500 rounded-xl flex items-center justify-center mb-6 transition-colors shadow-lg">
+                    <ShoppingBag size={28} />
+                </div>
+                <h3 className="text-3xl md:text-4xl font-black text-white font-mono tracking-tighter mb-2 group-hover:text-purple-400 transition-colors">BLACK<br/>MARKET</h3>
+                <p className="text-zinc-500 text-sm font-mono border-l-2 border-zinc-800 pl-3 group-hover:border-purple-500/50 transition-colors">
+                    Acquire illicit<br/>hardware & threat<br/>mitigation services.
+                </p>
+            </div>
+
+            <div className="relative z-10 mt-8 flex items-center gap-2 text-xs font-bold font-mono text-zinc-600 group-hover:text-purple-500 transition-colors uppercase tracking-widest">
+                <Lock size={14} /> 
+                <span>Encrypted Connection</span>
+            </div>
+
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500/0 via-purple-500/50 to-purple-500/0 scale-x-0 group-hover:scale-x-100 transition-transform duration-700"></div>
+        </button>
+      </main>
+
+      {/* --- FOOTER: STATUS & ACHIEVEMENTS (Compact) --- */}
+      <footer className="shrink-0 border-t border-zinc-800 bg-zinc-950/90 p-3 flex flex-col md:flex-row gap-4 overflow-hidden z-20 relative">
+        
+        {/* Left: Active Buffs */}
+        <div className="w-full md:w-1/3 border-r border-zinc-800/50 pr-4 flex items-center gap-3 overflow-x-auto custom-scrollbar">
+            <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest shrink-0 flex items-center gap-1">
+                <Activity size={12}/> Active Protocols
+            </div>
+            <div className="flex gap-2">
+                {player.skills.length === 0 && player.inventory.length === 0 && <span className="text-zinc-700 text-[10px] font-mono italic">None</span>}
+                {player.skills.slice(0, 3).map(s => (
+                     <span key={s} className="px-1.5 py-0.5 bg-blue-900/20 border border-blue-800/30 text-blue-400 rounded text-[9px] font-mono whitespace-nowrap">{s.replace('_', ' ')}</span>
+                ))}
+                {(player.skills.length > 3) && <span className="text-[9px] text-zinc-500">+{player.skills.length - 3}</span>}
+            </div>
+        </div>
+
+        {/* Right: Achievements Ticker */}
+        <div className="flex-1 flex flex-col justify-center overflow-hidden">
+             <div className="flex items-center justify-between mb-1">
+                 <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1">
+                    <Trophy size={12}/> Achievements
+                 </span>
+                 <span className="text-[9px] text-zinc-600 font-mono">{player.achievements.length}/{ACHIEVEMENTS.length} Unlocked</span>
+             </div>
+             
+             {/* Compact Horizontal Scroll */}
+             <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-1">
+                 {ACHIEVEMENTS.map(ach => {
+                     const unlocked = player.achievements.includes(ach.id);
+                     if (!unlocked) return null; // Only show unlocked to save space or keep "locked" ones dim
+                     return (
+                        <div key={ach.id} className="flex items-center gap-2 px-2 py-1 bg-zinc-900 border border-yellow-900/30 rounded shrink-0">
+                            <Award size={10} className="text-yellow-500"/>
+                            <span className="text-[10px] font-bold text-yellow-500/80 whitespace-nowrap">{ach.title}</span>
+                        </div>
+                     );
+                 })}
+                 {player.achievements.length === 0 && <span className="text-[10px] text-zinc-700 italic">No achievements unlocked yet.</span>}
+                 
+                 {/* Show locked as dim icons */}
+                 {ACHIEVEMENTS.filter(a => !player.achievements.includes(a.id)).slice(0, 5).map(ach => (
+                     <div key={ach.id} className="w-6 h-6 flex items-center justify-center border border-zinc-800 rounded bg-zinc-900/50 opacity-30 shrink-0">
+                         <Lock size={10} className="text-zinc-600"/>
+                     </div>
+                 ))}
+             </div>
+        </div>
+      </footer>
     </div>
   );
 };
