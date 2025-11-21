@@ -137,7 +137,7 @@ const HackingTerminalModal: React.FC<Props> = ({ isOpen, onClose, abilities, soc
                                 <div className="mt-auto pt-3 border-t border-white/5 flex justify-between items-center text-[10px] font-mono uppercase tracking-wider text-zinc-500">
                                     <span>System Hack</span>
                                     {isLocked && <span className="flex items-center gap-1 text-red-800"><Lock size={10}/> INSUFFICIENT PWR</span>}
-                                    {canAfford && !isOnCooldown && <span className="text-blue-500 group-hover:underline">&gt;&gt; DEPLOY</span>}
+                                    {canAfford && !isOnCooldown && <span className="text-blue-500 group-hover:underline">{`>>`} DEPLOY</span>}
                                 </div>
                             </button>
                          );

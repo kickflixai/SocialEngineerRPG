@@ -331,9 +331,11 @@ export const getVictimResponse = async (
             - If you say "I am calling the police" or "I am hanging up", you must set the corresponding flags below.
             
             OBJECTIVE CHECK:
-            - Did you (the victim) EXPLICITLY provide the information requested in the "CURRENT SCAMMER OBJECTIVE" in THIS specific response?
-            - If YES (you surrendered the info), return 'objectiveComplete': TRUE.
-            - If NO (you asked a question, refused, or just talked), return 'objectiveComplete': FALSE.
+            - Did you (the victim) satisfy the "CURRENT SCAMMER OBJECTIVE" in THIS specific response?
+            - If the objective asks for INFORMATION (e.g. zip code, name), did you provide it?
+            - If the objective asks for AGREEMENT or EMOTION (e.g. empathize, promise, listen), did you clearly express it?
+            - If YES, return 'objectiveComplete': TRUE.
+            - If NO, return 'objectiveComplete': FALSE.
             
             VALIDATION RULE:
             - If the player provides specific, authoritative-sounding codes/IDs, YOU BELIEVE THEM (unless you are Hard difficulty).
@@ -475,10 +477,11 @@ export const arbitrateChat = async (
 
         // FALLBACK LOGIC: If objective is abstract (contains "trust" or "connection") and Trust is high, force complete
         const objDesc = activeObjective.description.toLowerCase();
-        if (!result.objectiveComplete && (objDesc.includes('trust') || objDesc.includes('connection') || objDesc.includes('rapport'))) {
-            if (currentTrust >= 80) {
+        const keywords = ['trust', 'connection', 'rapport', 'empathize', 'agree', 'convince', 'persuade', 'understand'];
+        if (!result.objectiveComplete && keywords.some(k => objDesc.includes(k))) {
+            if (currentTrust >= 75) {
                 result.objectiveComplete = true;
-                result.internalThought += " [AUTO-COMPLETE: TRUST THRESHOLD REACHED]";
+                result.internalThought += " [AUTO-COMPLETE: PSYCHOLOGICAL THRESHOLD REACHED]";
             }
         }
 

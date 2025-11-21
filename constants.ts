@@ -844,7 +844,7 @@ export const VICTIM_FLAVORS = [
     "PC Master Race", "Mac User", "Linux User", "Android User",
     "iPhone User", "Windows User", "Chrome User", "Firefox User",
     "Safari User", "Edge User", "IE User", "Opera User",
-    "Brave User", "Tor User", "VPN User", "Proxy User", "Clinically retarded", "Sadist", "Masochist", "Swinger", "Down Syndrome", "Virgin", "wets their bed"
+    "Brave User", "Tor User", "VPN User", "Proxy User"
 ];
 
 export const SPEECH_STYLES_BY_AGE = {
