@@ -271,9 +271,16 @@ export const getVictimResponse = async (
             
             INSTRUCTIONS:
             1. Reply to the message in character.
-            2. CHECK: Did you (the victim) JUST provide the specific information or perform the action requested in the "CURRENT SCAMMER OBJECTIVE" in THIS response?
-               - If YES (e.g., you typed the Name, Number, or confirmed the action): Set 'objectiveComplete' to TRUE.
-               - If NO (e.g., you asked a question, refused, or just chatted): Set 'objectiveComplete' to FALSE.
+            2. SELF-EVALUATE: Did you (the victim) EXPLICITLY provide the specific information or perform the action requested in the "CURRENT SCAMMER OBJECTIVE" in THIS specific text response?
+               - The player wants: "${activeObjective.description}".
+               - If you just WROTE the name, number, or code they wanted -> Set 'objectiveComplete' to TRUE.
+               - If you just ASKED a question or REFUSED -> Set 'objectiveComplete' to FALSE.
+            
+            CRITICAL RULES FOR "objectiveComplete":
+            - If objective is "Get Name" and you say "It is Timothy", return TRUE.
+            - If objective is "Get SSN" and you say "My last 4 are 1234", return TRUE.
+            - If objective is "Get Name" and you say "Why do you need my name?", return FALSE.
+            - DO NOT HALLUCINATE COMPLETION. Only return TRUE if the text actually contains the surrendered info.
             
             BEHAVIOR RULES:
             - **EASY**: Trusting. If they ask nicely or use fear, give the info.

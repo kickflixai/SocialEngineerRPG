@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ScamState, PlayerState, ChatMessage, ShopItem } from '../types';
 import { getVictimResponse, arbitrateChat, generateScamHint } from '../services/geminiService';
 import { audioManager } from '../services/audioService';
-import { Send, Terminal, Wifi, Radio, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Circle, Package, ChevronDown, ChevronUp, Target, Lightbulb, BrainCircuit } from 'lucide-react';
+import { Send, Terminal, Wifi, Radio, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Circle, Package, ChevronDown, ChevronUp, Target, Lightbulb, BrainCircuit, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import InventoryModal from './InventoryModal';
 
@@ -34,6 +34,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   const [inventoryOpen, setInventoryOpen] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const initRef = useRef(false);
 
   const scrollToBottom = () => chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -41,6 +42,16 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   useEffect(() => {
     scrollToBottom();
   }, [scam.history, processing, hints]);
+
+  // Auto-focus input when processing finishes
+  useEffect(() => {
+      if (!processing) {
+          // Slight delay to ensure DOM is ready and state updated
+          setTimeout(() => {
+              inputRef.current?.focus();
+          }, 50);
+      }
+  }, [processing]);
 
   // Start Hacking Ambient Music
   useEffect(() => {
@@ -141,9 +152,9 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         }
 
         let updatedObjectives = [...scam.objectives];
+        // Arbiter Logic Check
         let isObjectiveComplete = analysis.objectiveComplete;
 
-        // Check if Arbiter triggered completion
         if (isObjectiveComplete) {
             audioManager.playSuccess(); 
             const objIndex = updatedObjectives.findIndex(o => o.id === activeObjective.id);
@@ -152,6 +163,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             }
         }
 
+        // Update state BEFORE victim response to reflect arbiter changes
         let updatedScam = {
             ...scam,
             history: newHistory,
@@ -173,24 +185,29 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         // Get Victim Response
         // Pass the updated objective list to determine the "Active" one for the victim prompt
         const nextActiveObjective = updatedObjectives.find(o => !o.isCompleted) || updatedObjectives[updatedObjectives.length - 1];
+        
         const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, nextActiveObjective);
         
         audioManager.playMessageReceived();
 
-        // Check if Victim triggered completion (Self-report)
+        // Victim Self-Report Check
         if (replyData.objectiveComplete && !isObjectiveComplete) {
              audioManager.playSuccess();
              const objIndex = updatedObjectives.findIndex(o => o.id === nextActiveObjective.id);
              if (objIndex !== -1) {
                 updatedObjectives[objIndex] = { ...updatedObjectives[objIndex], isCompleted: true };
-                // Update scam state with new objective completion
+                
+                // Update local ref of scam for next render
                 updatedScam = {
                     ...updatedScam,
                     objectives: updatedObjectives
                 };
+                // Update parent
+                onUpdateScam(updatedScam);
              }
         }
 
+        // Final update with message
         onUpdateScam({
             ...updatedScam,
             history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() }]
@@ -200,6 +217,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         console.error(error);
     } finally {
         setProcessing(false);
+        // Focus is handled by useEffect
     }
   };
 
@@ -389,8 +407,10 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                  </div>
 
                  <input 
+                    ref={inputRef}
                     type="text" 
                     value={input} 
+                    autoFocus
                     onChange={(e) => {
                         setInput(e.target.value);
                     }} 
@@ -465,19 +485,35 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             )}
              {scam.objectives.every(o => o.isCompleted) && (
                 <motion.div initial={{opacity: 0}} animate={{opacity: 1}} className="absolute inset-0 z-50 bg-green-950/90 flex items-center justify-center backdrop-blur-sm p-4">
-                    <div className="text-center space-y-4 p-8 md:p-12 border-2 border-green-500 rounded-2xl bg-black shadow-[0_0_50px_rgba(34,197,94,0.5)]">
+                    <div className="text-center space-y-6 p-8 md:p-12 border-2 border-green-500 rounded-2xl bg-black shadow-[0_0_50px_rgba(34,197,94,0.5)] max-w-lg w-full">
                         <CheckCircle2 size={60} className="text-green-500 mx-auto animate-bounce"/>
-                        <h1 className="text-3xl md:text-5xl font-black text-white font-mono tracking-tighter">PAYLOAD DELIVERED</h1>
-                        <p className="text-green-400 font-mono uppercase tracking-widest text-sm md:text-base">Funds Transferred Successfully</p>
+                        <div>
+                            <h1 className="text-3xl md:text-5xl font-black text-white font-mono tracking-tighter mb-2">PAYLOAD DELIVERED</h1>
+                            <p className="text-green-400 font-mono uppercase tracking-widest text-sm md:text-base">Funds Transferred Successfully</p>
+                        </div>
+                        <button 
+                            onClick={() => onScamEnd('success')}
+                            className="w-full py-4 bg-green-600 hover:bg-green-500 text-black font-bold rounded-xl shadow-[0_0_30px_rgba(34,197,94,0.3)] hover:scale-[1.02] transition-all font-mono text-lg flex items-center justify-center gap-2"
+                        >
+                             SECURE FUNDS & EXIT <ArrowRight size={20} />
+                        </button>
                     </div>
                 </motion.div>
             )}
              {scam.suspicion >= 100 && (
                 <motion.div initial={{opacity: 0}} animate={{opacity: 1}} className="absolute inset-0 z-50 bg-red-950/90 flex items-center justify-center backdrop-blur-sm p-4">
-                    <div className="text-center space-y-4 p-8 md:p-12 border-2 border-red-500 rounded-2xl bg-black shadow-[0_0_50px_rgba(239,68,68,0.5)]">
+                    <div className="text-center space-y-6 p-8 md:p-12 border-2 border-red-500 rounded-2xl bg-black shadow-[0_0_50px_rgba(239,68,68,0.5)] max-w-lg w-full">
                         <ShieldAlert size={60} className="text-red-500 mx-auto animate-pulse"/>
-                        <h1 className="text-3xl md:text-5xl font-black text-white font-mono tracking-tighter">CONNECTION TERMINATED</h1>
-                        <p className="text-red-400 font-mono uppercase tracking-widest text-sm md:text-base">Target Alerted Authorities</p>
+                        <div>
+                            <h1 className="text-3xl md:text-5xl font-black text-white font-mono tracking-tighter mb-2">CONNECTION TERMINATED</h1>
+                            <p className="text-red-400 font-mono uppercase tracking-widest text-sm md:text-base">Target Alerted Authorities</p>
+                        </div>
+                        <button 
+                            onClick={() => onScamEnd('police')}
+                            className="w-full py-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl shadow-[0_0_30px_rgba(239,68,68,0.3)] hover:scale-[1.02] transition-all font-mono text-lg flex items-center justify-center gap-2"
+                        >
+                             EMERGENCY DISCONNECT <Power size={20} />
+                        </button>
                     </div>
                 </motion.div>
             )}
