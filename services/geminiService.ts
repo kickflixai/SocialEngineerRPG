@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective } from "../types";
-import { OCCUPATIONS, QUIRKS, SPEECH_STYLES_BY_AGE, FIRST_NAMES, LAST_NAMES, VICTIM_FLAVORS } from "../constants";
+import { OCCUPATIONS, QUIRKS, SPEECH_STYLES_BY_AGE, MALE_FIRST_NAMES, FEMALE_FIRST_NAMES, LAST_NAMES, VICTIM_FLAVORS } from "../constants";
 
 const getClient = () => {
     // In Vite, process.env.API_KEY is replaced by the define plugin in vite.config.ts
@@ -135,8 +135,9 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
     const genderPrompt = Math.random() > 0.5 ? "Male" : "Female";
     const age = difficulty === 'easy' ? Math.floor(Math.random() * 20) + 65 : difficulty === 'medium' ? Math.floor(Math.random() * 30) + 25 : Math.floor(Math.random() * 20) + 30;
     
-    // Name Generation from Lists
-    const randFirst = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+    // Name Generation from Lists based on Gender
+    const nameList = genderPrompt === "Male" ? MALE_FIRST_NAMES : FEMALE_FIRST_NAMES;
+    const randFirst = nameList[Math.floor(Math.random() * nameList.length)];
     const randLast = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
     const forcedName = `${randFirst} ${randLast}`;
 

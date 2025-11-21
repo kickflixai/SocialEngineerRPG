@@ -378,7 +378,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
        <div className="hidden md:flex flex-col gap-4 h-full relative z-10 col-span-1 overflow-y-auto custom-scrollbar pr-1">
            {/* Profile Card */}
            <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-6 flex flex-col items-center text-center relative shadow-[0_0_20px_rgba(0,0,0,0.5)] shrink-0">
-             <div className="relative w-24 h-24 mb-3 mt-1 group">
+             <div className="relative w-32 h-32 lg:w-48 lg:h-48 mb-3 mt-1 group">
                 <div className="absolute inset-0 rounded-full border border-dashed border-green-500/40 animate-spin-slow"></div>
                 <img src={scam.victim.avatarUrl} alt="Target" className="w-full h-full rounded-full object-cover border-4 border-zinc-800 opacity-90 group-hover:opacity-100 transition-opacity" />
                 <div className="absolute -bottom-1 -right-1 bg-black text-green-500 text-[9px] font-bold px-2 py-0.5 rounded border border-green-900 flex items-center gap-1 shadow-[0_0_10px_rgba(34,197,94,0.2)]">

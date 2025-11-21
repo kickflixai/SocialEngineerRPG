@@ -659,27 +659,34 @@ export const SHOP_ITEMS: ShopItem[] = [
 ];
 
 // --- RANDOMIZERS FOR VICTIM VARIETY ---
-export const FIRST_NAMES = [
-    "Agnes", "Bert", "Chiara", "Dante", "Elara", "Finn", "Greta", "Hans", "Ingrid", "Jamal", 
-    "Keiko", "Liam", "Mei", "Nia", "Oscar", "Priya", "Quincy", "Rosa", "Sven", "Tariq", 
-    "Uma", "Viktor", "Wei", "Ximena", "Yusuf", "Zoe", "Albert", "Beatrice", "Charles", "Doris",
-    "Evelyn", "Frank", "Gertrude", "Harold", "Ida", "Jack", "Katherine", "Leonard", "Martha", "Norman",
-    "Olive", "Percy", "Queenie", "Ralph", "Sylvia", "Thomas", "Ursula", "Vera", "Walter", "Yvonne",
-    "Aiden", "Bella", "Caleb", "Daisy", "Ethan", "Fiona", "Gavin", "Hazel", "Isaac", "Julia",
-    "Kai", "Luna", "Mason", "Nora", "Owen", "Piper", "Quinn", "Riley", "Sam", "Tessa",
-    "Alessandro", "Bianca", "Carlos", "Diego", "Elena", "Fabio", "Gabriela", "Hugo", "Isabella", "Javier",
-    "Katarina", "Luca", "Mateo", "Natalia", "Octavio", "Paulo", "Rafael", "Sofia", "Thiago", "Valentina",
-    "Akira", "Bao", "Chen", "Dao", "Emiko", "Feng", "Genji", "Hiro", "Ichiro", "Jin",
-    "Kenji", "Li", "Min", "Naomi", "Ryu", "Sakura", "Takumi", "Yuki", "Zhang", "Wei",
-    "Eleanor", "Margaret", "Dorothy", "Richard", "Robert", "John", "William", "James", "Mary", "Patricia",
-    "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen", "Nancy", "Lisa",
-    "Betty", "Sandra", "Ashley", "Kimberly", "Donna", "Emily", "Michelle", "Carol", "Amanda", "Melissa",
-    "Deborah", "Stephanie", "Rebecca", "Laura", "Sharon", "Cynthia", "Kathleen", "Amy", "Shirley", "Angela",
-    "Helen", "Anna", "Brenda", "Pamela", "Nicole", "Emma", "Samantha", "Katherine", "Christine", "Debra",
-    "Rachel", "Catherine", "Carolyn", "Janet", "Ruth", "Maria", "Heather", "Diane", "Virginia", "Julie",
-    "Joyce", "Victoria", "Olivia", "Kelly", "Christina", "Lauren", "Joan", "Evelyn", "Judith", "Megan",
-    "Cheryl", "Andrea", "Hannah", "Martha", "Jacqueline", "Frances", "Gloria", "Ann", "Teresa", "Kathryn",
-    "Sara", "Janice", "Jean", "Alice", "Madison", "Doris", "Abigail", "Julia", "Judy", "Grace"
+
+export const MALE_FIRST_NAMES = [
+    "Bert", "Dante", "Finn", "Hans", "Jamal", "Liam", "Oscar", "Quincy", "Sven", "Tariq", "Viktor", "Yusuf", 
+    "Albert", "Charles", "Frank", "Harold", "Jack", "Leonard", "Norman", "Percy", "Ralph", "Thomas", "Walter", 
+    "Aiden", "Caleb", "Ethan", "Gavin", "Isaac", "Kai", "Mason", "Owen", "Riley", "Sam", "Alessandro", 
+    "Carlos", "Diego", "Fabio", "Hugo", "Javier", "Luca", "Mateo", "Octavio", "Paulo", "Rafael", "Thiago", 
+    "Bao", "Chen", "Dao", "Feng", "Genji", "Hiro", "Ichiro", "Jin", "Kenji", "Li", "Min", "Ryu", "Takumi", 
+    "Zhang", "Wei", "Richard", "Robert", "John", "William", "James", "Michael", "David", "Joseph", "Daniel",
+    "Matthew", "Anthony", "Donald", "Mark", "Paul", "Steven", "Andrew", "Kenneth", "Joshua", "Kevin", "Brian",
+    "George", "Edward", "Ronald", "Timothy", "Jason", "Jeffrey", "Ryan", "Jacob", "Gary", "Nicholas", "Eric",
+    "Jonathan", "Stephen", "Larry", "Justin", "Scott", "Brandon", "Benjamin", "Samuel", "Gregory", "Frank",
+    "Alexander", "Raymond", "Patrick", "Jack", "Dennis", "Jerry", "Tyler", "Aaron", "Jose", "Adam", "Henry"
+];
+
+export const FEMALE_FIRST_NAMES = [
+    "Agnes", "Chiara", "Elara", "Greta", "Ingrid", "Keiko", "Mei", "Nia", "Priya", "Rosa", "Uma", "Ximena", 
+    "Zoe", "Beatrice", "Doris", "Evelyn", "Gertrude", "Ida", "Katherine", "Martha", "Olive", "Queenie", 
+    "Sylvia", "Ursula", "Vera", "Yvonne", "Bella", "Daisy", "Fiona", "Hazel", "Julia", "Luna", "Nora", 
+    "Piper", "Quinn", "Tessa", "Bianca", "Elena", "Gabriela", "Isabella", "Katarina", "Natalia", "Sofia", 
+    "Valentina", "Akira", "Emiko", "Naomi", "Sakura", "Yuki", "Eleanor", "Margaret", "Dorothy", "Mary", 
+    "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen", "Nancy", 
+    "Lisa", "Betty", "Sandra", "Ashley", "Kimberly", "Donna", "Emily", "Michelle", "Carol", "Amanda", 
+    "Melissa", "Deborah", "Stephanie", "Rebecca", "Laura", "Sharon", "Cynthia", "Kathleen", "Amy", "Shirley", 
+    "Angela", "Helen", "Anna", "Brenda", "Pamela", "Nicole", "Emma", "Samantha", "Christine", "Debra", 
+    "Rachel", "Catherine", "Carolyn", "Janet", "Ruth", "Maria", "Heather", "Diane", "Virginia", "Julie", 
+    "Joyce", "Victoria", "Olivia", "Kelly", "Christina", "Lauren", "Joan", "Judith", "Megan", "Cheryl", 
+    "Andrea", "Hannah", "Jacqueline", "Frances", "Gloria", "Ann", "Teresa", "Kathryn", "Sara", "Janice", 
+    "Jean", "Alice", "Madison", "Abigail", "Judy", "Grace"
 ];
 
 export const LAST_NAMES = [
