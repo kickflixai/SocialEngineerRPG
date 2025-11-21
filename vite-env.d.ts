@@ -15,3 +15,8 @@ declare namespace NodeJS {
     [key: string]: string | undefined;
   }
 }
+
+declare module 'html2canvas' {
+  const html2canvas: (element: HTMLElement, options?: any) => Promise<HTMLCanvasElement>;
+  export default html2canvas;
+}
