@@ -83,14 +83,22 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+export interface ScamObjective {
+  id: string;
+  description: string;
+  isCompleted: boolean;
+  isFinal: boolean;
+  order: number; // 1, 2, or 3
+}
+
 export interface ScamState {
   victim: Victim;
   category: string; 
-  winCondition: string; 
+  // winCondition is now handled by the final objective in the objectives array
+  objectives: ScamObjective[];
   history: ChatMessage[];
   trust: number; // 0-100
   suspicion: number; // 0-100
-  progress: number; // 0-100 (Completion %)
   status: 'active' | 'success' | 'failed' | 'police_called';
   revealedFacts: string[];
 }
@@ -100,7 +108,7 @@ export interface ArbiterResponse {
   emotionalImpact: number; 
   trustDelta: number;
   suspicionDelta: number;
-  progressDelta: number;
+  objectiveComplete: boolean; // Replaces progressDelta
   internalThought: string;
   scamStatus: 'continue' | 'success' | 'failed' | 'police_called';
 }

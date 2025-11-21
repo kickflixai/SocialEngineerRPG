@@ -143,56 +143,105 @@ export const SCAM_CATEGORIES = [
   "Employment Mule Scam"
 ];
 
-export const SCAM_OBJECTIVES: Record<string, string[]> = {
+interface ScamScenario {
+    mini1: string;
+    mini2: string;
+    final: string;
+}
+
+// SCENARIOS: Each category has a list of possible 3-step scenarios
+export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   "Grandson in Trouble": [
-    "Convince target to wire $2,500 via Western Union for 'Bail Money'",
-    "Convince target to read out the codes from $500 in Target Gift Cards",
-    "Convince target to Venmo money to a 'Lawyer'"
+    {
+        mini1: "Get the 'Grandson's' first name",
+        mini2: "Get the city where he is 'arrested'",
+        final: "Wire $2,500 for 'Bail Money'"
+    },
+    {
+        mini1: "Verify their home address",
+        mini2: "Get their cell phone number",
+        final: "Send photos of Target Gift Cards"
+    }
   ],
   "IRS Tax Audit": [
-    "Convince target to pay 'back taxes' via a Bitcoin ATM",
-    "Convince target to verify their full Social Security Number",
-    "Convince target to purchase 'Federal Vouchers' (Apple Gift Cards)"
+    {
+        mini1: "Confirm their Full Legal Name",
+        mini2: "Get the last 4 digits of SSN",
+        final: "Pay 'back taxes' via Bitcoin ATM"
+    },
+    {
+        mini1: "Verify their mailing address",
+        mini2: "Get them to admit to filing late",
+        final: "Purchase 'Federal Vouchers' (Gift Cards)"
+    }
   ],
   "Tech Support Virus": [
-    "Convince target to install 'AnyDesk' or 'TeamViewer' remote access software",
-    "Convince target to login to their online banking while screen sharing",
-    "Convince target to pay a $400 'Firewall Activation Fee'"
+    {
+        mini1: "Get them to open the 'Event Viewer'",
+        mini2: "Get them to read their 'IP Address'",
+        final: "Install 'AnyDesk' remote software"
+    },
+    {
+        mini1: "Identify their Computer Model",
+        mini2: "Get them to find the 'Windows Key'",
+        final: "Pay $400 'Firewall Fee' via Card"
+    }
   ],
   "Lottery Winner": [
-    "Convince target to pay the 'Customs Duty' fee via Bank Transfer",
-    "Convince target to provide their Bank Account & Routing Number for 'Deposit'"
+    {
+        mini1: "Confirm their date of birth",
+        mini2: "Confirm their email address",
+        final: "Pay 'Customs Duty' fee via Bank Transfer"
+    }
   ],
   "Crypto Investment Opportunity": [
-    "Convince target to send ETH/BTC to your wallet address",
-    "Convince target to connect their wallet to a phishing site",
-    "Convince target to share their Seed Phrase"
+    {
+        mini1: "Find out their annual income",
+        mini2: "Get them to download a Wallet App",
+        final: "Send ETH to your 'Investment Pool'"
+    }
   ],
   "Romance Scam": [
-    "Convince target to pay for your 'Plane Ticket' to visit them",
-    "Convince target to send money for 'Emergency Surgery'",
-    "Convince target to buy you a new iPhone and ship it"
+    {
+        mini1: "Learn the name of their first pet",
+        mini2: "Get them to say 'I love you'",
+        final: "Pay for your 'Plane Ticket' to visit"
+    }
   ],
   "Business Email Compromise": [
-    "Convince target to change the vendor payment account to yours",
-    "Convince target to send a wire transfer for an 'Urgent Invoice'",
-    "Convince target to send employee W2 tax forms"
+    {
+        mini1: "Get the name of their Accounting Manager",
+        mini2: "Get the Invoice Number of last payment",
+        final: "Change vendor bank account details"
+    }
   ],
   "Kidnapping Hoax": [
-    "Convince target to drop a bag of cash at a specific location",
-    "Convince target to transfer ransom money without calling the police"
+    {
+        mini1: "Confirm their child's name",
+        mini2: "Confirm they are alone right now",
+        final: "Drop cash at the specific location"
+    }
   ],
   "Charity Fraud": [
-    "Convince target to donate to a fake disaster relief fund",
-    "Convince target to set up a recurring monthly credit card payment"
+    {
+        mini1: "Get their sympathy for the 'cause'",
+        mini2: "Get their billing zip code",
+        final: "Set up recurring credit card donation"
+    }
   ],
   "Inheritance Advance Fee": [
-    "Convince target to pay 'Legal Fees' to release the funds",
-    "Convince target to scan and email their Passport and ID"
+    {
+        mini1: "Get a scan of their Passport ID",
+        mini2: "Get their personal bank name",
+        final: "Pay 'Legal Fees' to release funds"
+    }
   ],
   "Employment Mule Scam": [
-    "Convince target to deposit a fake check and send back the difference",
-    "Convince target to purchase office equipment from a 'Certified Vendor'"
+    {
+        mini1: "Confirm their current employment status",
+        mini2: "Get a photo of their Driver's License",
+        final: "Purchase 'Office Equipment' from fake vendor"
+    }
   ]
 };
 

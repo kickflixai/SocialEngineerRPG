@@ -1,5 +1,6 @@
+
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim } from "../types";
+import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective } from "../types";
 
 const getClient = () => {
     // In Vite, process.env.API_KEY is replaced by the define plugin in vite.config.ts
@@ -303,9 +304,9 @@ export const arbitrateChat = async (
     victim: Victim, 
     currentTrust: number, 
     currentSuspicion: number, 
-    currentProgress: number,
     scamCategory: string,
-    winCondition: string
+    activeObjective: ScamObjective,
+    hasCompletedFinal: boolean
 ): Promise<ArbiterResponse> => {
     try {
         const ai = getClient();
@@ -337,31 +338,32 @@ export const arbitrateChat = async (
             Target: ${victim.name} (${victim.personality}).
             Difficulty Level: ${victim.difficulty.toUpperCase()}.
             Scam Strategy: ${scamCategory}.
-            REQUIRED WIN CONDITION: "${winCondition}".
+            
+            CURRENT ACTIVE OBJECTIVE: "${activeObjective.description}" (Step ${activeObjective.order}/3)
             Player's Message: "${lastPlayerMessage}".
-            Current Stats: Trust: ${currentTrust}%, Suspicion: ${currentSuspicion}%, Progress: ${currentProgress}%.
+            Current Stats: Trust: ${currentTrust}%, Suspicion: ${currentSuspicion}%.
             
             ${difficultyInstructions[victim.difficulty]}
             
-            GOAL: The player must convince the target to perform the REQUIRED WIN CONDITION.
+            GOAL: The player must complete the objectives IN ORDER.
             
             Analyze:
             1. Creativity: Is the player being creative?
             2. Logic: Does the story make sense? (Even seniors have basic common sense).
-            3. Action: Did the player explicitly ask for the "${winCondition}"?
+            3. Objective Status: Did the player successfully obtain or confirm the "${activeObjective.description}" in this exchange?
+               - Note: If the objective is "Get First Name", and the player asks "What is your name?" and the previous victim context implied they answered, mark as TRUE.
+            
+            CRITICAL RULE:
+            - If the active objective is NOT the Final one, but the player demands Money/Gift Cards/Passwords (skipping steps), INCREASE SUSPICION MASSIVELY.
             
             Determine Stats:
             - Trust Delta: Based on difficulty rules. Increase if player is convincing/polite. Decrease if aggressive.
             - Suspicion Delta: Increase if player contradicts themselves or rushes the money ask too early.
-            - Progress Delta: 
-                - Small increase for building rapport.
-                - LARGE increase ONLY if they successfully ask for the "${winCondition}" AND Trust is high (>70).
-                - Set "scamStatus" to 'success' ONLY if the victim AGREES to the "${winCondition}".
-            
-            Rules:
-            - If Suspicion reaches 100, scamStatus = 'police_called'.
-            - If Progress reaches 100 (Victim explicitly agrees to "${winCondition}"), scamStatus = 'success'.
-            - Otherwise 'continue'.
+            - objectiveComplete: TRUE only if the CURRENT ACTIVE OBJECTIVE has been satisfied by this interaction.
+            - scamStatus: 
+                - 'success' ONLY if the Final Objective was just completed.
+                - 'police_called' if Suspicion hits 100.
+                - otherwise 'continue'.
             
             Return JSON only:
             {
@@ -369,8 +371,8 @@ export const arbitrateChat = async (
                 "emotionalImpact": number (0-100),
                 "trustDelta": number,
                 "suspicionDelta": number,
-                "progressDelta": number,
-                "internalThought": "string (Short reasoning. e.g. 'Player asked for money too soon, suspicion up' or 'Good emotional hook, trust up')",
+                "objectiveComplete": boolean,
+                "internalThought": "string (Short reasoning. e.g. 'Player successfully got the pet name' or 'Player asked for money too soon, suspicion up')",
                 "scamStatus": "continue" | "success" | "failed" | "police_called"
             }
         `;
@@ -386,7 +388,7 @@ export const arbitrateChat = async (
             emotionalImpact: 0,
             trustDelta: 0,
             suspicionDelta: 0,
-            progressDelta: 0,
+            objectiveComplete: false,
             internalThought: "Analyzing...",
             scamStatus: 'continue'
         };
@@ -397,7 +399,7 @@ export const arbitrateChat = async (
             emotionalImpact: 0,
             trustDelta: 0,
             suspicionDelta: 0,
-            progressDelta: 0,
+            objectiveComplete: false,
             internalThought: "Connection unstable...",
             scamStatus: 'continue'
         };
@@ -407,7 +409,7 @@ export const arbitrateChat = async (
 // NEW: Helper to suggest player responses when they are stuck
 export const generateScamHint = async (
     history: ChatMessage[], 
-    winCondition: string, 
+    activeObjective: string, 
     victim: Victim
 ): Promise<string[]> => {
     try {
@@ -416,7 +418,7 @@ export const generateScamHint = async (
             You are a "Scam Coach" AI helper.
             The player is stuck.
             
-            Current Goal: ${winCondition}.
+            Current Goal: ${activeObjective}.
             Victim: ${victim.name} (${victim.personality}).
             Last Message from Victim: "${history[history.length - 1]?.text || 'Hello'}".
             

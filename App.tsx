@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { GameView, PlayerState, ScamState, PlayerAttributes, Skill } from './types';
-import { INITIAL_MONEY, INITIAL_THREAT, SCAM_CATEGORIES, MAX_THREAT, SKILLS, SHOP_ITEMS, COUNTRY_DATA, SCAM_OBJECTIVES, ACHIEVEMENTS } from './constants';
+import { GameView, PlayerState, ScamState, PlayerAttributes, Skill, ScamObjective } from './types';
+import { INITIAL_MONEY, INITIAL_THREAT, SCAM_CATEGORIES, MAX_THREAT, SKILLS, SHOP_ITEMS, COUNTRY_DATA, SCAM_SCENARIOS, ACHIEVEMENTS } from './constants';
 import { generateVictim, generateOpener } from './services/geminiService';
 
 import CharacterCreator from './components/CharacterCreator';
@@ -67,11 +67,10 @@ const App: React.FC = () => {
         setActiveScam({
             victim,
             category: '', // Selected in Dossier
-            winCondition: '', // Set in finalizeScam
+            objectives: [], // Set in finalizeScam
             history: [],
             trust: Math.max(0, Math.min(100, baseTrust + trustMod)),
             suspicion: Math.max(0, Math.min(100, suspicionMod)),
-            progress: 0,
             status: 'active',
             revealedFacts: []
         });
@@ -91,14 +90,21 @@ const App: React.FC = () => {
       try {
           const opener = await generateOpener(category, activeScam.victim);
           
-          // Select a random win condition based on the category
-          const objectives = SCAM_OBJECTIVES[category] || ["Get the target to send money"];
-          const randomGoal = objectives[Math.floor(Math.random() * objectives.length)];
+          // Select a random scenario based on the category
+          const scenarios = SCAM_SCENARIOS[category] || SCAM_SCENARIOS["Grandson in Trouble"];
+          const randomScenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+
+          // Build the 3-step objective array
+          const objectives: ScamObjective[] = [
+              { id: '1', description: randomScenario.mini1, isCompleted: false, isFinal: false, order: 1 },
+              { id: '2', description: randomScenario.mini2, isCompleted: false, isFinal: false, order: 2 },
+              { id: '3', description: randomScenario.final, isCompleted: false, isFinal: true, order: 3 }
+          ];
 
           setActiveScam(prev => prev ? ({
               ...prev,
               category: category,
-              winCondition: randomGoal,
+              objectives: objectives,
               history: [{ sender: 'player', text: opener, timestamp: Date.now() }]
           }) : null);
           setView(GameView.ACTIVE_SCAM);

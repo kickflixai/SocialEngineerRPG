@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ScamState, PlayerState, ChatMessage } from '../types';
 import { getVictimResponse, arbitrateChat, generateScamHint } from '../services/geminiService';
-import { Send, Terminal, Wifi, Radio, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Unlock, ChevronDown, ChevronUp, Target, Lightbulb } from 'lucide-react';
+import { Send, Terminal, Wifi, Radio, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Unlock, ChevronDown, ChevronUp, Target, Lightbulb, Circle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
@@ -55,6 +55,9 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
      }
   }, [scam, onUpdateScam]);
 
+  const activeObjective = scam.objectives.find(o => !o.isCompleted) || scam.objectives[scam.objectives.length - 1];
+  const allCompleted = scam.objectives.every(o => o.isCompleted);
+
   const handleSend = async (textOverride?: string) => {
     const msgToSend = textOverride || input;
     if (!msgToSend.trim() || processing) return;
@@ -71,13 +74,21 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
     setLastThought("ANALYZING RESPONSE VECTORS...");
 
     try {
-        const analysis = await arbitrateChat(msgToSend, scam.victim, scam.trust, scam.suspicion, scam.progress, scam.category, scam.winCondition);
+        const analysis = await arbitrateChat(
+            msgToSend, 
+            scam.victim, 
+            scam.trust, 
+            scam.suspicion, 
+            scam.category, 
+            activeObjective, 
+            allCompleted
+        );
+        
         setLastThought(analysis.internalThought);
 
         let newTrust = Math.max(0, Math.min(100, scam.trust + analysis.trustDelta));
         let newSuspicion = Math.max(0, Math.min(100, scam.suspicion + analysis.suspicionDelta));
-        let newProgress = Math.max(0, Math.min(100, scam.progress + analysis.progressDelta));
-
+        
         if (player.skills.includes('silver_tongue') && analysis.suspicionDelta > 0) {
              newSuspicion -= Math.floor(analysis.suspicionDelta * 0.2);
         }
@@ -85,12 +96,21 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
              newTrust += Math.ceil(analysis.trustDelta * 0.25);
         }
 
+        // Update Objective Status
+        const updatedObjectives = [...scam.objectives];
+        if (analysis.objectiveComplete) {
+            const objIndex = updatedObjectives.findIndex(o => o.id === activeObjective.id);
+            if (objIndex !== -1) {
+                updatedObjectives[objIndex] = { ...updatedObjectives[objIndex], isCompleted: true };
+            }
+        }
+
         const updatedScam = {
             ...scam,
             history: newHistory,
             trust: newTrust,
             suspicion: newSuspicion,
-            progress: newProgress
+            objectives: updatedObjectives
         };
         onUpdateScam(updatedScam);
 
@@ -98,7 +118,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             onScamEnd('police');
             return;
         }
-        if (analysis.scamStatus === 'success' || (newProgress >= 100)) {
+        if (analysis.scamStatus === 'success') {
             onScamEnd('success');
             return;
         }
@@ -126,7 +146,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
 
       setLoadingHints(true);
       try {
-          const suggestions = await generateScamHint(scam.history, scam.winCondition, scam.victim);
+          const suggestions = await generateScamHint(scam.history, activeObjective.description, scam.victim);
           setHints(suggestions);
       } catch (e) {
           console.error(e);
@@ -181,16 +201,13 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                             <span className="text-red-400">{scam.suspicion}%</span>
                         </div>
                          <div>
-                            <span className="block text-[10px] uppercase text-zinc-600">Progress</span>
-                            <span className="text-blue-400">{scam.progress}%</span>
+                            <span className="block text-[10px] uppercase text-zinc-600">Active Obj</span>
+                            <span className="text-blue-400">{activeObjective.description}</span>
                         </div>
                         <div>
                             <span className="block text-[10px] uppercase text-zinc-600">Difficulty</span>
                             <span className="text-white uppercase">{scam.victim.difficulty}</span>
                         </div>
-                    </div>
-                    <div className="bg-black/50 p-2 rounded text-[10px] font-mono text-zinc-300">
-                        <span className="text-blue-500 font-bold">OBJ:</span> {scam.winCondition}
                     </div>
                  </motion.div>
             )}
@@ -221,9 +238,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
              </div>
         </div>
 
-        {/* METERS: Trust, Suspicion, Progress */}
-        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-6 shadow-xl flex-1 space-y-6 backdrop-blur-sm relative overflow-hidden flex flex-col justify-center">
-            <div className="absolute top-0 left-0 w-1 h-full bg-zinc-800"></div>
+        {/* METERS: Trust, Suspicion */}
+        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-6 shadow-xl flex-1 space-y-6 backdrop-blur-sm relative overflow-hidden flex flex-col">
             
             {/* Trust */}
             <div className="space-y-2 relative">
@@ -250,22 +266,43 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                     ))}
                 </div>
             </div>
-
-             {/* Progress */}
-             <div className="space-y-2 relative">
-                <div className="flex justify-between text-xs font-mono">
-                    <span className="text-blue-400 font-bold tracking-widest flex items-center gap-2"><Unlock size={12}/> INFILTRATION</span>
-                    <span className="text-white font-bold">{scam.progress}%</span>
-                </div>
-                 <div className="h-4 bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden relative">
-                     <div className="absolute inset-0 bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAIklEQVQIW2NkQAKrVq36zwjjgzhhYWGMYAEYB8RmROaABADeOQ8CXl/xfgAAAABJRU5ErkJggg==')] opacity-20"></div>
-                     <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${scam.progress}%` }}
-                        className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
-                     />
+            
+            {/* OBJECTIVE LIST REPLACING PROGRESS BAR */}
+             <div className="mt-4 pt-4 border-t border-zinc-800 flex-1 flex flex-col min-h-0">
+                <h4 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Target size={12} className="text-blue-500" /> Execution Steps
+                </h4>
+                <div className="space-y-3 overflow-y-auto custom-scrollbar">
+                    {scam.objectives.map((obj, idx) => {
+                        const isActive = !obj.isCompleted && (idx === 0 || scam.objectives[idx - 1].isCompleted);
+                        const isLocked = !obj.isCompleted && !isActive;
+                        
+                        return (
+                            <div 
+                                key={obj.id} 
+                                className={`p-2 rounded border flex items-start gap-3 text-xs font-mono transition-all ${
+                                    obj.isCompleted 
+                                    ? 'bg-green-900/20 border-green-500/30 text-green-400' 
+                                    : isActive 
+                                        ? 'bg-blue-900/20 border-blue-500/50 text-white shadow-[0_0_10px_rgba(59,130,246,0.1)]' 
+                                        : 'bg-zinc-900 border-zinc-800 text-zinc-500'
+                                }`}
+                            >
+                                <div className="mt-0.5 shrink-0">
+                                    {obj.isCompleted ? <CheckCircle2 size={14}/> : isLocked ? <Lock size={14}/> : <Circle size={14} className="animate-pulse text-blue-400"/>}
+                                </div>
+                                <div className="flex-1">
+                                    <p className={`font-bold mb-0.5 ${isActive ? 'text-blue-400' : ''}`}>
+                                        STEP 0{obj.order}: {obj.isFinal ? 'PAYLOAD' : 'INTEL'}
+                                    </p>
+                                    <p className={isLocked ? 'opacity-50' : ''}>{obj.description}</p>
+                                </div>
+                            </div>
+                        )
+                    })}
                 </div>
             </div>
+
         </div>
       </div>
 
@@ -290,12 +327,12 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                 </div>
             </div>
             
-            {/* MISSION OBJECTIVE BANNER */}
+            {/* ACTIVE OBJECTIVE BANNER */}
             <div className="bg-blue-900/20 border border-blue-500/30 rounded px-2 py-1.5 md:px-3 md:py-2 flex items-center gap-2 md:gap-3 animate-pulse">
                 <Target size={12} className="text-blue-400 shrink-0" />
                 <div className="flex flex-col min-w-0">
-                    <span className="text-[9px] text-blue-300 font-mono font-bold tracking-wider uppercase whitespace-nowrap">OBJECTIVE:</span>
-                    <span className="text-[10px] text-white font-mono truncate">{scam.winCondition || "Extract Funds"}</span>
+                    <span className="text-[9px] text-blue-300 font-mono font-bold tracking-wider uppercase whitespace-nowrap">CURRENT TASK:</span>
+                    <span className="text-[10px] text-white font-mono truncate">{activeObjective.description}</span>
                 </div>
             </div>
         </div>
@@ -512,7 +549,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             )}
 
             {/* SUCCESS OVERLAY */}
-            {scam.progress >= 100 && (
+            {scam.objectives.every(o => o.isCompleted) && (
                 <motion.div 
                     initial={{opacity: 0}} animate={{opacity: 1}}
                     className="absolute inset-0 z-50 bg-green-950/90 flex items-center justify-center backdrop-blur-sm p-4"
