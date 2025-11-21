@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ScamState, PlayerState, ChatMessage, ShopItem, HackAbility } from '../types';
 import { getVictimResponse, arbitrateChat, generateScamHint } from '../services/geminiService';
 import { audioManager } from '../services/audioService';
 import { HACK_ABILITIES } from '../constants';
-import { Send, Terminal, Wifi, Radio, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Circle, Package, ChevronDown, ChevronUp, Target, Lightbulb, BrainCircuit, ArrowRight, Zap, Mail, Bell, Mic, Search, Code, Speaker, WifiOff, Shuffle, FileCheck, BadgeCheck, Key, Fingerprint, Unlock } from 'lucide-react';
+import { Send, Terminal, Wifi, Radio, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Circle, Package, ChevronDown, ChevronUp, Target, Lightbulb, BrainCircuit, ArrowRight, Zap, Mail, Bell, Mic, Search, Code, Speaker, WifiOff, Shuffle, FileCheck, BadgeCheck, Key, Fingerprint, Unlock, Database } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import InventoryModal from './InventoryModal';
 
@@ -329,7 +330,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       </div>
 
        {/* ... LEFT COL ... */}
-       <div className="hidden md:flex flex-col gap-4 h-full relative z-10 col-span-1">
+       <div className="hidden md:flex flex-col gap-4 h-full relative z-10 col-span-1 overflow-y-auto custom-scrollbar pr-1">
            {/* Profile Card */}
            <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-6 flex flex-col items-center text-center relative shadow-[0_0_20px_rgba(0,0,0,0.5)] shrink-0">
              <div className="relative w-24 h-24 mb-3 mt-1 group">
@@ -343,7 +344,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
              <p className="text-zinc-500 text-[10px] font-mono uppercase tracking-widest mb-3">{scam.victim.age} Y/O // {scam.victim.occupation}</p>
         </div>
 
-        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-5 shadow-xl flex-1 space-y-5 backdrop-blur-sm relative overflow-hidden flex flex-col min-h-0">
+        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-5 shadow-xl flex-1 space-y-5 backdrop-blur-sm relative flex flex-col min-h-0 shrink-0">
             
             {/* SEPARATE METERS */}
             <div className="space-y-4 shrink-0">
@@ -375,32 +376,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                     </div>
                 </div>
             </div>
-
-            {/* PSYCH PROFILE & INTEL */}
-            <div className="space-y-2 shrink-0">
-                 <div className="bg-zinc-900/30 p-2 rounded border border-zinc-800/50">
-                    <h4 className="text-zinc-400 text-[10px] font-bold uppercase mb-1 flex items-center gap-2 tracking-wider">
-                        <Fingerprint size={12} className="text-purple-400"/> Psych Profile
-                    </h4>
-                    <p className="text-zinc-300 text-[10px] leading-relaxed font-mono">{scam.victim.personality}</p>
-                </div>
-                
-                <div className="bg-zinc-900/30 p-2 rounded border border-zinc-800/50 flex flex-col gap-1">
-                    <h4 className="text-zinc-400 text-[10px] font-bold uppercase flex items-center gap-2 tracking-wider">
-                        <Lock size={12} className="text-orange-400"/> Target Intel
-                    </h4>
-                    <div className="flex justify-between items-center text-[10px]">
-                        <span className="text-zinc-500">SECRET:</span>
-                        <span className={`font-mono ${hasDoxxing ? 'text-green-400' : 'text-red-900'}`}>{hasDoxxing ? scam.victim.hiddenFact : 'ENCRYPTED'}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-[10px]">
-                        <span className="text-zinc-500">WEAKNESS:</span>
-                        <span className={`font-mono ${hasScraper ? 'text-green-400' : 'text-red-900'}`}>{hasScraper ? scam.victim.weakness : 'ENCRYPTED'}</span>
-                    </div>
-                </div>
-            </div>
             
-            {/* HACKING POWER METER (Relocated) */}
+            {/* HACKING POWER METER */}
              <div className="w-full bg-zinc-900/50 rounded-lg border border-blue-900/30 p-2">
                  <div className="flex justify-between items-end mb-1">
                       <span className="text-[10px] font-bold uppercase text-blue-400 tracking-widest flex items-center gap-1"><Zap size={10}/> HACKING POWER</span>
@@ -412,11 +389,11 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                  <p className="text-[8px] text-zinc-500 text-center">POWERED BY CREATIVE RESPONSES</p>
              </div>
 
-             <div className="border-t border-zinc-800 pt-4 flex-1 flex flex-col min-h-0 overflow-hidden">
+             <div className="border-t border-zinc-800 pt-4 flex-1 flex flex-col min-h-0">
                 <h4 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
                     <Target size={12} className="text-blue-500" /> Execution Steps
                 </h4>
-                <div className="space-y-2 overflow-y-auto custom-scrollbar pr-1">
+                <div className="space-y-2">
                     {scam.objectives.map((obj, idx) => {
                         const isActive = !obj.isCompleted && (idx === 0 || scam.objectives[idx - 1].isCompleted);
                         const isLocked = !obj.isCompleted && !isActive;
@@ -525,26 +502,52 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         </div>
        </div>
 
-       {/* ... RIGHT COL (HACKING TERMINAL) ... */}
-       <div className="hidden md:flex flex-col gap-4 h-full relative z-10 col-span-1">
+       {/* ... RIGHT COL (TARGET ANALYSIS & HACKING TERMINAL) ... */}
+       <div className="hidden md:flex flex-col gap-4 h-full relative z-10 col-span-1 overflow-y-auto custom-scrollbar pr-1">
            
-           {/* TERMINAL LOG (Top Half) */}
-           <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl flex flex-col relative overflow-hidden shadow-xl h-[30%]">
-                <div className="p-3 border-b border-zinc-800 bg-black/40 flex justify-between items-center">
+           {/* TARGET ANALYSIS (Moved from Left) */}
+           <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-3 shrink-0 space-y-3">
+                <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-2">Target Analysis</h3>
+                
+                <div className="bg-zinc-900/30 p-2 rounded border border-zinc-800/50">
+                    <h4 className="text-zinc-400 text-[10px] font-bold uppercase mb-1 flex items-center gap-2 tracking-wider">
+                        <Fingerprint size={12} className="text-purple-400"/> Psych Profile
+                    </h4>
+                    <p className="text-zinc-300 text-[10px] leading-relaxed font-mono">{scam.victim.personality}</p>
+                </div>
+                
+                <div className="bg-zinc-900/30 p-2 rounded border border-zinc-800/50 flex flex-col gap-1">
+                    <h4 className="text-zinc-400 text-[10px] font-bold uppercase flex items-center gap-2 tracking-wider">
+                        <Database size={12} className="text-orange-400"/> Intel
+                    </h4>
+                    <div className="flex justify-between items-center text-[10px]">
+                        <span className="text-zinc-500">SECRET:</span>
+                        <span className={`font-mono ${hasDoxxing ? 'text-green-400' : 'text-red-900'}`}>{hasDoxxing ? scam.victim.hiddenFact : 'ENCRYPTED'}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[10px]">
+                        <span className="text-zinc-500">WEAKNESS:</span>
+                        <span className={`font-mono ${hasScraper ? 'text-green-400' : 'text-red-900'}`}>{hasScraper ? scam.victim.weakness : 'ENCRYPTED'}</span>
+                    </div>
+                </div>
+           </div>
+
+           {/* TERMINAL LOG (Compact) */}
+           <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl flex flex-col relative overflow-hidden shadow-xl min-h-[8rem] shrink-0">
+                <div className="p-2 border-b border-zinc-800 bg-black/40 flex justify-between items-center">
                     <p className="text-green-600 uppercase font-bold text-[10px] flex items-center gap-2 tracking-widest"><Terminal size={12}/> SYS_LOG</p>
                     <Wifi size={12} className={processing ? "animate-pulse text-green-500" : "text-zinc-600"}/>
                 </div>
-                <div className="flex-1 p-4 font-mono text-xs overflow-y-auto custom-scrollbar">
+                <div className="flex-1 p-2 font-mono text-[10px] overflow-y-auto custom-scrollbar">
                      {processing ? (
-                        <div className="flex flex-col gap-2 text-green-500/50 h-full justify-end">
+                        <div className="flex flex-col gap-1 text-green-500/50 h-full justify-end">
                              <div className="animate-pulse">&gt;&gt; ANALYZING INPUT VECTOR...</div>
                              <div className="animate-pulse delay-75">&gt;&gt; CALCULATING PROBABILITY...</div>
                         </div>
                     ) : (
                         <div className="flex flex-col h-full justify-end">
-                            <div className="text-zinc-500 mb-2">&gt;&gt; CONNECTION ESTABLISHED</div>
+                            <div className="text-zinc-500 mb-1">&gt;&gt; CONNECTION ESTABLISHED</div>
                              {lastThought && (
-                                <div className="text-green-400 typing-effect">
+                                <div className="text-green-400 typing-effect leading-tight">
                                     <span className="text-zinc-500 mr-2">&gt;&gt;</span>{lastThought}
                                 </div>
                             )}
@@ -553,15 +556,15 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                 </div>
            </div>
 
-           {/* HACKING DECK (Bottom Half) */}
-           <div className="bg-zinc-900/80 border border-zinc-800/60 rounded-xl p-4 flex-1 flex flex-col relative overflow-hidden shadow-xl">
-                <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2"><Code size={14}/> Hacking Terminal</h3>
-                    <span className="text-[9px] text-zinc-500">AVAILABLE TOOLS: {HACK_ABILITIES.length}</span>
+           {/* HACKING DECK */}
+           <div className="bg-zinc-900/80 border border-zinc-800/60 rounded-xl p-3 flex-1 flex flex-col relative overflow-hidden shadow-xl min-h-[12rem]">
+                <div className="flex items-center justify-between mb-3 shrink-0">
+                    <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2"><Code size={14}/> Hacking Tools</h3>
+                    <span className="text-[9px] text-zinc-500">{HACK_ABILITIES.length} AVAILABLE</span>
                 </div>
 
                {/* HACKS GRID */}
-               <div className="grid grid-cols-2 gap-2 flex-1 overflow-y-auto custom-scrollbar content-start">
+               <div className="grid grid-cols-2 gap-2 overflow-y-auto custom-scrollbar content-start">
                    {HACK_ABILITIES.map(hack => {
                        const canAfford = scam.socialCharge >= hack.cost;
                        const isOnCooldown = hackCooldown === hack.id;
@@ -571,7 +574,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                                key={hack.id}
                                onClick={() => executeHack(hack)}
                                disabled={!canAfford || processing || isOnCooldown}
-                               className={`p-2 rounded border text-left flex flex-col justify-between transition-all relative group h-16 md:h-20 ${
+                               className={`p-2 rounded border text-left flex flex-col justify-between transition-all relative group h-16 ${
                                    isOnCooldown 
                                    ? 'bg-green-900/20 border-green-500/50 cursor-not-allowed'
                                    : canAfford 
@@ -586,7 +589,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                                    <span className={`text-[9px] font-mono font-bold ${canAfford ? "text-blue-300" : "text-zinc-600"}`}>{hack.cost} PWR</span>
                                </div>
                                <div>
-                                   <div className={`text-[10px] font-bold leading-tight ${canAfford ? "text-white" : "text-zinc-500"}`}>{hack.name}</div>
+                                   <div className={`text-[10px] font-bold leading-tight truncate ${canAfford ? "text-white" : "text-zinc-500"}`}>{hack.name}</div>
                                </div>
                            </button>
                        );
