@@ -1,15 +1,49 @@
 
-import { Skill, ShopItem, CountryStats, Achievement } from './types';
+import { Skill, ShopItem, CountryStats, Achievement, HackAbility } from './types';
 
 export const INITIAL_MONEY = 1000;
 export const INITIAL_THREAT = 0;
 export const MAX_THREAT = 100;
 
 // --- AUDIO CONFIG ---
-// To use your own music, paste a direct URL to an MP3 file here (e.g. from GitHub Raw, Dropbox dl=1, etc.)
-// If left empty, the game will use the built-in generative synth music.
 export const HACKING_MUSIC_URL = "https://res.cloudinary.com/dyqus7sfo/video/upload/v1763722941/hacking1_vyfcpf.mp3"; 
 export const DASHBOARD_MUSIC_URL = "https://res.cloudinary.com/dyqus7sfo/video/upload/v1763722941/MainMenu_gge672.mp3"; 
+
+// --- HACKING ABILITIES ---
+export const HACK_ABILITIES: HackAbility[] = [
+    {
+        id: 'spoof_email',
+        name: 'Forge Email',
+        description: 'Simulate an email arrival from a known contact.',
+        cost: 35,
+        icon: 'Mail',
+        systemMessage: '>> EMAIL SPOOFING SUCCESSFUL. FAKE AUTHORIZATION DELIVERED TO TARGET INBOX.'
+    },
+    {
+        id: 'fake_notification',
+        name: 'Bank Alert',
+        description: 'Trigger a fake bank security notification.',
+        cost: 45,
+        icon: 'Bell',
+        systemMessage: '>> SMS INJECTION COMPLETE. TARGET RECEIVED "UNAUTHORIZED LOGIN" ALERT.'
+    },
+    {
+        id: 'voice_changer',
+        name: 'Voice Deepfake',
+        description: 'Play a snippet of a family member/boss voice.',
+        cost: 60,
+        icon: 'Mic',
+        systemMessage: '>> AUDIO DEEPFAKE STREAMED. VOICE MATCH: 98% ACCURACY.'
+    },
+    {
+        id: 'background_check',
+        name: 'Quick Dox',
+        description: 'Reveal a hidden fact immediately.',
+        cost: 75,
+        icon: 'Search',
+        systemMessage: '>> DATABASE LEAK DECRYPTED. NEW INTEL ACQUIRED.'
+    }
+];
 
 // --- COUNTRY DATA & LORE ---
 export const COUNTRY_DATA: Record<string, CountryStats> = {
@@ -48,12 +82,12 @@ export const COUNTRY_DATA: Record<string, CountryStats> = {
     perkName: 'Clickfarm Volume',
     perkDescription: 'Start with $3,000 extra cash from "legitimate" ad revenue.',
     weaknessName: 'Spotty Connection',
-    weaknessDescription: 'Scams start with -10% Trust due to lag and typos.',
+    weaknessDescription: 'Scams start with -10 Relationship due to lag and typos.',
     startingMoney: 4000, // 1000 base + 3000 bonus
     startingThreat: 0,
     startingItems: [],
     startingSkills: [],
-    modifiers: { trustBonus: -10 }
+    modifiers: { relationshipStartBonus: -10 }
   },
   'India': {
     id: 'India',
@@ -62,12 +96,12 @@ export const COUNTRY_DATA: Record<string, CountryStats> = {
     perkName: 'Call Center Infrastructure',
     perkDescription: 'Start with a "Voice Modulator" item.',
     weaknessName: 'Over-Scripted',
-    weaknessDescription: 'Victims start with +10% Suspicion (They heard this one before).',
+    weaknessDescription: 'Victims start suspicious (-15 Relationship).',
     startingMoney: 1200,
     startingThreat: 0,
     startingItems: ['voice_modulator'],
     startingSkills: [],
-    modifiers: { suspicionStart: 10 }
+    modifiers: { relationshipStartBonus: -15 }
   },
   'Russia': {
     id: 'Russia',
@@ -88,14 +122,14 @@ export const COUNTRY_DATA: Record<string, CountryStats> = {
     name: 'USA',
     description: 'Home of the brave, land of the identity theft. Corporate confidence makes you blend in perfectly.',
     perkName: 'Blue Passport',
-    perkDescription: 'Scams start with +15% Trust. You sound "Safe".',
+    perkDescription: 'Scams start with +15 Relationship. You sound "Safe".',
     weaknessName: 'Federal Jurisdiction',
     weaknessDescription: 'If police are called, it\'s Game Over instantly (No chance to escape).',
     startingMoney: 500,
     startingThreat: 0,
     startingItems: [],
     startingSkills: ['authority_voice'],
-    modifiers: { trustBonus: 15 }
+    modifiers: { relationshipStartBonus: 15 }
   },
   'Nigeria': {
     id: 'Nigeria',
@@ -104,12 +138,12 @@ export const COUNTRY_DATA: Record<string, CountryStats> = {
     perkName: 'The Prince',
     perkDescription: 'Successful scams pay out 25% more.',
     weaknessName: 'Meme Status',
-    weaknessDescription: 'Scams start with +15% Suspicion. Everyone knows the Prince.',
+    weaknessDescription: 'Scams start with -20 Relationship. Everyone knows the Prince.',
     startingMoney: 1000,
     startingThreat: 0,
     startingItems: [],
     startingSkills: [],
-    modifiers: { payoutMultiplier: 1.25, suspicionStart: 15 }
+    modifiers: { payoutMultiplier: 1.25, relationshipStartBonus: -20 }
   },
   'China': {
     id: 'China',
@@ -271,7 +305,7 @@ export const SKILLS: Skill[] = [
   {
     id: 'silver_tongue',
     name: 'Silver Tongue',
-    description: 'Reduces suspicion gain by 20% during conversations.',
+    description: 'Reduces threat level gain by 20% if caught.',
     cost: 2000,
     icon: 'MessageSquare',
     category: 'social'
@@ -279,7 +313,7 @@ export const SKILLS: Skill[] = [
   {
     id: 'empathy_mirror',
     name: 'Empathy Mirror',
-    description: 'Increases Trust gain by 25% when using emotional keywords.',
+    description: 'Increases Social Charge gain by 25%.',
     cost: 4500,
     icon: 'Heart',
     category: 'social'
@@ -295,7 +329,7 @@ export const SKILLS: Skill[] = [
   {
     id: 'love_bomb',
     name: 'Love Bomb Protocol',
-    description: 'Romance scams start with +15% Trust.',
+    description: 'Romance scams start with +15 Relationship.',
     cost: 8000,
     icon: 'HeartHandshake',
     category: 'social'
@@ -303,7 +337,7 @@ export const SKILLS: Skill[] = [
   {
     id: 'authority_voice',
     name: 'Authority Voice',
-    description: 'Reduces suspicion when making demands or threats.',
+    description: 'Increases Relationship gain when acting authoritative.',
     cost: 10000,
     icon: 'Megaphone',
     category: 'social'
@@ -311,7 +345,7 @@ export const SKILLS: Skill[] = [
   {
     id: 'linguistic_mimicry',
     name: 'Linguistic Mimicry',
-    description: 'Automatically adapts tone to match victim, boosting logic score.',
+    description: 'Hacking abilities cost 10% less Social Charge.',
     cost: 12000,
     icon: 'Languages',
     category: 'social'
@@ -335,7 +369,7 @@ export const SKILLS: Skill[] = [
   {
     id: 'deepfake_audio',
     name: 'Deepfake Audio',
-    description: 'Unlocks "Voice Note" scams (Automatic high trust opener).',
+    description: 'Unlocks "Voice Note" scams (Automatic high relationship opener).',
     cost: 8000,
     icon: 'Mic',
     category: 'tech'
@@ -427,7 +461,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: 'voice_modulator',
     name: 'Voice Modulator',
-    description: 'One-time use: Instantly reduces suspicion by 30% in a chat.',
+    description: 'One-time use: Instantly boosts relationship by 30 points.',
     cost: 250,
     effect: 'reduce_suspicion',
     icon: 'Mic2',
@@ -472,7 +506,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: 'ddos_attack',
     name: 'DDoS Attack',
-    description: 'Chaos distraction. Reduces Suspicion to 0 immediately.',
+    description: 'Chaos distraction. Resets relationship to 0 (Neutral).',
     cost: 800,
     effect: 'reset_suspicion',
     icon: 'WifiOff',
@@ -481,7 +515,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   {
     id: 'fake_id',
     name: 'Forged FBI Badge',
-    description: 'Unlock "Federal Agent" persona. Boosts Trust by 25%.',
+    description: 'Unlock "Federal Agent" persona. Boosts Relationship by 25.',
     cost: 1000,
     effect: 'boost_trust',
     icon: 'BadgeCheck',

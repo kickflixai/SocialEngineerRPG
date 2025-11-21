@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ScamState, PlayerState, ChatMessage, ShopItem } from '../types';
+import { ScamState, PlayerState, ChatMessage, ShopItem, HackAbility } from '../types';
 import { getVictimResponse, arbitrateChat, generateScamHint } from '../services/geminiService';
 import { audioManager } from '../services/audioService';
-import { Send, Terminal, Wifi, Radio, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Circle, Package, ChevronDown, ChevronUp, Target, Lightbulb, BrainCircuit, ArrowRight } from 'lucide-react';
+import { HACK_ABILITIES } from '../constants';
+import { Send, Terminal, Wifi, Radio, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Circle, Package, ChevronDown, ChevronUp, Target, Lightbulb, BrainCircuit, ArrowRight, Zap, Mail, Bell, Mic, Search, Code } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import InventoryModal from './InventoryModal';
 
@@ -23,9 +24,11 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   const [lastThought, setLastThought] = useState<string | null>(null);
   
   const [showAbortConfirm, setShowAbortConfirm] = useState(false);
-  const [intelExpanded, setIntelExpanded] = useState(true);
   const [mobileStatsExpanded, setMobileStatsExpanded] = useState(false); 
   const [isExiting, setIsExiting] = useState(false);
+  
+  // Hacking Terminal
+  const [hackCooldown, setHackCooldown] = useState<string | null>(null);
   
   // Hint System
   const [hints, setHints] = useState<string[]>([]);
@@ -47,7 +50,6 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   // Auto-focus input when processing finishes
   useEffect(() => {
       if (!processing) {
-          // Slight delay to ensure DOM is ready and state updated
           setTimeout(() => {
               inputRef.current?.focus();
           }, 50);
@@ -91,14 +93,14 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
      onConsumeItem(item); // Remove from inventory globally
 
      if (item.effect === 'reduce_suspicion') {
-         onUpdateScam({ ...scam, suspicion: Math.max(0, scam.suspicion - 30) });
-         alert("Voice modulator active. Suspicion reduced.");
+         onUpdateScam({ ...scam, relationship: Math.min(100, scam.relationship + 30) });
+         alert("Voice modulator active. Relationship boosted.");
      } else if (item.effect === 'boost_trust') {
-         onUpdateScam({ ...scam, trust: Math.min(100, scam.trust + 25) });
-         alert("Fake ID verified. Trust boosted.");
+         onUpdateScam({ ...scam, relationship: Math.min(100, scam.relationship + 25) });
+         alert("Fake ID verified. Relationship boosted.");
      } else if (item.effect === 'reset_suspicion') {
-         onUpdateScam({ ...scam, suspicion: 0 });
-         alert("DDoS attack successful. Police comms blocked.");
+         onUpdateScam({ ...scam, relationship: 0 });
+         alert("DDoS attack successful. Connection reset to neutral.");
      } else if (item.effect === 'force_objective') {
          // Complete current objective but raise suspicion/threat?
          const updatedObjectives = [...scam.objectives];
@@ -109,10 +111,50 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
          onUpdateScam({ 
              ...scam, 
              objectives: updatedObjectives,
-             trust: Math.max(0, scam.trust - 20) // Cost of using ransomware
+             relationship: Math.max(-100, scam.relationship - 30) // Cost of using ransomware
          });
-         alert("Ransomware deployed. Objective forced. Trust damaged.");
+         alert("Ransomware deployed. Objective forced. Relationship damaged.");
      }
+  };
+
+  // Execute Hack
+  const executeHack = async (hack: HackAbility) => {
+      if (scam.socialCharge < hack.cost || processing) return;
+
+      audioManager.playClick();
+      // Deduct cost
+      let chargeCost = hack.cost;
+      if (player.skills.includes('linguistic_mimicry')) {
+          chargeCost = Math.floor(chargeCost * 0.9);
+      }
+      
+      const newCharge = Math.max(0, scam.socialCharge - chargeCost);
+      const newHistory = [...scam.history, { sender: 'system', text: hack.systemMessage, timestamp: Date.now() } as ChatMessage];
+      
+      onUpdateScam({
+          ...scam,
+          socialCharge: newCharge,
+          history: newHistory
+      });
+
+      setHackCooldown(hack.id);
+      setTimeout(() => setHackCooldown(null), 3000);
+
+      setProcessing(true);
+      try {
+          // Victim Reacts to System Message
+          const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, activeObjective);
+          audioManager.playMessageReceived();
+          onUpdateScam({
+              ...scam,
+              socialCharge: newCharge,
+              history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() } as ChatMessage]
+          });
+      } catch (e) {
+          console.error(e);
+      } finally {
+          setProcessing(false);
+      }
   };
 
   const handleSend = async (textOverride?: string) => {
@@ -127,14 +169,13 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
     onUpdateScam({ ...scam, history: newHistory });
     setInput('');
     setProcessing(true);
-    setLastThought("ANALYZING RESPONSE VECTORS...");
+    setLastThought("ANALYZING NEURAL PATTERNS...");
 
     try {
         const analysis = await arbitrateChat(
             msgToSend, 
             scam.victim, 
-            scam.trust, 
-            scam.suspicion, 
+            scam.relationship, 
             scam.category, 
             activeObjective, 
             allCompleted
@@ -142,18 +183,27 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         
         setLastThought(analysis.internalThought);
 
-        let newTrust = Math.round(Math.max(0, Math.min(100, scam.trust + analysis.trustDelta)));
-        let newSuspicion = Math.round(Math.max(0, Math.min(100, scam.suspicion + analysis.suspicionDelta)));
+        // Update Relationship (-100 to 100)
+        let newRelationship = Math.round(Math.max(-100, Math.min(100, scam.relationship + analysis.relationshipDelta)));
         
-        if (player.skills.includes('silver_tongue') && analysis.suspicionDelta > 0) {
-             newSuspicion = Math.round(newSuspicion - (analysis.suspicionDelta * 0.2));
+        // Skills modifiers
+        if (player.skills.includes('silver_tongue') && analysis.relationshipDelta < 0) {
+             // Mitigate loss
+             newRelationship = Math.round(scam.relationship + (analysis.relationshipDelta * 0.8));
         }
-        if (player.skills.includes('empathy_mirror') && analysis.trustDelta > 0) {
-             newTrust = Math.round(newTrust + (analysis.trustDelta * 0.25));
+        if (player.skills.includes('empathy_mirror') && analysis.relationshipDelta > 0) {
+             // Boost gain
+             newRelationship = Math.round(scam.relationship + (analysis.relationshipDelta * 1.25));
         }
 
+        // Update Social Charge (Creativity)
+        // Arbitrary multiplier: Score (0-10) * 3 = up to 30 charge per message
+        let chargeGain = analysis.creativityScore * 3;
+        if (player.skills.includes('empathy_mirror')) chargeGain = Math.floor(chargeGain * 1.25);
+        
+        const newCharge = Math.min(100, scam.socialCharge + chargeGain);
+
         let updatedObjectives = [...scam.objectives];
-        // Arbiter Logic Check
         let isObjectiveComplete = analysis.objectiveComplete;
 
         if (isObjectiveComplete) {
@@ -164,17 +214,18 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             }
         }
 
-        // Update state BEFORE victim response to reflect arbiter changes
+        // Update State
         let updatedScam = {
             ...scam,
             history: newHistory,
-            trust: newTrust,
-            suspicion: newSuspicion,
+            relationship: newRelationship,
+            socialCharge: newCharge,
             objectives: updatedObjectives
         };
         onUpdateScam(updatedScam);
 
-        if (analysis.scamStatus === 'police_called' || newSuspicion >= 100) {
+        // End Conditions
+        if (analysis.scamStatus === 'police_called' || newRelationship <= -100) {
             onScamEnd('police');
             return;
         }
@@ -184,11 +235,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         }
 
         // Get Victim Response
-        // Pass the updated objective list to determine the "Active" one for the victim prompt
         const nextActiveObjective = updatedObjectives.find(o => !o.isCompleted) || updatedObjectives[updatedObjectives.length - 1];
-        
         const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, nextActiveObjective);
-        
         audioManager.playMessageReceived();
 
         // Victim Self-Report Check
@@ -197,21 +245,12 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
              const objIndex = updatedObjectives.findIndex(o => o.id === nextActiveObjective.id);
              if (objIndex !== -1) {
                 updatedObjectives[objIndex] = { ...updatedObjectives[objIndex], isCompleted: true };
-                
-                // Update local ref of scam for next render
-                updatedScam = {
-                    ...updatedScam,
-                    objectives: updatedObjectives
-                };
-                // Update parent
+                updatedScam = { ...updatedScam, objectives: updatedObjectives };
                 onUpdateScam(updatedScam);
-
-                // FIX: Force update log to match UI
                 setLastThought(`TARGET YIELDED DATA. "${nextActiveObjective.description.toUpperCase()}" VERIFIED.`);
              }
         }
 
-        // Final update with message
         onUpdateScam({
             ...updatedScam,
             history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() }]
@@ -221,14 +260,13 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         console.error(error);
     } finally {
         setProcessing(false);
-        // Focus is handled by useEffect
     }
   };
 
   const requestHints = async () => {
-      if (scam.trust < 20) return;
+      if (scam.relationship < 0) return;
       audioManager.playClick();
-      onUpdateScam({ ...scam, trust: Math.max(0, scam.trust - 20) });
+      onUpdateScam({ ...scam, relationship: Math.max(-100, scam.relationship - 10) });
       setLoadingHints(true);
       try {
           const suggestions = await generateScamHint(scam.history, activeObjective.description, scam.victim);
@@ -236,9 +274,16 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       } catch (e) { console.error(e); } finally { setLoadingHints(false); }
   };
 
+  // Calculate position of meter marker (0 to 100%)
+  // Relationship is -100 to 100.
+  // -100 -> 0%
+  // 0 -> 50%
+  // 100 -> 100%
+  const meterPercent = ((scam.relationship + 100) / 200) * 100;
+
   return (
     <div className="flex flex-col md:grid md:grid-cols-3 h-full gap-4 md:gap-6 p-2 md:p-6 bg-black overflow-hidden relative">
-       {/* Mobile Header - Collapsible Stats (Visible only on Mobile) */}
+       {/* Mobile Header */}
        <div className="md:hidden z-20 bg-zinc-950 border border-zinc-800 rounded-xl p-3 shrink-0 relative">
           <div className="flex items-center justify-between" onClick={() => setMobileStatsExpanded(!mobileStatsExpanded)}>
               <div className="flex items-center gap-3">
@@ -247,39 +292,20 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                   </div>
                   <div>
                       <h2 className="text-sm font-bold text-white font-mono">{scam.victim.name}</h2>
-                      <div className="flex gap-2">
-                          <div className="w-16 h-1.5 bg-zinc-900 rounded-full mt-1 overflow-hidden border border-zinc-800">
-                              <div className="h-full bg-green-500" style={{width: `${Math.round(scam.trust)}%`}}></div>
-                          </div>
-                          <div className="w-16 h-1.5 bg-zinc-900 rounded-full mt-1 overflow-hidden border border-zinc-800">
-                              <div className="h-full bg-red-500" style={{width: `${Math.round(scam.suspicion)}%`}}></div>
-                          </div>
+                      <div className="w-24 h-1.5 bg-zinc-900 rounded-full mt-1 overflow-hidden border border-zinc-800 relative">
+                          <div className="absolute top-0 bottom-0 left-0 bg-red-500 w-1/2"></div>
+                          <div className="absolute top-0 bottom-0 right-0 bg-green-500 w-1/2"></div>
+                          <div className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_5px_white]" style={{ left: `${meterPercent}%` }}></div>
                       </div>
                   </div>
               </div>
               {mobileStatsExpanded ? <ChevronUp size={16} className="text-zinc-500"/> : <ChevronDown size={16} className="text-zinc-500"/>}
           </div>
-          <AnimatePresence>
-            {mobileStatsExpanded && (
-                 <motion.div 
-                    initial={{ height: 0, opacity: 0 }} 
-                    animate={{ height: 'auto', opacity: 1 }} 
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden pt-3 border-t border-zinc-800 mt-2 space-y-2"
-                >
-                     <div className="grid grid-cols-2 gap-2 text-xs font-mono text-zinc-400">
-                        <div><span className="block text-[10px] uppercase text-zinc-600">Trust</span><span className="text-green-400">{Math.round(scam.trust)}%</span></div>
-                        <div><span className="block text-[10px] uppercase text-zinc-600">Suspicion</span><span className="text-red-400">{Math.round(scam.suspicion)}%</span></div>
-                        <div><span className="block text-[10px] uppercase text-zinc-600">Active Obj</span><span className="text-blue-400">{activeObjective.description}</span></div>
-                    </div>
-                 </motion.div>
-            )}
-          </AnimatePresence>
       </div>
 
        {/* ... LEFT COL ... */}
        <div className="hidden md:flex flex-col gap-4 h-full relative z-10 col-span-1">
-           {/* Profile Card & Meters same as before */}
+           {/* Profile Card */}
            <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-6 flex flex-col items-center text-center relative shadow-[0_0_20px_rgba(0,0,0,0.5)] shrink-0">
              <div className="relative w-32 h-32 mb-4 mt-2 group">
                 <div className="absolute inset-0 rounded-full border border-dashed border-green-500/40 animate-spin-slow"></div>
@@ -298,27 +324,38 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         </div>
 
         <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-6 shadow-xl flex-1 space-y-6 backdrop-blur-sm relative overflow-hidden flex flex-col">
-            <div className="space-y-2 relative">
-                <div className="flex justify-between text-xs font-mono">
-                    <span className="text-green-500 font-bold tracking-widest flex items-center gap-2"><Lock size={12}/> TRUST_LEVEL</span>
-                    <span className="text-white font-bold">{Math.round(scam.trust)}%</span>
+            
+            {/* UNIFIED METER */}
+            <div className="space-y-3 relative">
+                <div className="flex justify-between text-xs font-mono uppercase tracking-widest">
+                    <span className="text-red-500 font-bold flex items-center gap-2"><AlertTriangle size={12}/> SUSPICION</span>
+                    <span className="text-green-500 font-bold flex items-center gap-2">TRUST <CheckCircle2 size={12}/></span>
                 </div>
-                <div className="h-3 bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden flex gap-0.5">
-                    {Array.from({length: 20}).map((_, i) => (
-                        <div key={i} className={`flex-1 transition-all duration-300 ${i < (scam.trust / 5) ? 'bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.8)]' : 'bg-zinc-900'}`}></div>
-                    ))}
-                </div>
-            </div>
+                
+                <div className="relative h-4 bg-zinc-900 border border-zinc-700 rounded-full overflow-hidden shadow-inner">
+                    {/* Gradient Background */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-900/50 via-transparent to-green-900/50"></div>
+                    
+                    {/* Center Marker (Neutral) */}
+                    <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-zinc-600/50 -translate-x-1/2"></div>
+                    
+                    {/* The Needle/Bar */}
+                    <div 
+                        className="absolute top-0 bottom-0 w-1.5 bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)] transition-all duration-500 ease-out z-10"
+                        style={{ left: `calc(${meterPercent}% - 3px)` }}
+                    ></div>
 
-            <div className="space-y-2 relative">
-                <div className="flex justify-between text-xs font-mono">
-                    <span className="text-red-500 font-bold tracking-widest flex items-center gap-2"><AlertTriangle size={12}/> SUSPICION</span>
-                    <span className="text-white font-bold">{Math.round(scam.suspicion)}%</span>
+                    {/* Fill Effect */}
+                    <div 
+                        className={`absolute top-0 bottom-0 transition-all duration-500 opacity-30 ${scam.relationship > 0 ? 'bg-green-500 left-1/2' : 'bg-red-500 right-1/2'}`}
+                        style={{ width: `${Math.abs(scam.relationship) / 2}%` }}
+                    ></div>
                 </div>
-                <div className="h-3 bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden flex gap-0.5">
-                     {Array.from({length: 20}).map((_, i) => (
-                        <div key={i} className={`flex-1 transition-all duration-300 ${i < (scam.suspicion / 5) ? 'bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.8)]' : 'bg-zinc-900'}`}></div>
-                    ))}
+
+                <div className="flex justify-between text-[10px] font-mono text-zinc-500">
+                     <span>-100</span>
+                     <span className={scam.relationship === 0 ? 'text-white font-bold' : ''}>0</span>
+                     <span>+100</span>
                 </div>
             </div>
             
@@ -372,7 +409,15 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
              {scam.history.map((msg, i) => (
                 <motion.div key={i} initial={{ opacity: 0, x: msg.sender === 'player' ? 20 : -20 }} animate={{ opacity: 1, x: 0 }} className={`flex relative z-10 ${msg.sender === 'player' ? 'justify-end' : 'justify-start'}`}>
                     {msg.sender === 'victim' && <div className="w-6 h-6 md:w-8 md:h-8 rounded-full overflow-hidden mr-2 md:mr-3 border border-zinc-600 shadow-lg flex-shrink-0 self-end mb-1"><img src={scam.victim.avatarUrl} alt="avatar" className="w-full h-full object-cover" /></div>}
-                    <div className={`max-w-[90%] p-3 rounded-xl text-xs md:text-sm leading-relaxed shadow-lg backdrop-blur-md border ${msg.sender === 'player' ? 'bg-green-900/10 border-green-500/30 text-green-50 rounded-br-none' : 'bg-zinc-800/60 border-zinc-600/30 text-zinc-200 rounded-bl-none'}`}><p>{msg.text}</p></div>
+                    
+                    {msg.sender === 'system' ? (
+                         <div className="max-w-[90%] p-2 rounded border bg-yellow-900/20 border-yellow-500/30 text-yellow-200 font-mono text-xs tracking-tight flex items-center gap-2">
+                             <Zap size={12} className="text-yellow-500 animate-pulse shrink-0"/>
+                             {msg.text}
+                         </div>
+                    ) : (
+                        <div className={`max-w-[90%] p-3 rounded-xl text-xs md:text-sm leading-relaxed shadow-lg backdrop-blur-md border ${msg.sender === 'player' ? 'bg-green-900/10 border-green-500/30 text-green-50 rounded-br-none' : 'bg-zinc-800/60 border-zinc-600/30 text-zinc-200 rounded-bl-none'}`}><p>{msg.text}</p></div>
+                    )}
                 </motion.div>
              ))}
              <AnimatePresence>
@@ -400,10 +445,9 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         <div className="p-2 md:p-3 bg-black/80 backdrop-blur border-t border-zinc-800 shrink-0 relative z-20">
              <div className="flex gap-2">
                  <div className="relative flex gap-2">
-                    <button onClick={requestHints} disabled={loadingHints || processing || scam.trust < 20} className={`p-3 rounded-lg border bg-black border-zinc-700 text-zinc-400 transition-all relative group ${scam.trust >= 20 ? 'hover:text-blue-400 hover:border-blue-500' : 'opacity-30 cursor-not-allowed'}`}>
+                    <button onClick={requestHints} disabled={loadingHints || processing || scam.relationship < -20} className={`p-3 rounded-lg border bg-black border-zinc-700 text-zinc-400 transition-all relative group ${scam.relationship >= -20 ? 'hover:text-blue-400 hover:border-blue-500' : 'opacity-30 cursor-not-allowed'}`}>
                          {loadingHints ? <Loader2 size={18} className="animate-spin"/> : <Lightbulb size={18}/>}
                     </button>
-                    {/* BACKPACK BUTTON */}
                     <button onClick={() => setInventoryOpen(true)} className="p-3 rounded-lg border bg-black border-zinc-700 text-zinc-400 hover:text-purple-400 hover:border-purple-500 transition-all relative group">
                          <Package size={18}/>
                          <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">{player.inventory.length}</span>
@@ -428,47 +472,83 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         </div>
        </div>
 
-       {/* ... RIGHT COL (INTEL/ARBITER) ... */}
+       {/* ... RIGHT COL (HACKING TERMINAL) ... */}
        <div className="hidden md:flex flex-col gap-4 h-full relative z-10 col-span-1">
-            <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl flex flex-col shadow-xl min-h-0 overflow-hidden backdrop-blur-sm shrink-0 max-h-[30%]">
-             <button onClick={() => setIntelExpanded(!intelExpanded)} className="p-3 border-b border-zinc-800 bg-black/40 flex justify-between items-center hover:bg-zinc-900/50 transition-colors">
-                <p className="text-green-600 uppercase font-bold text-[10px] flex items-center gap-2 tracking-widest"><Terminal size={12}/> TARGET_INTEL</p>
-                {intelExpanded ? <ChevronDown size={12} className="text-zinc-500"/> : <ChevronUp size={12} className="text-zinc-500"/>}
-             </button>
-             {intelExpanded && (
-                 <div className="overflow-y-auto p-3 custom-scrollbar space-y-3 text-xs font-mono">
-                     <div className="bg-zinc-900/50 p-2 rounded border-l-2 border-zinc-700">
-                         <p className="text-zinc-500 text-[10px] uppercase">Strategy</p>
-                         <p className="text-zinc-300">{scam.category}</p>
-                     </div>
-                     {/* Always show Personality/Psych Profile */}
-                     <div className="bg-zinc-900/50 p-2 rounded border-l-2 border-zinc-700">
-                         <p className="text-zinc-500 text-[10px] uppercase flex items-center gap-1"><BrainCircuit size={10}/> Psych Profile</p>
-                         <p className="text-zinc-300 italic">{scam.victim.personality}</p>
-                     </div>
-                     
-                     {(player.skills.includes('doxxing_suite') || player.skills.includes('social_scraper') || scam.revealedFacts.length > 0) && (
-                        <div className="space-y-2 animate-in fade-in slide-in-from-left-4 duration-500">
-                            {player.skills.includes('doxxing_suite') && <div className="bg-green-900/10 p-2 rounded border-l-2 border-green-600"><p className="text-green-500 text-[10px] uppercase font-bold">LEAK DETECTED</p><p className="text-zinc-300">{scam.victim.hiddenFact}</p></div>}
-                            {player.skills.includes('social_scraper') && <div className="bg-red-900/10 p-2 rounded border-l-2 border-red-600"><p className="text-red-500 text-[10px] uppercase font-bold">PSYCH VULNERABILITY</p><p className="text-zinc-300">{scam.victim.weakness}</p></div>}
-                            {scam.revealedFacts.map((fact, idx) => <div key={idx} className="bg-blue-900/10 p-2 rounded border-l-2 border-blue-600"><p className="text-blue-500 text-[10px] uppercase font-bold">NEW INTEL</p><p className="text-zinc-300">{fact}</p></div>)}
+           
+           {/* TERMINAL LOG (Top Half) */}
+           <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl flex flex-col relative overflow-hidden shadow-xl h-[40%]">
+                <div className="p-3 border-b border-zinc-800 bg-black/40 flex justify-between items-center">
+                    <p className="text-green-600 uppercase font-bold text-[10px] flex items-center gap-2 tracking-widest"><Terminal size={12}/> SYS_LOG</p>
+                    <Wifi size={12} className={processing ? "animate-pulse text-green-500" : "text-zinc-600"}/>
+                </div>
+                <div className="flex-1 p-4 font-mono text-xs overflow-y-auto custom-scrollbar">
+                     {processing ? (
+                        <div className="flex flex-col gap-2 text-green-500/50 h-full justify-end">
+                             <div className="animate-pulse">>> ANALYZING INPUT VECTOR...</div>
+                             <div className="animate-pulse delay-75">>> CALCULATING PROBABILITY...</div>
                         </div>
-                     )}
-                 </div>
-             )}
-            </div>
-
-            <div className="bg-zinc-900/80 border border-zinc-800/60 rounded-xl p-6 flex-1 flex flex-col relative overflow-hidden shadow-xl">
-                <div className="absolute top-0 right-0 p-4 opacity-10"><Radio size={60} className="text-green-500"/></div>
-                <p className="text-zinc-500 mb-4 text-xs font-bold uppercase tracking-widest flex items-center gap-2 border-b border-zinc-800 pb-2"><Wifi size={12} className={processing ? "animate-pulse text-green-500" : "text-zinc-600"}/> AI_ARBITER_LINK</p>
-                <div className="font-mono text-sm relative z-10 flex-1 overflow-y-auto custom-scrollbar">
-                    {processing ? (
-                        <div className="flex flex-col gap-3 text-yellow-500 h-full justify-center items-center opacity-90"><Loader2 size={32} className="animate-spin"/><span className="tracking-widest font-bold text-xs">ANALYZING PATTERNS...</span></div>
                     ) : (
-                        <div className="text-zinc-300 leading-relaxed h-full"><span className="text-green-500 mr-2 text-lg font-bold">&gt;</span>{lastThought || "ESTABLISHED CONNECTION. WAITING FOR INPUT..."}</div>
+                        <div className="flex flex-col h-full justify-end">
+                            <div className="text-zinc-500 mb-2">>> CONNECTION ESTABLISHED</div>
+                             {lastThought && (
+                                <div className="text-green-400 typing-effect">
+                                    <span className="text-zinc-500 mr-2">>></span>{lastThought}
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
-            </div>
+           </div>
+
+           {/* HACKING DECK (Bottom Half) */}
+           <div className="bg-zinc-900/80 border border-zinc-800/60 rounded-xl p-4 flex-1 flex flex-col relative overflow-hidden shadow-xl">
+               {/* CHARGE METER */}
+               <div className="mb-4">
+                   <div className="flex justify-between items-end mb-1">
+                        <span className="text-[10px] font-bold uppercase text-blue-400 tracking-widest flex items-center gap-1"><Zap size={10}/> SOCIAL CHARGE</span>
+                        <span className="text-white font-mono text-xs">{scam.socialCharge}%</span>
+                   </div>
+                   <div className="w-full h-2 bg-zinc-950 border border-zinc-800 rounded-full overflow-hidden">
+                       <div className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] transition-all duration-500" style={{width: `${scam.socialCharge}%`}}></div>
+                   </div>
+                   <p className="text-[9px] text-zinc-500 mt-1 text-right">Generate charge via creative responses</p>
+               </div>
+
+               {/* HACKS GRID */}
+               <div className="grid grid-cols-2 gap-2 flex-1 overflow-y-auto custom-scrollbar">
+                   {HACK_ABILITIES.map(hack => {
+                       const canAfford = scam.socialCharge >= hack.cost;
+                       const isOnCooldown = hackCooldown === hack.id;
+                       const Icon = hack.icon === 'Mail' ? Mail : hack.icon === 'Bell' ? Bell : hack.icon === 'Mic' ? Mic : hack.icon === 'Search' ? Search : Code;
+
+                       return (
+                           <button
+                               key={hack.id}
+                               onClick={() => executeHack(hack)}
+                               disabled={!canAfford || processing || isOnCooldown}
+                               className={`p-3 rounded border text-left flex flex-col justify-between transition-all relative group ${
+                                   isOnCooldown 
+                                   ? 'bg-green-900/20 border-green-500/50 cursor-not-allowed'
+                                   : canAfford 
+                                        ? 'bg-zinc-900 hover:bg-blue-900/20 border-zinc-700 hover:border-blue-500' 
+                                        : 'bg-zinc-950 border-zinc-800 opacity-50 cursor-not-allowed'
+                               }`}
+                           >
+                               {isOnCooldown && <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-green-500 bg-black/50 backdrop-blur-[1px]">EXECUTING...</div>}
+                               
+                               <div className="flex justify-between items-start w-full mb-2">
+                                   <Icon size={16} className={canAfford ? "text-blue-400" : "text-zinc-600"} />
+                                   <span className={`text-[10px] font-mono font-bold ${canAfford ? "text-blue-300" : "text-zinc-600"}`}>{hack.cost} CHG</span>
+                               </div>
+                               <div>
+                                   <div className={`text-xs font-bold mb-0.5 ${canAfford ? "text-white" : "text-zinc-500"}`}>{hack.name}</div>
+                                   <div className="text-[9px] text-zinc-500 leading-tight">{hack.description}</div>
+                               </div>
+                           </button>
+                       );
+                   })}
+               </div>
+           </div>
        </div>
 
        {/* Overlays */}
@@ -509,7 +589,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                     </div>
                 </motion.div>
             )}
-             {scam.suspicion >= 100 && (
+             {scam.relationship <= -100 && (
                 <motion.div initial={{opacity: 0}} animate={{opacity: 1}} className="absolute inset-0 z-50 bg-red-950/90 flex items-center justify-center backdrop-blur-sm p-4">
                     <div className="text-center space-y-6 p-8 md:p-12 border-2 border-red-500 rounded-2xl bg-black shadow-[0_0_50px_rgba(239,68,68,0.5)] max-w-lg w-full">
                         <ShieldAlert size={60} className="text-red-500 mx-auto animate-pulse"/>

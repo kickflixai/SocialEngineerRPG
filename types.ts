@@ -1,3 +1,4 @@
+
 export enum GameView {
   LANDING,
   MENU,
@@ -37,10 +38,10 @@ export interface CountryStats {
   startingItems: string[];
   startingSkills: string[];
   modifiers: {
-    trustBonus?: number;
+    relationshipStartBonus?: number; // Replaces trustBonus
     threatMultiplier?: number;
     payoutMultiplier?: number;
-    suspicionStart?: number;
+    startSuspicious?: boolean;
   };
 }
 
@@ -49,7 +50,7 @@ export interface Achievement {
   title: string;
   description: string;
   icon: string;
-  isHidden?: boolean; // If true, details hidden until unlocked
+  isHidden?: boolean; 
 }
 
 export interface PlayerState {
@@ -59,7 +60,7 @@ export interface PlayerState {
   scamsCompleted: number;
   inventory: string[];
   skills: string[];
-  achievements: string[]; // Array of unlocked Achievement IDs
+  achievements: string[];
 }
 
 export interface Victim {
@@ -77,7 +78,7 @@ export interface Victim {
 }
 
 export interface ChatMessage {
-  sender: 'player' | 'victim' | 'system';
+  sender: 'player' | 'victim' | 'system'; // Added system
   text: string;
   timestamp: number;
 }
@@ -87,30 +88,39 @@ export interface ScamObjective {
   description: string;
   isCompleted: boolean;
   isFinal: boolean;
-  order: number; // 1, 2, or 3
+  order: number;
 }
 
 export interface ScamState {
   victim: Victim;
   category: string; 
-  // winCondition is now handled by the final objective in the objectives array
   objectives: ScamObjective[];
   history: ChatMessage[];
-  trust: number; // 0-100
-  suspicion: number; // 0-100
+  
+  // NEW MECHANICS
+  relationship: number; // -100 (Suspicion) to 100 (Trust)
+  socialCharge: number; // 0-100 (Mana for hacks)
+  
   status: 'active' | 'success' | 'failed' | 'police_called';
   revealedFacts: string[];
-  isHighValue?: boolean; // Bonus payout flag
+  isHighValue?: boolean;
 }
 
 export interface ArbiterResponse {
-  logicScore: number; 
-  emotionalImpact: number; 
-  trustDelta: number;
-  suspicionDelta: number;
-  objectiveComplete: boolean; // Replaces progressDelta
+  relationshipDelta: number; // -X to +X
+  creativityScore: number; // 0 to 10 (Adds to Social Charge)
+  objectiveComplete: boolean; 
   internalThought: string;
   scamStatus: 'continue' | 'success' | 'failed' | 'police_called';
+}
+
+export interface HackAbility {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  icon: string;
+  systemMessage: string; // What appears in chat
 }
 
 export interface Skill {
