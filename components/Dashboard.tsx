@@ -1,17 +1,27 @@
-
 import React from 'react';
 import { PlayerState, GameView } from '../types';
-import { ShieldAlert, ShoppingBag, BrainCircuit, MessageSquare, Globe, Activity, Trophy, Award, Lock } from 'lucide-react';
+import { ShieldAlert, ShoppingBag, BrainCircuit, MessageSquare, Globe, Activity, Trophy, Award, Lock, Package } from 'lucide-react';
 import { ACHIEVEMENTS } from '../constants';
 
 interface Props {
   player: PlayerState;
   onChangeView: (view: GameView) => void;
+  onOpenInventory: () => void;
 }
 
-const Dashboard: React.FC<Props> = ({ player, onChangeView }) => {
+const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory }) => {
   return (
-    <div className="h-full p-4 md:p-6 space-y-4 overflow-hidden flex flex-col">
+    <div className="h-full p-4 md:p-6 space-y-4 overflow-hidden flex flex-col relative">
+      {/* Inventory Button Absolute Top Right within container if needed, or just part of header? 
+          Let's add it to the header area or nearby. 
+      */}
+      <button 
+        onClick={onOpenInventory}
+        className="absolute top-6 right-6 z-20 bg-zinc-900 border border-zinc-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-zinc-800 shadow-lg"
+      >
+          <Package size={16} /> <span className="text-xs font-bold font-mono">BACKPACK ({player.inventory.length})</span>
+      </button>
+
       {/* Header Stats - Taller & More Prominent for Laptop */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 shrink-0 min-h-[180px]">
         {/* Profile Card */}
@@ -150,9 +160,6 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView }) => {
                   {player.skills.length === 0 && player.inventory.length === 0 && <span className="text-zinc-600 italic text-xs">No active enhancements.</span>}
                   {player.skills.map(s => (
                       <span key={s} className="px-2 py-1 bg-blue-900/30 border border-blue-800 text-blue-400 rounded text-[10px] font-mono">{s.replace('_', ' ')}</span>
-                  ))}
-                  {player.inventory.map(i => (
-                      <span key={i} className="px-2 py-1 bg-purple-900/30 border border-purple-800 text-purple-400 rounded text-[10px] font-mono">{i.replace('_', ' ')}</span>
                   ))}
               </div>
           </div>

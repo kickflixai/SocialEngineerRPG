@@ -1,4 +1,3 @@
-
 import { Skill, ShopItem, CountryStats, Achievement } from './types';
 
 export const INITIAL_MONEY = 1000;
@@ -123,7 +122,6 @@ export const COUNTRY_DATA: Record<string, CountryStats> = {
 
 export const COUNTRIES = Object.keys(COUNTRY_DATA);
 
-// Replaced fixed ARCHETYPES with simple examples since it is now free text
 export const CLOTHING_STYLES = ['Business Suit', 'Hoodie & Jeans', 'Tactical Gear', 'Vintage Sweater', 'Designer Streetwear', 'Lab Coat', 'Leather Jacket', 'Tracksuit', 'Turtleneck & Blazer'];
 export const FACIAL_FEATURES = ['Clean Shaven', 'Full Beard', 'Scarred', 'Piercings', 'Heavy Makeup', 'Glasses', 'Tattooed', 'Weathered', 'Gold Teeth', 'Eye Patch'];
 export const ACCESSORIES = ['Headphones', 'Gold Chain', 'VR Headset', 'Sunglasses', 'Fedora', 'Medical Mask', 'Smart Watch', 'Cybernetic Implant (Fake)', 'None'];
@@ -149,7 +147,6 @@ interface ScamScenario {
     final: string;
 }
 
-// SCENARIOS: Each category has a list of possible 3-step scenarios
 export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   "Grandson in Trouble": [
     {
@@ -245,15 +242,11 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   ]
 };
 
-// --- ACHIEVEMENTS ---
 export const ACHIEVEMENTS: Achievement[] = [
-    // General
     { id: 'first_blood', title: 'First Blood', description: 'Successfully complete your first scam.', icon: 'Award' },
     { id: 'high_roller', title: 'High Roller', description: 'Accumulate over $20,000 in funds.', icon: 'Banknote' },
     { id: 'untouchable', title: 'Untouchable', description: 'Complete a scam with 0% Suspicion.', icon: 'Ghost' },
     { id: 'close_call', title: 'Close Call', description: 'Complete a scam with >90% Suspicion.', icon: 'Zap' },
-    
-    // Specific Scams
     { id: 'ach_grandson', title: 'Nana\'s Boy', description: 'Success: Grandson in Trouble', icon: 'User' },
     { id: 'ach_irs', title: 'The Taxman', description: 'Success: IRS Tax Audit', icon: 'FileText' },
     { id: 'ach_tech', title: 'Hello Sir', description: 'Success: Tech Support Virus', icon: 'Monitor' },
@@ -267,9 +260,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     { id: 'ach_mule', title: 'Job Creator', description: 'Success: Employment Mule Scam', icon: 'Briefcase' },
 ];
 
-
 export const SKILLS: Skill[] = [
-  // --- Social Engineering (Charisma) ---
   {
     id: 'silver_tongue',
     name: 'Silver Tongue',
@@ -318,8 +309,6 @@ export const SKILLS: Skill[] = [
     icon: 'Languages',
     category: 'social'
   },
-
-  // --- Technical (Intel) ---
   {
     id: 'doxxing_suite',
     name: 'Doxxing Suite',
@@ -368,8 +357,6 @@ export const SKILLS: Skill[] = [
     icon: 'Globe',
     category: 'tech'
   },
-
-  // --- Operations (Defense/Money) ---
   {
     id: 'vpn_tunnel',
     name: 'VPN Tunneling',
@@ -425,64 +412,72 @@ export const SHOP_ITEMS: ShopItem[] = [
     id: 'burner_phone',
     name: 'Burner Phone',
     description: 'Switch devices to confuse the trail. Reduces current Threat Level by 20.',
-    cost: 1500,
+    cost: 500,
     effect: 'reduce_threat',
-    icon: 'Smartphone'
+    icon: 'Smartphone',
+    usageContext: 'dashboard'
   },
   {
     id: 'voice_modulator',
     name: 'Voice Modulator',
     description: 'One-time use: Instantly reduces suspicion by 30% in a chat.',
-    cost: 1000,
+    cost: 250,
     effect: 'reduce_suspicion',
-    icon: 'Mic2'
+    icon: 'Mic2',
+    usageContext: 'scam'
   },
   {
     id: 'grease_palm',
     name: 'Police Bribe',
     description: 'Pay off a local precinct. Reduces current Threat Level by 50.',
-    cost: 4000,
+    cost: 1200,
     effect: 'reduce_threat_major',
-    icon: 'Briefcase'
+    icon: 'Briefcase',
+    usageContext: 'dashboard'
   },
   {
     id: 'dark_web_leak',
     name: 'Data Leak Purchase',
     description: 'Buy a high-value lead. Guarantees next victim has max payout potential.',
-    cost: 3000,
+    cost: 1500,
     effect: 'high_value_target',
-    icon: 'FileWarning'
+    icon: 'FileWarning',
+    usageContext: 'dashboard'
   },
   {
     id: 'cleaner',
     name: 'The Cleaner',
     description: 'Wipe your entire digital footprint. Resets Threat Level to 0.',
-    cost: 15000,
+    cost: 5000,
     effect: 'reset_threat',
-    icon: 'Trash2'
+    icon: 'Trash2',
+    usageContext: 'dashboard'
   },
   {
     id: 'ransomware',
     name: 'Ransomware Kit',
-    description: 'Force a successful payout on a stalled scam, but +40 Threat.',
-    cost: 8000,
-    effect: 'force_success_high_threat',
-    icon: 'Lock'
+    description: 'Force success on current objective, but raises Threat.',
+    cost: 2000,
+    effect: 'force_objective',
+    icon: 'Lock',
+    usageContext: 'scam'
   },
   {
     id: 'ddos_attack',
     name: 'DDoS Attack',
-    description: 'Jam the victim\'s phone line. Prevents them from calling police for 3 turns.',
-    cost: 2500,
-    effect: 'block_police',
-    icon: 'WifiOff'
+    description: 'Chaos distraction. Reduces Suspicion to 0 immediately.',
+    cost: 800,
+    effect: 'reset_suspicion',
+    icon: 'WifiOff',
+    usageContext: 'scam'
   },
   {
     id: 'fake_id',
     name: 'Forged FBI Badge',
-    description: 'Unlock "Federal Agent" persona for one scam (High Authority).',
-    cost: 5000,
-    effect: 'unlock_persona',
-    icon: 'BadgeCheck'
+    description: 'Unlock "Federal Agent" persona. Boosts Trust by 25%.',
+    cost: 1000,
+    effect: 'boost_trust',
+    icon: 'BadgeCheck',
+    usageContext: 'scam'
   }
 ];

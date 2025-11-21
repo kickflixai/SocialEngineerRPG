@@ -1,4 +1,3 @@
-
 export enum GameView {
   LANDING,
   MENU,
@@ -101,6 +100,7 @@ export interface ScamState {
   suspicion: number; // 0-100
   status: 'active' | 'success' | 'failed' | 'police_called';
   revealedFacts: string[];
+  isHighValue?: boolean; // Bonus payout flag
 }
 
 export interface ArbiterResponse {
@@ -129,4 +129,5 @@ export interface ShopItem {
   cost: number;
   effect: string;
   icon: string;
+  usageContext: 'dashboard' | 'scam' | 'any';
 }

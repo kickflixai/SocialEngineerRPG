@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { GameView, PlayerState, ScamState, PlayerAttributes, Skill, ScamObjective } from './types';
+import { GameView, PlayerState, ScamState, PlayerAttributes, Skill, ScamObjective, ShopItem } from './types';
 import { INITIAL_MONEY, INITIAL_THREAT, SCAM_CATEGORIES, MAX_THREAT, SKILLS, SHOP_ITEMS, COUNTRY_DATA, SCAM_SCENARIOS, ACHIEVEMENTS } from './constants';
 import { generateVictim, generateOpener } from './services/geminiService';
 
@@ -9,6 +8,7 @@ import Dashboard from './components/Dashboard';
 import ScamInterface from './components/ScamInterface';
 import VictimDossier from './components/VictimDossier';
 import LandingScreen from './components/LandingScreen'; 
+import InventoryModal from './components/InventoryModal';
 import { Siren, Skull, ArrowLeft, Cpu, AlertOctagon, Terminal, Shield } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -27,6 +27,8 @@ const App: React.FC = () => {
   const [activeScam, setActiveScam] = useState<ScamState | null>(null);
   const [loadingScam, setLoadingScam] = useState(false);
   const [generatingOpener, setGeneratingOpener] = useState(false);
+  const [showInventory, setShowInventory] = useState(false);
+  const [highValueTargetActive, setHighValueTargetActive] = useState(false);
 
   // Handle Start from Landing Screen
   const handleStart = () => {
@@ -51,6 +53,36 @@ const App: React.FC = () => {
     setView(GameView.DASHBOARD);
   };
 
+  // Handle Item Usage
+  const handleConsumeItem = (item: ShopItem) => {
+      // Remove 1 instance of the item from inventory
+      const newInventory = [...player.inventory];
+      const index = newInventory.indexOf(item.id);
+      if (index > -1) {
+          newInventory.splice(index, 1);
+          setPlayer(prev => ({ ...prev, inventory: newInventory }));
+      }
+
+      // Handle Global Effects (Dashboard context)
+      if (item.effect === 'reduce_threat') {
+          setPlayer(prev => ({ ...prev, threatLevel: Math.max(0, prev.threatLevel - 20) }));
+          alert("Burner phone used. Threat reduced by 20.");
+      } else if (item.effect === 'reduce_threat_major') {
+          setPlayer(prev => ({ ...prev, threatLevel: Math.max(0, prev.threatLevel - 50) }));
+          alert("Bribe accepted. Threat reduced by 50.");
+      } else if (item.effect === 'reset_threat') {
+          setPlayer(prev => ({ ...prev, threatLevel: 0 }));
+          alert("Digital footprint wiped. Threat level reset.");
+      } else if (item.effect === 'high_value_target') {
+          setHighValueTargetActive(true);
+          alert("Data leak purchased. Next target will be High Value.");
+      }
+      // Local scam effects are handled by ScamInterface callback response, 
+      // but InventoryModal calls this to remove the item first.
+      // We return the item so the caller can perform additional logic if needed.
+      return item;
+  };
+
   // Step 1: Find a Target (Generates Victim, goes to Dossier)
   const findTarget = async (difficulty: 'easy' | 'medium' | 'hard') => {
     setLoadingScam(true);
@@ -72,8 +104,13 @@ const App: React.FC = () => {
             trust: Math.max(0, Math.min(100, baseTrust + trustMod)),
             suspicion: Math.max(0, Math.min(100, suspicionMod)),
             status: 'active',
-            revealedFacts: []
+            revealedFacts: [],
+            isHighValue: highValueTargetActive
         });
+
+        if (highValueTargetActive) {
+            setHighValueTargetActive(false); // Consume the buff
+        }
         
         setView(GameView.VICTIM_DOSSIER);
     } catch (e) {
@@ -140,8 +177,7 @@ const App: React.FC = () => {
           if (player.money + moneyChange >= 20000) add('high_roller');
           if (currentScam.suspicion === 0) add('untouchable');
           if (currentScam.suspicion > 90) add('close_call');
-
-          // Category specific
+          // ... other achievements logic ...
           if (currentScam.category === "Grandson in Trouble") add('ach_grandson');
           if (currentScam.category === "IRS Tax Audit") add('ach_irs');
           if (currentScam.category === "Tech Support Virus") add('ach_tech');
@@ -173,8 +209,11 @@ const App: React.FC = () => {
         const baseReward = activeScam.victim.difficulty === 'easy' ? 1500 : activeScam.victim.difficulty === 'medium' ? 5000 : 15000;
         const skillMult = player.skills.includes('money_laundering') ? 1.15 : 1.0;
         
+        // High Value Target Buff
+        const hvtMult = activeScam.isHighValue ? 2.5 : 1.0;
+        
         // Calculate final reward with multipliers
-        const totalMult = payoutMult * skillMult;
+        const totalMult = payoutMult * skillMult * hvtMult;
         moneyChange = Math.floor((baseReward + Math.floor(Math.random() * 1000)) * totalMult);
         
         // Check Achievements
@@ -224,30 +263,21 @@ const App: React.FC = () => {
   };
 
   const buyItem = (item: typeof SHOP_ITEMS[0]) => {
-      // Check for China trait
       const countryStats = COUNTRY_DATA[player.attributes.country];
       const costMultiplier = player.attributes.country === 'China' ? 1.2 : 1.0;
       const finalCost = Math.floor(item.cost * costMultiplier);
 
       if (player.money >= finalCost) {
-          if (item.effect === 'reset_threat') {
-              setPlayer(prev => ({ ...prev, money: prev.money - finalCost, threatLevel: 0 }));
-          } else if (item.effect === 'reduce_threat') {
-               setPlayer(prev => ({ ...prev, money: prev.money - finalCost, threatLevel: Math.max(0, prev.threatLevel - 20) }));
-          } else if (item.effect === 'reduce_threat_major') {
-               setPlayer(prev => ({ ...prev, money: prev.money - finalCost, threatLevel: Math.max(0, prev.threatLevel - 50) }));
-          } else {
-              setPlayer(prev => ({ 
-                  ...prev, 
-                  money: prev.money - finalCost,
-                  inventory: [...prev.inventory, item.id]
-              }));
-          }
+          // Simply Add to Inventory now, effects happen on use
+          setPlayer(prev => ({ 
+              ...prev, 
+              money: prev.money - finalCost,
+              inventory: [...prev.inventory, item.id]
+          }));
       }
   };
 
   const buySkill = (skill: typeof SKILLS[0]) => {
-      // Check for China trait
       const costMultiplier = player.attributes.country === 'China' ? 1.2 : 1.0;
       const finalCost = Math.floor(skill.cost * costMultiplier);
 
@@ -324,7 +354,11 @@ const App: React.FC = () => {
             )}
 
             {view === GameView.DASHBOARD && (
-                <Dashboard player={player} onChangeView={setView} />
+                <Dashboard 
+                    player={player} 
+                    onChangeView={setView} 
+                    onOpenInventory={() => setShowInventory(true)}
+                />
             )}
             
             {view === GameView.VICTIM_DOSSIER && activeScam && (
@@ -344,9 +378,12 @@ const App: React.FC = () => {
                     onUpdateScam={setActiveScam} 
                     onScamEnd={handleScamEnd} 
                     onAbort={handleAbortScam}
+                    onOpenInventory={() => setShowInventory(true)}
+                    onConsumeItem={handleConsumeItem}
                 />
             )}
 
+            {/* ... SCAM SELECTION, SHOP, SKILL TREE logic ... */}
             {view === GameView.SCAM_SELECTION && (
                 <div className="flex items-center justify-center h-full p-4 md:p-8 overflow-y-auto custom-scrollbar">
                     {loadingScam ? (
@@ -355,8 +392,8 @@ const App: React.FC = () => {
                             <div className="text-green-500 font-mono animate-pulse text-lg md:text-xl text-center">SCANNING DARK WEB DIRECTORY...</div>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 max-w-6xl w-full pb-8">
-                            {/* Tier 1 */}
+                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 max-w-6xl w-full pb-8">
+                             {/* Tier 1 */}
                             <button onClick={() => findTarget('easy')} className="relative group bg-zinc-900 border border-zinc-800 hover:border-green-500 rounded-2xl p-6 md:p-8 text-left transition-all hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(34,197,94,0.1)] overflow-hidden">
                                 <div className="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
                                 <div className="mb-4 md:mb-6 text-green-500 font-mono font-bold text-sm tracking-widest">TIER 1 // LOW YIELD</div>
@@ -399,12 +436,12 @@ const App: React.FC = () => {
                                     {player.scamsCompleted < 5 ? <span className="text-red-500 text-xs">LOCKED (5 Wins)</span> : <span className="text-red-400 group-hover:translate-x-2 transition-transform text-sm">Scan &rarr;</span>}
                                 </div>
                             </button>
-                        </div>
+                         </div>
                     )}
                 </div>
             )}
 
-            {view === GameView.SHOP && (
+             {view === GameView.SHOP && (
                 <div className="p-6 md:p-12 max-w-7xl mx-auto pb-24 h-full overflow-y-auto custom-scrollbar">
                     <div className="flex items-center gap-4 mb-8 md:mb-12">
                         <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
@@ -418,7 +455,6 @@ const App: React.FC = () => {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                         {SHOP_ITEMS.map(item => {
-                            // Check cost modifiers (China)
                             const countryStats = COUNTRY_DATA[player.attributes.country];
                             const costMultiplier = player.attributes.country === 'China' ? 1.2 : 1.0;
                             const finalCost = Math.floor(item.cost * costMultiplier);
@@ -430,6 +466,9 @@ const App: React.FC = () => {
                                         <div className="flex justify-between items-start mb-4">
                                             <h3 className={`font-bold text-lg md:text-xl transition-colors ${canAfford ? 'text-white group-hover:text-purple-400' : 'text-zinc-500'}`}>{item.name}</h3>
                                             <span className={`${canAfford ? 'text-purple-500' : 'text-zinc-600'} font-mono text-sm font-bold`}>${finalCost}</span>
+                                        </div>
+                                        <div className="text-[10px] uppercase font-bold mb-2 text-zinc-500 bg-zinc-950 inline-block px-2 py-1 rounded border border-zinc-800">
+                                            USAGE: {item.usageContext === 'scam' ? 'ACTIVE HACK' : 'DASHBOARD'}
                                         </div>
                                         <p className="text-zinc-400 text-sm leading-relaxed">{item.description}</p>
                                     </div>
@@ -447,8 +486,9 @@ const App: React.FC = () => {
                 </div>
             )}
 
-            {view === GameView.SKILL_TREE && (
+             {view === GameView.SKILL_TREE && (
                  <div className="p-6 md:p-12 max-w-7xl mx-auto pb-24 h-full overflow-y-auto custom-scrollbar">
+                    {/* Skill tree UI remains same but passing color prop correctly */}
                     <div className="flex items-center gap-4 mb-8 md:mb-12">
                         <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
                             <AlertOctagon size={24} className="text-blue-500 md:w-8 md:h-8" />
@@ -458,45 +498,31 @@ const App: React.FC = () => {
                             <p className="text-zinc-400 text-sm md:text-base">Cognitive upgrades to improve success rates.</p>
                         </div>
                     </div>
-
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Social Column */}
                         <div className="space-y-6 flex flex-col">
-                            <h3 className="text-blue-400 font-mono text-sm uppercase tracking-widest border-b border-blue-500/20 pb-4 mb-2 flex items-center gap-2">
-                                <Terminal size={14}/> Social Engineering
-                            </h3>
-                            <div className="space-y-6 flex-1">
-                                {SKILLS.filter(s => s.category === 'social').map(skill => (
-                                    <SkillCard key={skill.id} skill={skill} player={player} onBuy={() => buySkill(skill)} color="blue" />
-                                ))}
-                            </div>
+                            <h3 className="text-blue-400 font-mono text-sm uppercase tracking-widest border-b border-blue-500/20 pb-4 mb-2 flex items-center gap-2"><Terminal size={14}/> Social Engineering</h3>
+                            <div className="space-y-6 flex-1">{SKILLS.filter(s => s.category === 'social').map(skill => <SkillCard key={skill.id} skill={skill} player={player} onBuy={() => buySkill(skill)} color="blue" />)}</div>
                         </div>
-                         {/* Tech Column */}
                          <div className="space-y-6 flex flex-col">
-                            <h3 className="text-green-400 font-mono text-sm uppercase tracking-widest border-b border-green-500/20 pb-4 mb-2 flex items-center gap-2">
-                                <Cpu size={14}/> Technical Intel
-                            </h3>
-                            <div className="space-y-6 flex-1">
-                                {SKILLS.filter(s => s.category === 'tech').map(skill => (
-                                    <SkillCard key={skill.id} skill={skill} player={player} onBuy={() => buySkill(skill)} color="green" />
-                                ))}
-                            </div>
+                            <h3 className="text-green-400 font-mono text-sm uppercase tracking-widest border-b border-green-500/20 pb-4 mb-2 flex items-center gap-2"><Cpu size={14}/> Technical Intel</h3>
+                            <div className="space-y-6 flex-1">{SKILLS.filter(s => s.category === 'tech').map(skill => <SkillCard key={skill.id} skill={skill} player={player} onBuy={() => buySkill(skill)} color="green" />)}</div>
                         </div>
-                         {/* Ops Column */}
                          <div className="space-y-6 flex flex-col">
-                            <h3 className="text-orange-400 font-mono text-sm uppercase tracking-widest border-b border-orange-500/20 pb-4 mb-2 flex items-center gap-2">
-                                <Shield size={14}/> Operations
-                            </h3>
-                            <div className="space-y-6 flex-1">
-                                {SKILLS.filter(s => s.category === 'ops').map(skill => (
-                                    <SkillCard key={skill.id} skill={skill} player={player} onBuy={() => buySkill(skill)} color="orange" />
-                                ))}
-                            </div>
+                            <h3 className="text-orange-400 font-mono text-sm uppercase tracking-widest border-b border-orange-500/20 pb-4 mb-2 flex items-center gap-2"><Shield size={14}/> Operations</h3>
+                            <div className="space-y-6 flex-1">{SKILLS.filter(s => s.category === 'ops').map(skill => <SkillCard key={skill.id} skill={skill} player={player} onBuy={() => buySkill(skill)} color="orange" />)}</div>
                         </div>
                     </div>
                  </div>
             )}
         </main>
+
+        <InventoryModal 
+            isOpen={showInventory} 
+            onClose={() => setShowInventory(false)} 
+            inventory={player.inventory} 
+            onUseItem={handleConsumeItem}
+            context={view === GameView.ACTIVE_SCAM ? 'scam' : 'dashboard'}
+        />
     </div>
   );
 };
@@ -504,7 +530,6 @@ const App: React.FC = () => {
 // Helper component for Skills
 const SkillCard: React.FC<{ skill: Skill, player: PlayerState, onBuy: () => void, color: string }> = ({ skill, player, onBuy, color }) => {
     const isOwned = player.skills.includes(skill.id);
-    // Add check to prevent crash if country is not yet set in player attributes (e.g. initial state)
     const countryStats = player.attributes.country ? COUNTRY_DATA[player.attributes.country] : null;
     const costMultiplier = countryStats?.id === 'China' ? 1.2 : 1.0;
     const finalCost = Math.floor(skill.cost * costMultiplier);
@@ -517,31 +542,11 @@ const SkillCard: React.FC<{ skill: Skill, player: PlayerState, onBuy: () => void
     };
 
     return (
-        <div className={`bg-zinc-900/80 border p-6 rounded-xl relative overflow-hidden transition-all group shadow-lg ${
-            isOwned 
-            ? 'border-zinc-700 opacity-70' 
-            : canAfford 
-                ? `border-zinc-800 hover:-translate-y-1 hover:${colors[color].split(' ')[0]}`
-                : 'border-zinc-800 opacity-50 grayscale cursor-not-allowed'
-        }`}>
+        <div className={`bg-zinc-900/80 border p-6 rounded-xl relative overflow-hidden transition-all group shadow-lg ${isOwned ? 'border-zinc-700 opacity-70' : canAfford ? `border-zinc-800 hover:-translate-y-1 hover:${colors[color].split(' ')[0]}` : 'border-zinc-800 opacity-50 grayscale cursor-not-allowed'}`}>
              {isOwned && <div className="absolute top-0 right-0 bg-zinc-800 text-zinc-400 text-[10px] font-bold px-2 py-1 uppercase">Installed</div>}
-             <h3 className={`font-bold text-lg flex items-center gap-2 ${isOwned ? 'text-zinc-500' : canAfford ? 'text-white' : 'text-zinc-600'}`}>
-                {skill.name}
-             </h3>
+             <h3 className={`font-bold text-lg flex items-center gap-2 ${isOwned ? 'text-zinc-500' : canAfford ? 'text-white' : 'text-zinc-600'}`}>{skill.name}</h3>
              <p className="text-zinc-500 text-xs mt-2 mb-4 leading-relaxed">{skill.description}</p>
-             <button 
-                onClick={onBuy}
-                disabled={!canAfford || isOwned}
-                className={`w-full py-2 rounded text-xs font-bold uppercase tracking-wider transition-all ${
-                    isOwned 
-                    ? 'bg-zinc-800 text-zinc-600 cursor-default' 
-                    : canAfford
-                        ? `${colors[color].split(' ').pop()} hover:brightness-110 text-white shadow-lg`
-                        : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
-                }`}
-            >
-                {isOwned ? 'Active' : canAfford ? `Install $${finalCost}` : 'Insufficient Funds'}
-            </button>
+             <button onClick={onBuy} disabled={!canAfford || isOwned} className={`w-full py-2 rounded text-xs font-bold uppercase tracking-wider transition-all ${isOwned ? 'bg-zinc-800 text-zinc-600 cursor-default' : canAfford ? `${colors[color].split(' ').pop()} hover:brightness-110 text-white shadow-lg` : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'}`}>{isOwned ? 'Active' : canAfford ? `Install $${finalCost}` : 'Insufficient Funds'}</button>
         </div>
     );
 };
