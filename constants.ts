@@ -31,7 +31,7 @@ export const HACK_ABILITIES: HackAbility[] = [
     {
         id: 'noise_generator',
         name: 'Office Ambience',
-        description: 'Play busy office sounds to boost credibility (+5 Trust).',
+        description: 'Play busy office sounds to boost credibility.',
         cost: 25,
         icon: 'Speaker',
         systemMessage: '>> AUDIO MIXER ACTIVE. BACKGROUND: "BUSY_CALL_CENTER_V4.MP3" LOOPING.'
@@ -41,7 +41,7 @@ export const HACK_ABILITIES: HackAbility[] = [
     {
         id: 'delay_packet',
         name: 'Lag Switch',
-        description: 'Simulate connection issues to buy time (-10 Suspicion).',
+        description: 'Simulate connection issues to explain delays.',
         cost: 30,
         icon: 'WifiOff',
         systemMessage: '>> NETWORK THROTTLED. ARTIFICIAL LATENCY INTRODUCED.'
@@ -49,7 +49,7 @@ export const HACK_ABILITIES: HackAbility[] = [
     {
         id: 'ip_scramble',
         name: 'Trace Scrubber',
-        description: 'Bounce signal through 3 nodes (-15 Suspicion).',
+        description: 'Bounce signal through 3 nodes to confuse origin.',
         cost: 40,
         icon: 'Shuffle',
         systemMessage: '>> PROXY CHAIN ROTATED. IP ADDRESS OBFUSCATED.'
@@ -57,7 +57,7 @@ export const HACK_ABILITIES: HackAbility[] = [
     {
         id: 'fake_receipt',
         name: 'Wire Receipt',
-        description: 'Send a forged transaction confirmation (+15 Trust).',
+        description: 'Send a forged transaction confirmation document.',
         cost: 50,
         icon: 'FileCheck',
         systemMessage: '>> DOCUMENT FORGED. "TRANSACTION_SUCCESS.PDF" SENT TO TARGET DEVICE.'
@@ -67,7 +67,7 @@ export const HACK_ABILITIES: HackAbility[] = [
     {
         id: 'voice_changer',
         name: 'Deepfake Audio',
-        description: 'Play a snippet of a relative\'s voice (+20 Trust).',
+        description: 'Play a snippet of a relative\'s voice.',
         cost: 60,
         icon: 'Mic',
         systemMessage: '>> AUDIO DEEPFAKE STREAMED. VOICE MATCH: 98% ACCURACY.'
@@ -75,7 +75,7 @@ export const HACK_ABILITIES: HackAbility[] = [
     {
         id: 'gov_database',
         name: 'Fed Database',
-        description: 'Flash fake government credentials (+25 Trust).',
+        description: 'Flash fake government credentials to assert authority.',
         cost: 65,
         icon: 'BadgeCheck',
         systemMessage: '>> DATABASE INJECTION. AGENT CREDENTIALS PUSHED TO TARGET SCREEN.'
@@ -91,7 +91,7 @@ export const HACK_ABILITIES: HackAbility[] = [
     {
         id: 'credential_dump',
         name: 'Password Leak',
-        description: 'Show target their own "leaked" passwords (High Pressure).',
+        description: 'Show target their own "leaked" passwords.',
         cost: 85,
         icon: 'Key',
         systemMessage: '>> PASSWORD HASH CRACKED. DISPLAYING PLAIN TEXT CREDENTIALS TO TARGET.'
@@ -790,102 +790,17 @@ export const QUIRKS = [
     "Is sleepwalking", "Is sleep talking", "Is sleep eating", "Is sleep texting", "Is sleep hacking"
 ];
 
+export const SPEECH_STYLES_BY_AGE = {
+    youth: ["Gen Z Slang (fr, no cap)", "Lowercase aesthetic", "Excessive Emojis 💀😭", "Cryptic/Vague", "Hyper-enthusiastic", "Meme-speak"],
+    adult: ["Professional Corporate", "Stressed Parent", "Overly Polite", "Short & Direct", "Passive Aggressive", "Casual/Friendly"],
+    elderly: ["ALL CAPS YELLING", "Confused usage of... ellipses...", "Signing every message -Grandma", "Overly formal/Old fashioned", "Suspicious/Hostile", "Wholesome/Sweet"]
+};
+
 export const VICTIM_FLAVORS = [
     "Discord Mod", "Furry", "Alpha Male", "Crypto Bro", "Flat Earther", 
     "Foot Fetishist", "Gamer Girl Bath Water Buyer", "Clinically Obsessed with Musk", 
-    "Believes in Lizard People", "OnlyFans Simp", "Compulsive Gambler", "Karens Final Boss",
-    "Vape Lord", "Street Pharmacist", "Lives in Mom's Basement", "Adult Baby",
-    "Raw Meat Eater", "Sovereign Citizen", "Anti-Vax Mom", "MLM Hun", 
-    "Reptilian", "Time Traveler", "Psychic Medium", "Hoarder", 
-    "Cat Lady", "Dogecoin Millionaire (Bankrupt)", "Incel", "Femcel",
-    "Weaboo", "K-Pop Stan", "Swiftie", "Horse Girl", 
-    "Disney Adult", "Crossfitter", "Vegan Warrior", "Carnivore Dieter",
-    "Ghost Hunter", "UFO Abductee", "Prepper", "Van Life Influencer",
-    "Soundcloud Rapper", "NFT Collector", "LinkedIn Lunatic", "Tech Bro",
-    "Finance Bro", "Gym Rat", "Yoga Mom", "Wine Mom",
-    "Soccer Mom", "Hockey Dad", "Baseball Dad", "Basketball Dad",
-    "Football Dad", "Tennis Mom", "Golf Dad", "Fishing Dad",
-    "Hunting Dad", "Camping Dad", "Hiking Dad", "Biking Dad",
-    "Running Dad", "Swimming Dad", "Surfing Dad", "Skating Dad",
-    "Skiing Dad", "Snowboarding Dad", "Climbing Dad", "Gaming Dad", 
-    "Retarded", "BSDM Addict", "Down Syndrome", "Obese", "Virgin",
-    "Reddit Mod", "Discord Kitten", "E-Girl", "E-Boy", "Twitch Streamer",
-    "VTuber Fan", "Gooner", "Porn Addict", "Hentai Connoisseur",
-    "Loli Defender", "Neckbeard", "Legbeard", "Nice Guy", "Pick Me Girl",
-    "Trad Wife", "Trad Cath", "Rad Fem", "MRA", "PUA",
-    "Red Pilled", "Blue Pilled", "Black Pilled", "White Pilled",
-    "Based God", "Cringe Lord", "Edgelord", "Normie", "NPC",
-    "Main Character", "Gaslighter", "Gatekeeper", "Girlboss",
-    "Sigma Male", "Beta Male", "Omega Male", "Delta Male", "Gamma Male",
-    "Zodiac Obsessive", "Crystal Mommy", "Essential Oil Karen",
-    "Anti-5G Activist", "Chemtrail Watcher", "Simulation Theorist",
-    "Glitch in the Matrix Witness", "Mandela Effect Victim",
-    "Backrooms Explorer", "SCP Researcher", "Creepypasta Writer",
-    "Fanfic Author", "Shipper", "Stan", "Sasaeng",
-    "Koreaboo", "Westaboo", "Teaboo", "Ouiaboo",
-    "Wehraboo", "Tankie", "Ancap", "Ancom", "Libertarian",
-    "Neolib", "Neocon", "Alt-Right", "Alt-Left", "Centrist",
-    "Apolitical", "Political Junkie", "News Junkie", "Doomscroller",
-    "Clickbait Victim", "Boomer", "Zoomer", "Doomer", "Bloomer",
-    "Coomer", "Consoomer", "Karen", "Kyle", "Chad", "Stacy", "Becky",
-    "Soy Boy", "Nu-Male", "Simp", "Cuck", "White Knight",
-    "SJW", "Anti-SJW", "Woke", "Anti-Woke", "Cancel Culture Warrior",
-    "Free Speech Absolutist", "Tone Police", "Grammar Nazi",
-    "Pedantic", "Contrarian", "Devil's Advocate", "Troll",
-    "Shitposter", "Memelord", "Lurker", "Bot", "Sockpuppet",
-    "Catfish", "Scammer", "Hacker", "Script Kiddie", "Skid",
-    "Leet Haxor", "Anonymous Member", "QAnon Believer",
-    "Illuminati Confirmed", "Freemason", "Scientologist",
-    "Jehovah's Witness", "Mormon", "Amish", "Quaker", "Puritan",
-    "Satanist", "Wiccan", "Pagan", "Druid", "Shaman",
-    "Guru", "Cult Leader", "Cult Follower", "Brainwashed",
-    "Sheeple", "Woke Mob", "Echo Chamber Dweller", "Bubble Boy",
-    "Touch Grass Avoider", "Chronically Online", "Terminally Online",
-    "Keyboard Warrior", "Internet Tough Guy", "Armchair Expert",
-    "Backseat Gamer", "Stream Sniper", "Griefer", "Smurf",
-    "Tryhard", "Sweat", "Casual", "Noob", "Scrub",
-    "Pro Gamer", "Esports Athlete", "Speedrunner", "Completionist",
-    "Trophy Hunter", "Achievement Whore", "Lore Master",
-    "Theory Crafter", "Min-Maxer", "Whale", "Dolphin", "Minnow",
-    "F2P Player", "P2W Player", "Mobile Gamer", "Console Peasant",
-    "PC Master Race", "Mac User", "Linux User", "Android User",
-    "iPhone User", "Windows User", "Chrome User", "Firefox User",
-    "Safari User", "Edge User", "IE User", "Opera User",
-    "Brave User", "Tor User", "VPN User", "Proxy User"
+    "Believes in Lizard People", "OnlyFans Simp", "MLM 'Boss Babe'", "Sovereign Citizen",
+    "Hardcore K-Pop Stan", "Disney Adult", "Van Life Influencer", "Bio-Hacker",
+    "Carnivore Diet Evangelist", "Raw Vegan", "Astrology Girlie", "Finance Bro",
+    "Professional Victim", "Internet Troll", "Weeb", "Compulsive Gambler", "Mall Ninja"
 ];
-
-export const SPEECH_STYLES_BY_AGE = {
-    youth: [
-        "Gen Z slang overload (fr fr no cap, bet)", "Uses way too many emojis 🤠✨", "Writes in all lowercase very chill",
-        "Chaotic keyboard smash energy", "Uses 'literally' in every sentence", "Text speak (u r gr8)",
-        "Uses TikTok trends as vocabulary", "Sarcastic and ironic", "Passive aggressive uwu",
-        "Skibidi Toilet Brainrot", "Rizz God slang", "Gyatt references constantly",
-        "Fanum Tax mentions", "Ohio memes only", "Grimace Shake survivor",
-        "Among Us references (sus)", "Roblox oof sounds", "Minecraft villager noises",
-        "Fortnite dance descriptions", "Yeet usage", "Sheesh usage",
-        "Bussin usage", "Finna usage", "Cap/No Cap usage",
-        "Simp usage", "Karen usage", "Boomer usage"
-    ],
-    adult: [
-        "Professional corporate speak", "Stressed parent energy", "Casual but grammatically correct",
-        "Over-explains everything in paragraphs", "Uses '...' constantly for pause", "Friendly and polite",
-        "Short, efficient sentences", "Passive aggressive corporate", "Overly enthusiastic!!!",
-        "LinkedIn influencer voice", "Hashtag abuser", "Reply Guy energy",
-        "Mansplaining tone", "Gaslighting tone", "Gatekeeping tone",
-        "Girlboss tone", "Therapy speak (boundaries, gaslighting)", "HR violation voice",
-        "Tech bro disruption speak", "Finance bro alpha talk", "Crypto bro moon talk",
-        "MLM hun emoji pyramid", "Wine mom facebook vibe", "Minion meme sharer",
-        "Political ranting", "Sports metaphor abuser", "Dad joke dispenser"
-    ],
-    elderly: [
-        "Very formal, Victorian english", "ALL CAPS AGGRESSIVE BOOMER", "Typos everywhere, bad eyesight",
-        "Suspiciously brief. Like a spy.", "Confused by technology terms", "Sign their name at end of every text",
-        "Uses voice-to-text so includes punctuation words", "Polite but rambling stories", "Extremely slow responses",
-        "Thinks you are Google", "Thinks you are their grandson", "Thinks you are the government",
-        "Thinks you are a scammer (ironically)", "Thinks you are tech support", "Thinks you are a celebrity",
-        "Posts private info publicly", "Shares fake news links", "Forwards chain emails",
-        "Uses 'LOL' as 'Lots of Love'", "Uses 'WTF' as 'Why the Face'", "Uses 'YOLO' incorrectly",
-        "Asks to speak to manager", "Complains about 'kids these days'", "Nostalgic for the war",
-        "Racist grandpa (mildly)", "Sweet grandma (baking)", "Grumpy old man (lawn)"
-    ]
-};
