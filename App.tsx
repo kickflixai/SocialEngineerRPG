@@ -33,15 +33,26 @@ const App: React.FC = () => {
   const [highValueTargetActive, setHighValueTargetActive] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
 
-  // Initialize Audio Logic based on View
+  // Initialize Audio Logic based on View & Loading State
   useEffect(() => {
-      // If we are NOT in active scam, play dashboard theme
-      // If we ARE in active scam, ScamInterface component handles starting the Hacking Theme
-      // IMPORTANT: Only play if not in Landing (handled by handleStart)
-      if (view !== GameView.ACTIVE_SCAM && view !== GameView.LANDING) {
-          audioManager.startDashboardTheme();
+      // 1. If in Landing, do nothing (handled by handleStart)
+      if (view === GameView.LANDING) return;
+
+      // 2. If in Active Scam, Dashboard music should be OFF (ScamInterface handles Hacking Theme)
+      if (view === GameView.ACTIVE_SCAM) {
+          audioManager.stopDashboardTheme();
+          return;
       }
-  }, [view]);
+
+      // 3. If Loading (Scanning), Dashboard music should be OFF (Scanning SFX plays)
+      if (loadingScam) {
+          audioManager.stopDashboardTheme();
+          return;
+      }
+
+      // 4. Otherwise (Dashboard, Menus, Dossier), play Dashboard Theme
+      audioManager.startDashboardTheme();
+  }, [view, loadingScam]);
 
   const toggleAudio = () => {
       const muted = audioManager.toggleMute();

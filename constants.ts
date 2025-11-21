@@ -9,7 +9,7 @@ export const MAX_THREAT = 100;
 // To use your own music, paste a direct URL to an MP3 file here (e.g. from GitHub Raw, Dropbox dl=1, etc.)
 // If left empty, the game will use the built-in generative synth music.
 export const HACKING_MUSIC_URL = "https://res.cloudinary.com/dyqus7sfo/video/upload/v1763722941/hacking1_vyfcpf.mp3"; 
-export const DASHBOARD_MUSIC_URL = "https://res.cloudinary.com/dyqus7sfo/video/upload/v1763722941/hacking1_vyfcpf.mp3"; 
+export const DASHBOARD_MUSIC_URL = "https://res.cloudinary.com/dyqus7sfo/video/upload/v1763722941/MainMenu_gge672.mp3"; 
 
 // --- COUNTRY DATA & LORE ---
 export const COUNTRY_DATA: Record<string, CountryStats> = {
