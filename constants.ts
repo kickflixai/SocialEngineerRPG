@@ -763,7 +763,24 @@ export const QUIRKS = [
     "Is convinced you are an IRS auditor", "Is currently being audited by the real IRS", "Is a compulsive liar",
     "Cannot lie (cursed)", "Speaks only in questions?", "Is offended by everything", "Is impressed by nothing",
     "Is trying to sell YOU a scam", "Is a rival scammer", "Is a police officer undercover", "Is your dad",
-    "Is your mom", "Is your ex", "Is your future self", "Is an AI realizing it's an AI", "Is a glitched NPC"
+    "Is your mom", "Is your ex", "Is your future self", "Is an AI realizing it's an AI", "Is a glitched NPC",
+    "Is scared of their own reflection", "Thinks they are invisible", "Is convinced the floor is lava",
+    "Is trying to contact aliens", "Is a werewolf", "Is a vampire", "Is a zombie", "Is a ghost hunter",
+    "Is a flat earther", "Is a moon landing denier", "Is a lizard person believer", "Is a illuminati member",
+    "Is a freemason", "Is a scientologist", "Is a pastafarian", "Is a jedi", "Is a sith", "Is a wizard",
+    "Is a witch", "Is a warlock", "Is a sorcerer", "Is a mage", "Is a druid", "Is a cleric", "Is a paladin",
+    "Is a bard", "Is a rogue", "Is a ranger", "Is a monk", "Is a barbarian", "Is a fighter",
+    "Is convinced the keyboard is hot", "Refuses to use the letter 'e'", "Types with their toes",
+    "Is narrating their life out loud", "Thinks the government is listening through the toaster",
+    "Is terrified of clouds", "Collects toenail clippings", "Is allergic to water", "Is a breatharian",
+    "Is sun gazing", "Is hugging a tree", "Is talking to plants", "Is waiting for a sign from the universe",
+    "Is decoding a secret message in their cereal", "Is building a bunker", "Is wearing a tinfoil hat",
+    "Is convinced birds are government drones", "Is afraid of silence", "Is addicted to nasal spray",
+    "Is chewing on a pen", "Is playing with a fidget spinner", "Is popping bubble wrap", "Is cracking their knuckles",
+    "Is whistling a tune", "Is humming", "Is beatboxing", "Is rapping", "Is singing", "Is yodeling",
+    "Is screaming internally", "Is screaming externally", "Is crying", "Is laughing maniacally",
+    "Is staring into the void", "Is meditating", "Is levitating", "Is astral projecting", "Is lucid dreaming",
+    "Is sleepwalking", "Is sleep talking", "Is sleep eating", "Is sleep texting", "Is sleep hacking"
 ];
 
 export const VICTIM_FLAVORS = [
@@ -783,23 +800,85 @@ export const VICTIM_FLAVORS = [
     "Football Dad", "Tennis Mom", "Golf Dad", "Fishing Dad",
     "Hunting Dad", "Camping Dad", "Hiking Dad", "Biking Dad",
     "Running Dad", "Swimming Dad", "Surfing Dad", "Skating Dad",
-    "Skiing Dad", "Snowboarding Dad", "Climbing Dad", "Gaming Dad", "Retarded", "BSDM Addict", "Down Syndrome", "Obese", "Virgin"
+    "Skiing Dad", "Snowboarding Dad", "Climbing Dad", "Gaming Dad", 
+    "Retarded", "BSDM Addict", "Down Syndrome", "Obese", "Virgin",
+    "Reddit Mod", "Discord Kitten", "E-Girl", "E-Boy", "Twitch Streamer",
+    "VTuber Fan", "Gooner", "Porn Addict", "Hentai Connoisseur",
+    "Loli Defender", "Neckbeard", "Legbeard", "Nice Guy", "Pick Me Girl",
+    "Trad Wife", "Trad Cath", "Rad Fem", "MRA", "PUA",
+    "Red Pilled", "Blue Pilled", "Black Pilled", "White Pilled",
+    "Based God", "Cringe Lord", "Edgelord", "Normie", "NPC",
+    "Main Character", "Gaslighter", "Gatekeeper", "Girlboss",
+    "Sigma Male", "Beta Male", "Omega Male", "Delta Male", "Gamma Male",
+    "Zodiac Obsessive", "Crystal Mommy", "Essential Oil Karen",
+    "Anti-5G Activist", "Chemtrail Watcher", "Simulation Theorist",
+    "Glitch in the Matrix Witness", "Mandela Effect Victim",
+    "Backrooms Explorer", "SCP Researcher", "Creepypasta Writer",
+    "Fanfic Author", "Shipper", "Stan", "Sasaeng",
+    "Koreaboo", "Westaboo", "Teaboo", "Ouiaboo",
+    "Wehraboo", "Tankie", "Ancap", "Ancom", "Libertarian",
+    "Neolib", "Neocon", "Alt-Right", "Alt-Left", "Centrist",
+    "Apolitical", "Political Junkie", "News Junkie", "Doomscroller",
+    "Clickbait Victim", "Boomer", "Zoomer", "Doomer", "Bloomer",
+    "Coomer", "Consoomer", "Karen", "Kyle", "Chad", "Stacy", "Becky",
+    "Soy Boy", "Nu-Male", "Simp", "Cuck", "White Knight",
+    "SJW", "Anti-SJW", "Woke", "Anti-Woke", "Cancel Culture Warrior",
+    "Free Speech Absolutist", "Tone Police", "Grammar Nazi",
+    "Pedantic", "Contrarian", "Devil's Advocate", "Troll",
+    "Shitposter", "Memelord", "Lurker", "Bot", "Sockpuppet",
+    "Catfish", "Scammer", "Hacker", "Script Kiddie", "Skid",
+    "Leet Haxor", "Anonymous Member", "QAnon Believer",
+    "Illuminati Confirmed", "Freemason", "Scientologist",
+    "Jehovah's Witness", "Mormon", "Amish", "Quaker", "Puritan",
+    "Satanist", "Wiccan", "Pagan", "Druid", "Shaman",
+    "Guru", "Cult Leader", "Cult Follower", "Brainwashed",
+    "Sheeple", "Woke Mob", "Echo Chamber Dweller", "Bubble Boy",
+    "Touch Grass Avoider", "Chronically Online", "Terminally Online",
+    "Keyboard Warrior", "Internet Tough Guy", "Armchair Expert",
+    "Backseat Gamer", "Stream Sniper", "Griefer", "Smurf",
+    "Tryhard", "Sweat", "Casual", "Noob", "Scrub",
+    "Pro Gamer", "Esports Athlete", "Speedrunner", "Completionist",
+    "Trophy Hunter", "Achievement Whore", "Lore Master",
+    "Theory Crafter", "Min-Maxer", "Whale", "Dolphin", "Minnow",
+    "F2P Player", "P2W Player", "Mobile Gamer", "Console Peasant",
+    "PC Master Race", "Mac User", "Linux User", "Android User",
+    "iPhone User", "Windows User", "Chrome User", "Firefox User",
+    "Safari User", "Edge User", "IE User", "Opera User",
+    "Brave User", "Tor User", "VPN User", "Proxy User", "Clinically retarded", "Sadist", "Masochist", "Swinger", "Down Syndrome", "Virgin", "wets their bed"
 ];
 
 export const SPEECH_STYLES_BY_AGE = {
     youth: [
         "Gen Z slang overload (fr fr no cap, bet)", "Uses way too many emojis 🤠✨", "Writes in all lowercase very chill",
         "Chaotic keyboard smash energy", "Uses 'literally' in every sentence", "Text speak (u r gr8)",
-        "Uses TikTok trends as vocabulary", "Sarcastic and ironic", "Passive aggressive uwu"
+        "Uses TikTok trends as vocabulary", "Sarcastic and ironic", "Passive aggressive uwu",
+        "Skibidi Toilet Brainrot", "Rizz God slang", "Gyatt references constantly",
+        "Fanum Tax mentions", "Ohio memes only", "Grimace Shake survivor",
+        "Among Us references (sus)", "Roblox oof sounds", "Minecraft villager noises",
+        "Fortnite dance descriptions", "Yeet usage", "Sheesh usage",
+        "Bussin usage", "Finna usage", "Cap/No Cap usage",
+        "Simp usage", "Karen usage", "Boomer usage"
     ],
     adult: [
         "Professional corporate speak", "Stressed parent energy", "Casual but grammatically correct",
         "Over-explains everything in paragraphs", "Uses '...' constantly for pause", "Friendly and polite",
-        "Short, efficient sentences", "Passive aggressive corporate", "Overly enthusiastic!!!"
+        "Short, efficient sentences", "Passive aggressive corporate", "Overly enthusiastic!!!",
+        "LinkedIn influencer voice", "Hashtag abuser", "Reply Guy energy",
+        "Mansplaining tone", "Gaslighting tone", "Gatekeeping tone",
+        "Girlboss tone", "Therapy speak (boundaries, gaslighting)", "HR violation voice",
+        "Tech bro disruption speak", "Finance bro alpha talk", "Crypto bro moon talk",
+        "MLM hun emoji pyramid", "Wine mom facebook vibe", "Minion meme sharer",
+        "Political ranting", "Sports metaphor abuser", "Dad joke dispenser"
     ],
     elderly: [
         "Very formal, Victorian english", "ALL CAPS AGGRESSIVE BOOMER", "Typos everywhere, bad eyesight",
         "Suspiciously brief. Like a spy.", "Confused by technology terms", "Sign their name at end of every text",
-        "Uses voice-to-text so includes punctuation words", "Polite but rambling stories", "Extremely slow responses"
+        "Uses voice-to-text so includes punctuation words", "Polite but rambling stories", "Extremely slow responses",
+        "Thinks you are Google", "Thinks you are their grandson", "Thinks you are the government",
+        "Thinks you are a scammer (ironically)", "Thinks you are tech support", "Thinks you are a celebrity",
+        "Posts private info publicly", "Shares fake news links", "Forwards chain emails",
+        "Uses 'LOL' as 'Lots of Love'", "Uses 'WTF' as 'Why the Face'", "Uses 'YOLO' incorrectly",
+        "Asks to speak to manager", "Complains about 'kids these days'", "Nostalgic for the war",
+        "Racist grandpa (mildly)", "Sweet grandma (baking)", "Grumpy old man (lawn)"
     ]
 };
