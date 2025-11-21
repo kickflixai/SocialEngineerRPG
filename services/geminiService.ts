@@ -293,7 +293,7 @@ export const getVictimResponse = async (
         }));
 
         const chat = ai.chats.create({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-flash-lite-latest',
             config: { 
                 systemInstruction: context,
                 responseMimeType: 'application/json'
@@ -372,6 +372,8 @@ export const arbitrateChat = async (
             - If the Player asked for the info, but the Victim ignored it, refused, or asked a question back, 'objectiveComplete' MUST BE FALSE.
             - Example: Objective "Get computer model". Player asks "What model is it?". Victim says "I don't know". Result: FALSE.
             - Example: Objective "Get computer model". Player asks "What model?". Victim says "It's a Dell Inspiron". Result: TRUE.
+            - Do NOT assume completion.
+            - If the victim's message is vague, 'objectiveComplete' is FALSE.
             
             Determine Stats:
             - Trust Delta: Based on difficulty rules. Increase if player is convincing/polite. Decrease if aggressive.
@@ -394,7 +396,7 @@ export const arbitrateChat = async (
         `;
 
         const response = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-flash-lite-latest',
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         }));

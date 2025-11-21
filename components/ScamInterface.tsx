@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ScamState, PlayerState, ChatMessage, ShopItem } from '../types';
 import { getVictimResponse, arbitrateChat, generateScamHint } from '../services/geminiService';
 import { audioManager } from '../services/audioService';
-import { Send, Terminal, Wifi, Radio, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Circle, Package, ChevronDown, ChevronUp, Target, Lightbulb } from 'lucide-react';
+import { Send, Terminal, Wifi, Radio, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Circle, Package, ChevronDown, ChevronUp, Target, Lightbulb, BrainCircuit } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import InventoryModal from './InventoryModal';
 
@@ -413,7 +413,16 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
              </button>
              {intelExpanded && (
                  <div className="overflow-y-auto p-3 custom-scrollbar space-y-3 text-xs font-mono">
-                     <div className="bg-zinc-900/50 p-2 rounded border-l-2 border-zinc-700"><p className="text-zinc-500 text-[10px] uppercase">Strategy</p><p className="text-zinc-300">{scam.category}</p></div>
+                     <div className="bg-zinc-900/50 p-2 rounded border-l-2 border-zinc-700">
+                         <p className="text-zinc-500 text-[10px] uppercase">Strategy</p>
+                         <p className="text-zinc-300">{scam.category}</p>
+                     </div>
+                     {/* Always show Personality/Psych Profile */}
+                     <div className="bg-zinc-900/50 p-2 rounded border-l-2 border-zinc-700">
+                         <p className="text-zinc-500 text-[10px] uppercase flex items-center gap-1"><BrainCircuit size={10}/> Psych Profile</p>
+                         <p className="text-zinc-300 italic">{scam.victim.personality}</p>
+                     </div>
+                     
                      {(player.skills.includes('doxxing_suite') || player.skills.includes('social_scraper') || scam.revealedFacts.length > 0) && (
                         <div className="space-y-2 animate-in fade-in slide-in-from-left-4 duration-500">
                             {player.skills.includes('doxxing_suite') && <div className="bg-green-900/10 p-2 rounded border-l-2 border-green-600"><p className="text-green-500 text-[10px] uppercase font-bold">LEAK DETECTED</p><p className="text-zinc-300">{scam.victim.hiddenFact}</p></div>}
