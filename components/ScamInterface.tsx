@@ -4,7 +4,7 @@ import { ScamState, PlayerState, ChatMessage, ShopItem, HackAbility } from '../t
 import { getVictimResponse, arbitrateChat, generateScamHint } from '../services/geminiService';
 import { audioManager } from '../services/audioService';
 import { HACK_ABILITIES } from '../constants';
-import { Send, Terminal, Wifi, Radio, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Circle, Package, ChevronDown, ChevronUp, Target, Lightbulb, BrainCircuit, ArrowRight, Zap, Mail, Bell, Mic, Search, Code, Speaker, WifiOff, Shuffle, FileCheck, BadgeCheck, Key, Fingerprint, Unlock, Database } from 'lucide-react';
+import { Send, Terminal, Wifi, Radio, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Circle, Package, ChevronDown, ChevronUp, Target, Lightbulb, BrainCircuit, ArrowRight, Zap, Mail, Bell, Mic, Search, Code, Speaker, WifiOff, Shuffle, FileCheck, BadgeCheck, Key, Fingerprint, Unlock, Database, Printer, AppWindow, Music, Disc, Thermometer, Ghost, MousePointer2, Video, MonitorX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import InventoryModal from './InventoryModal';
 
@@ -136,12 +136,27 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       let suspicionMod = 0;
 
       switch(hack.id) {
+          // Basics
           case 'noise_generator': trustMod = 5; break;
           case 'fake_receipt': trustMod = 15; break;
           case 'voice_changer': trustMod = 20; break;
           case 'gov_database': trustMod = 25; break;
+          
+          // Utility
           case 'delay_packet': suspicionMod = -10; break;
           case 'ip_scramble': suspicionMod = -15; break;
+          
+          // Chaos / Pranks
+          case 'printer_demon': suspicionMod = 5; break; // Confusion/Panic
+          case 'smart_lights': suspicionMod = 5; break; // Spooky
+          case 'bsod_sim': suspicionMod = -5; trustMod = -5; break; // Distraction (lowers suspicion but also trust)
+          case 'browser_popup': suspicionMod = 5; break; // Annoying
+          case 'rickroll': trustMod = -10; break; // Unprofessional
+          case 'cd_eject': suspicionMod = 5; break; // Spooky
+          case 'thermostat_hack': suspicionMod = 5; break; // Uncomfortable
+          case 'tts_ghost': suspicionMod = 15; break; // Very scary/suspicious
+          case 'mouse_jitter': suspicionMod = 5; break; 
+          case 'webcam_led': suspicionMod = 10; break; // Paranoia inducing
       }
 
       const newTrust = Math.min(100, Math.max(0, scam.trust + trustMod));
@@ -196,7 +211,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             msgToSend, 
             scam.victim, 
             scam.trust,
-            scam.suspicion,
+            scam.suspicion, 
             scam.category, 
             activeObjective, 
             allCompleted
@@ -305,6 +320,17 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
           case 'BadgeCheck': return <BadgeCheck size={16}/>;
           case 'Search': return <Search size={16}/>;
           case 'Key': return <Key size={16}/>;
+          // New Icons
+          case 'Printer': return <Printer size={16}/>;
+          case 'Lightbulb': return <Lightbulb size={16}/>;
+          case 'MonitorX': return <MonitorX size={16}/>;
+          case 'AppWindow': return <AppWindow size={16}/>;
+          case 'Music': return <Music size={16}/>;
+          case 'Disc': return <Disc size={16}/>;
+          case 'Thermometer': return <Thermometer size={16}/>;
+          case 'Ghost': return <Ghost size={16}/>;
+          case 'MousePointer2': return <MousePointer2 size={16}/>;
+          case 'Video': return <Video size={16}/>;
           default: return <Code size={16}/>;
       }
   };

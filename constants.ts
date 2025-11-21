@@ -11,6 +11,7 @@ export const DASHBOARD_MUSIC_URL = "https://res.cloudinary.com/dyqus7sfo/video/u
 
 // --- HACKING ABILITIES ---
 export const HACK_ABILITIES: HackAbility[] = [
+    // --- TIER 1: BASICS ---
     {
         id: 'spoof_email',
         name: 'Forge Email',
@@ -35,6 +36,8 @@ export const HACK_ABILITIES: HackAbility[] = [
         icon: 'Speaker',
         systemMessage: '>> AUDIO MIXER ACTIVE. BACKGROUND: "BUSY_CALL_CENTER_V4.MP3" LOOPING.'
     },
+    
+    // --- TIER 2: UTILITY ---
     {
         id: 'delay_packet',
         name: 'Lag Switch',
@@ -59,6 +62,8 @@ export const HACK_ABILITIES: HackAbility[] = [
         icon: 'FileCheck',
         systemMessage: '>> DOCUMENT FORGED. "TRANSACTION_SUCCESS.PDF" SENT TO TARGET DEVICE.'
     },
+
+    // --- TIER 3: ADVANCED ---
     {
         id: 'voice_changer',
         name: 'Deepfake Audio',
@@ -90,6 +95,88 @@ export const HACK_ABILITIES: HackAbility[] = [
         cost: 85,
         icon: 'Key',
         systemMessage: '>> PASSWORD HASH CRACKED. DISPLAYING PLAIN TEXT CREDENTIALS TO TARGET.'
+    },
+
+    // --- TIER 4: CHAOS & PRANKS (New) ---
+    {
+        id: 'printer_demon',
+        name: 'Printer Demon',
+        description: 'Force their printer to print 50 pages of binary code.',
+        cost: 40,
+        icon: 'Printer',
+        systemMessage: '>> IOT EXPLOIT. PRINTER SPOOLER OVERLOADED. PRINTING: "WATCHING_YOU.BIN".'
+    },
+    {
+        id: 'smart_lights',
+        name: 'Poltergeist',
+        description: 'Flicker their smart home lights rapidly.',
+        cost: 30,
+        icon: 'Lightbulb',
+        systemMessage: '>> HOME AUTOMATION BREACHED. LIGHTS SET TO STROBE MODE.'
+    },
+    {
+        id: 'bsod_sim',
+        name: 'Fake Crash',
+        description: 'Flash a Blue Screen of Death on their monitor.',
+        cost: 55,
+        icon: 'MonitorX',
+        systemMessage: '>> VIDEO DRIVER CRASH SIMULATED. BSOD DISPLAYED ON MAIN MONITOR.'
+    },
+    {
+        id: 'browser_popup',
+        name: 'Ad Storm',
+        description: 'Open 20 annoying pop-up windows.',
+        cost: 20,
+        icon: 'AppWindow',
+        systemMessage: '>> BROWSER INJECTION. POPUP LOOP INITIATED. "YOU_WON_IPHONE.HTML".'
+    },
+    {
+        id: 'rickroll',
+        name: 'Meme Protocol',
+        description: 'Force open YouTube to "Never Gonna Give You Up".',
+        cost: 15,
+        icon: 'Music',
+        systemMessage: '>> URL INJECTION. PLAYING: "RICK_ASTLEY_OPUS.MP4".'
+    },
+    {
+        id: 'cd_eject',
+        name: 'Ghost Tray',
+        description: 'Eject their CD/DVD tray repeatedly.',
+        cost: 10,
+        icon: 'Disc',
+        systemMessage: '>> HARDWARE INTERRUPT. OPTICAL DRIVE: EJECT/CLOSE LOOP.'
+    },
+    {
+        id: 'thermostat_hack',
+        name: 'Heat Wave',
+        description: 'Set their smart thermostat to 99°F.',
+        cost: 35,
+        icon: 'Thermometer',
+        systemMessage: '>> IOT THERMOSTAT BRIDGE BYPASSED. SET TEMP: 99°F.'
+    },
+    {
+        id: 'tts_ghost',
+        name: 'Phantom TTS',
+        description: 'Make their computer whisper "I see you".',
+        cost: 50,
+        icon: 'Ghost',
+        systemMessage: '>> TEXT-TO-SPEECH INJECTION. VOL: 10%. MSG: "I see you".'
+    },
+    {
+        id: 'mouse_jitter',
+        name: 'Cursor Glitch',
+        description: 'Make their mouse cursor shake uncontrollably.',
+        cost: 25,
+        icon: 'MousePointer2',
+        systemMessage: '>> INPUT DRIVER HIJACKED. RANDOMIZING X/Y COORDINATES.'
+    },
+    {
+        id: 'webcam_led',
+        name: 'Paranoia LED',
+        description: 'Turn on their webcam light without recording.',
+        cost: 45,
+        icon: 'Video',
+        systemMessage: '>> PERIPHERAL CONTROL. WEBCAM INDICATOR: TOGGLE ON.'
     }
 ];
 
@@ -604,7 +691,7 @@ export const QUIRKS = [
     "Hates technology, prefers fax machines", "Is extremely lonely and just wants to chat", "Is secretly a hacker themselves",
     "Believes they are royalty", "Has short term memory loss", "Is in a noisy environment (airport/club)",
     "Is extremely stingy with money", "Is overly flirtatious", "Quotes movies constantly",
-    "Speaks in the third person", "Is terrified of the color yellow", "Collects spoons", "Thinks they are a vampire",
+    "Speaks in the third person", "Is terrified of the color yellow", "Collects spoons", "Thinks they are in a vampire",
     "Is training for a marathon right now", "Has a parrot that repeats everything", "Is convinced you are an alien",
     "Refuses to say the word 'money'", "Is writing a novel about this conversation", "Thinks they are in a simulation",
     "Is extremely superstitious", "Will only reply in haiku", "Is currently skydiving", "Is holding a seance",
