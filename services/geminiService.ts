@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective } from "../types";
 
@@ -393,9 +392,17 @@ export const arbitrateChat = async (
                 - Increase if polite, logical, authoritative, or authoritative specific fake details used.
                 - Decrease if rude, vague, or contradictory.
             - **SUSPICION DELTA**:
-                - Increase (+5 to +30) if the player makes a mistake, threatens aggressively without setup, or contradicts themselves.
-                - **CRITICAL**: If Suspicion Increases, Trust usually Decreases too.
                 - Suspicion NEVER decreases. Delta must be >= 0.
+                - **CRITICAL RULE**: ONLY increase Suspicion if the player:
+                    1. Directly threatens the victim without establishment.
+                    2. Contradicts a previous statement.
+                    3. Uses obviously fake/poor grammar script.
+                    4. Fails to answer a direct question logically.
+                - **DO NOT INCREASE SUSPICION** for:
+                    1. Weird/Unique roleplay choices (e.g., "I'm gay", "I'm eating lunch").
+                    2. Personal anecdotes.
+                    3. Delays in responding.
+                - If the player is just weird but not threatening, keep Suspicion Delta at 0.
             - **CREATIVITY SCORE (0-10)**:
                 - 0-3: Generic script.
                 - 4-7: Good logic.

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ScamState, PlayerState, ChatMessage, ShopItem, HackAbility } from '../types';
 import { getVictimResponse, arbitrateChat, generateScamHint } from '../services/geminiService';
@@ -342,18 +341,6 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
              </div>
              <h2 className="text-lg font-bold text-white font-mono truncate w-full tracking-tight mb-0.5">{scam.victim.name}</h2>
              <p className="text-zinc-500 text-[10px] font-mono uppercase tracking-widest mb-3">{scam.victim.age} Y/O // {scam.victim.occupation}</p>
-             
-             {/* HACKING POWER METER (Relocated) */}
-             <div className="w-full bg-zinc-900/50 rounded-lg border border-blue-900/30 p-2 mb-2">
-                 <div className="flex justify-between items-end mb-1">
-                      <span className="text-[10px] font-bold uppercase text-blue-400 tracking-widest flex items-center gap-1"><Zap size={10}/> HACKING POWER</span>
-                      <span className="text-white font-mono text-xs font-bold">{scam.socialCharge}%</span>
-                 </div>
-                 <div className="w-full h-2 bg-zinc-950 border border-zinc-800 rounded-full overflow-hidden mb-1">
-                     <div className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] transition-all duration-500" style={{width: `${scam.socialCharge}%`}}></div>
-                 </div>
-                 <p className="text-[8px] text-zinc-500 text-center">POWERED BY CREATIVE RESPONSES</p>
-             </div>
         </div>
 
         <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-5 shadow-xl flex-1 space-y-5 backdrop-blur-sm relative overflow-hidden flex flex-col min-h-0">
@@ -385,7 +372,6 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                             className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-900 to-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)] transition-all duration-700 ease-out"
                             style={{ width: `${scam.suspicion}%` }}
                          ></div>
-                         <div className="absolute top-0 right-0 w-[10%] h-full bg-red-500/20 border-l border-red-500/30"></div>
                     </div>
                 </div>
             </div>
@@ -414,6 +400,18 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                 </div>
             </div>
             
+            {/* HACKING POWER METER (Relocated) */}
+             <div className="w-full bg-zinc-900/50 rounded-lg border border-blue-900/30 p-2">
+                 <div className="flex justify-between items-end mb-1">
+                      <span className="text-[10px] font-bold uppercase text-blue-400 tracking-widest flex items-center gap-1"><Zap size={10}/> HACKING POWER</span>
+                      <span className="text-white font-mono text-xs font-bold">{scam.socialCharge}%</span>
+                 </div>
+                 <div className="w-full h-2 bg-zinc-950 border border-zinc-800 rounded-full overflow-hidden mb-1">
+                     <div className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] transition-all duration-500" style={{width: `${scam.socialCharge}%`}}></div>
+                 </div>
+                 <p className="text-[8px] text-zinc-500 text-center">POWERED BY CREATIVE RESPONSES</p>
+             </div>
+
              <div className="border-t border-zinc-800 pt-4 flex-1 flex flex-col min-h-0 overflow-hidden">
                 <h4 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
                     <Target size={12} className="text-blue-500" /> Execution Steps

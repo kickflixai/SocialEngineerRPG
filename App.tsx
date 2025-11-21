@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { GameView, PlayerState, ScamState, PlayerAttributes, Skill, ScamObjective, ShopItem } from './types';
 import { INITIAL_MONEY, INITIAL_THREAT, SCAM_CATEGORIES, MAX_THREAT, SKILLS, SHOP_ITEMS, COUNTRY_DATA, SCAM_SCENARIOS, ACHIEVEMENTS } from './constants';
@@ -215,7 +214,7 @@ const App: React.FC = () => {
             history: [],
             trust: Math.max(0, Math.min(100, baseTrust + trustBonus)),
             suspicion: 0, // Always start at 0
-            socialCharge: 20, 
+            socialCharge: 0, // Always start at 0
             status: 'active',
             revealedFacts: [],
             isHighValue: highValueTargetActive
