@@ -484,15 +484,15 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                 <div className="flex-1 p-4 font-mono text-xs overflow-y-auto custom-scrollbar">
                      {processing ? (
                         <div className="flex flex-col gap-2 text-green-500/50 h-full justify-end">
-                             <div className="animate-pulse">>> ANALYZING INPUT VECTOR...</div>
-                             <div className="animate-pulse delay-75">>> CALCULATING PROBABILITY...</div>
+                             <div className="animate-pulse">&gt;&gt; ANALYZING INPUT VECTOR...</div>
+                             <div className="animate-pulse delay-75">&gt;&gt; CALCULATING PROBABILITY...</div>
                         </div>
                     ) : (
                         <div className="flex flex-col h-full justify-end">
-                            <div className="text-zinc-500 mb-2">>> CONNECTION ESTABLISHED</div>
+                            <div className="text-zinc-500 mb-2">&gt;&gt; CONNECTION ESTABLISHED</div>
                              {lastThought && (
                                 <div className="text-green-400 typing-effect">
-                                    <span className="text-zinc-500 mr-2">>></span>{lastThought}
+                                    <span className="text-zinc-500 mr-2">&gt;&gt;</span>{lastThought}
                                 </div>
                             )}
                         </div>

@@ -354,7 +354,7 @@ export const arbitrateChat = async (
             medium: `
                 MODE: MEDIUM (Target is Business Owner).
                 - RELATIONSHIP GAIN: MODERATE (x1.0). Good moves give +10 to +15 relationship.
-                - RELATIONSHIP LOSS: HIGH (x1.5). Bad logic drops -20 to -30.
+                - RELATIONSHIP LOSS: MODERATE. Bad logic drops -10 to -20.
                 - CREATIVITY REWARD: Medium. Rewards jargon and specificity.
             `,
             hard: `
