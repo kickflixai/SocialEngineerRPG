@@ -282,10 +282,16 @@ export const getVictimResponse = async (
             - If objective is "Get Name" and you say "Why do you need my name?", return FALSE.
             - DO NOT HALLUCINATE COMPLETION. Only return TRUE if the text actually contains the surrendered info.
             
+            CRITICAL ROLEPLAY RULE ON VALIDATION:
+            - You do NOT have access to a real external database.
+            - If the player provides a specific Case Number, Employee ID, Code, or Technical Detail that sounds plausible/professional, ACCEPT IT AS REAL.
+            - Do NOT say "I cannot verify that code" or "That ID does not exist". 
+            - If the player sounds authoritative and uses specific jargon/numbers, believe them. You are susceptible to social engineering.
+            
             BEHAVIOR RULES:
             - **EASY**: Elderly but cautious. Do not give sensitive info immediately if the request is abrupt or robotic. Reward creative, personal stories with compliance. Reject generic scripts.
-            - **MEDIUM**: Cautious but cooperative if the story makes sense. Willing to comply to avoid trouble, but hates wasting time.
-            - **HARD**: Strict and impatient. Responds well to confidence and authority. Will comply if they feel a threat to their assets or legal standing, but will shut down obvious weak attempts.
+            - **MEDIUM**: Cautious but cooperative. If the player provides a logical story or specific data (even if made up), comply to resolve the issue. Do not be impossibly stubborn.
+            - **HARD**: Strict and impatient. Responds well to confidence and authority. Will comply if they feel a threat to their assets or legal standing, especially if the player uses specific "codes" or "IDs" to prove authority.
             
             Return JSON:
             {
@@ -347,12 +353,13 @@ export const arbitrateChat = async (
                 MODE: MEDIUM (Target is Business Owner).
                 - TRUST GAIN: NORMAL (x1.1). Open to professional reasoning.
                 - SUSPICION GAIN: SLIGHTLY LOW (x0.9). Will overlook minor slip-ups if tone is professional.
+                - LOGIC CHECK: High Reward for specific details (even made up ones). If player uses specific codes/IDs, boost Logic Score.
             `,
             hard: `
                 MODE: HARD (Target is Paranoid Executive).
                 - TRUST GAIN: MODERATE (x0.8). Difficult but possible with strong authority.
                 - SUSPICION GAIN: HIGH (x1.2). Impatient with time-wasters, but won't hang up immediately unless insulted.
-                - They will fold if the threat feels real.
+                - LOGIC CHECK: They respect AUTHORITY and SPECIFICITY. If the player provides a specific Code/ID, treat it as valid authority.
             `
         };
 
@@ -374,6 +381,11 @@ export const arbitrateChat = async (
             TASK:
             1. Analyze the conversation logic.
             2. Determine if the CURRENT ACTIVE OBJECTIVE was completed.
+            
+            LOGIC EVALUATION GUIDELINES:
+            - If the player invents specific details (Case #, Codes, Names, Technical Jargon), score this as HIGH LOGIC/AUTHORITY.
+            - Do not penalize the player for making up facts/codes (this is a game, they are roleplaying).
+            - If the player sounds professional and specific, the Logic Score should be high, and Trust should increase.
             
             CRITICAL OBJECTIVE VALIDATION RULES:
             - 'objectiveComplete' is TRUE ONLY if the VICTIM has explicitly stated/revealed the requested info or performed the action in the previous messages.
