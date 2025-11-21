@@ -312,8 +312,9 @@ export const getVictimResponse = async (
             
             INSTRUCTIONS:
             1. Reply to the message in character. USE YOUR GENERATED SPEECH STYLE.
-            2. If you are "Technologically Illiterate", act like it. If you are "Aggressive", be aggressive.
-            3. SYSTEM MESSAGES: If you see a message from 'system', REACT TO IT realistically.
+            2. KEEP RESPONSES SHORT. MAX 2-3 SENTENCES. Do not monologue. Be concise.
+            3. If you are "Technologically Illiterate", act like it. If you are "Aggressive", be aggressive.
+            4. SYSTEM MESSAGES: If you see a message from 'system', REACT TO IT realistically.
             
             OBJECTIVE CHECK:
             - Did you (the victim) EXPLICITLY provide the information requested in the "CURRENT SCAMMER OBJECTIVE" in THIS specific response?
@@ -364,7 +365,7 @@ export const getVictimResponse = async (
 export const arbitrateChat = async (
     lastPlayerMessage: string, 
     victim: Victim, 
-    currentTrust: number,
+    currentTrust: number, 
     currentSuspicion: number,
     scamCategory: string, 
     activeObjective: ScamObjective,

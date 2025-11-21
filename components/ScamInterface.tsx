@@ -128,7 +128,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       }
       
       const newCharge = Math.max(0, scam.socialCharge - chargeCost);
-      const newHistory = [...scam.history, { sender: 'system', text: hack.systemMessage, timestamp: Date.now() } as ChatMessage];
+      const systemMsgText = `[${hack.name.toUpperCase()}] ${hack.systemMessage}`;
+      const newHistory = [...scam.history, { sender: 'system', text: systemMsgText, timestamp: Date.now() } as ChatMessage];
       
       // Apply side effects immediately
       let trustMod = 0;
@@ -321,7 +322,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                       <h2 className="text-sm font-bold text-white font-mono">{scam.victim.name}</h2>
                       <div className="flex gap-1 mt-1">
                           <div className="w-12 h-1 bg-zinc-800 rounded-full overflow-hidden"><div className="h-full bg-green-500" style={{width: `${scam.trust}%`}}></div></div>
-                          <div className="w-12 h-1 bg-zinc-800 rounded-full overflow-hidden"><div className="h-full bg-red-500" style={{width: `${scam.suspicion}%`}}></div></div>
+                          <div className="w-1 h-1 bg-zinc-800 rounded-full overflow-hidden"><div className="h-full bg-red-500" style={{width: `${scam.suspicion}%`}}></div></div>
                       </div>
                   </div>
               </div>

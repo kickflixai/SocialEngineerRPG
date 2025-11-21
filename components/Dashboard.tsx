@@ -102,7 +102,7 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
                          <div className="text-[10px] text-red-900 font-bold uppercase tracking-[0.2em] mb-1 flex items-center gap-2">
                              <ShieldAlert size={12} className="text-red-600"/> GLOBAL THREAT
                          </div>
-                         <div className="text-3xl text-red-500 font-bold tracking-tighter drop-shadow-[0_0_8px_rgba(220,38,38,0.5)]">
+                         <div className="text-4xl md:text-5xl text-red-500 font-bold tracking-tighter drop-shadow-[0_0_8px_rgba(220,38,38,0.5)]">
                              {Math.round(player.threatLevel)}%
                          </div>
                      </div>
@@ -136,7 +136,7 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
                  <div className="flex justify-between items-start">
                      <div>
                          <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">AVAILABLE FUNDS</div>
-                         <div className="text-3xl text-white font-bold tracking-tighter drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
+                         <div className="text-4xl md:text-5xl text-white font-bold tracking-tighter drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
                              ${player.money.toLocaleString()}
                          </div>
                      </div>
@@ -173,23 +173,24 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
             <motion.button
                 variants={itemVariants}
                 onClick={() => onChangeView(GameView.SCAM_SELECTION)}
-                className="relative group bg-black border border-zinc-800 hover:border-green-500 transition-all duration-500 flex flex-col overflow-hidden rounded-sm"
+                className="relative group bg-zinc-950 border border-zinc-800 hover:border-green-500 transition-all duration-500 flex flex-col overflow-hidden rounded-sm"
             >
-                <div className="absolute inset-0 bg-[url('https://media.giphy.com/media/3o7TKSjRrfIPjeiVyM/giphy.gif')] opacity-5 mix-blend-screen bg-cover pointer-events-none"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-green-900/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                {/* Animated Background Grid */}
+                <div className="absolute inset-0 bg-[linear-gradient(transparent_1px,rgba(0,20,0,0.3)_1px),linear-gradient(90deg,transparent_1px,rgba(0,20,0,0.3)_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_80%)] group-hover:bg-[size:20px_20px] transition-all duration-1000 opacity-50"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-green-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 
                 {renderCornerBrackets("border-green-500/0 group-hover:border-green-500/100 transition-all duration-500")}
                 
                 <div className="p-6 flex-1 flex flex-col items-center justify-center z-10">
-                    <div className="w-20 h-20 border border-zinc-800 group-hover:border-green-500 rounded-full flex items-center justify-center mb-6 bg-zinc-950 shadow-[0_0_30px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_30px_rgba(34,197,94,0.2)] transition-all duration-500 relative">
+                    <div className="w-20 h-20 border border-zinc-800 group-hover:border-green-500 rounded-full flex items-center justify-center mb-6 bg-zinc-950 shadow-[0_0_30px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_30px_rgba(34,197,94,0.2)] transition-all duration-500 relative group-hover:scale-110">
                         <div className="absolute inset-0 rounded-full border border-dashed border-green-500/30 animate-spin-slow opacity-0 group-hover:opacity-100"></div>
                         <Crosshair size={40} className="text-zinc-600 group-hover:text-green-500 transition-colors" />
                     </div>
                     <h3 className="text-2xl md:text-3xl font-bold text-white group-hover:text-green-400 font-mono tracking-tighter transition-colors">ACQUIRE TARGET</h3>
                     <p className="text-zinc-500 text-xs mt-2 max-w-[200px] text-center font-mono group-hover:text-green-800 transition-colors">
-                        >> SCAN GLOBAL DIRECTORY<br/>
-                        >> SELECT VICTIM<br/>
-                        >> INITIATE PROTOCOL
+                        &gt;&gt; SCAN GLOBAL DIRECTORY<br/>
+                        &gt;&gt; SELECT VICTIM<br/>
+                        &gt;&gt; INITIATE PROTOCOL
                     </p>
                 </div>
                 <div className="p-2 bg-zinc-950 border-t border-zinc-800 group-hover:border-green-500/50 flex justify-between items-center text-[10px] font-mono text-zinc-600 group-hover:text-green-500 transition-colors">
@@ -202,21 +203,22 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
             <motion.button
                 variants={itemVariants}
                 onClick={() => onChangeView(GameView.SKILL_TREE)}
-                className="relative group bg-black border border-zinc-800 hover:border-blue-500 transition-all duration-500 flex flex-col overflow-hidden rounded-sm"
+                className="relative group bg-zinc-950 border border-zinc-800 hover:border-blue-500 transition-all duration-500 flex flex-col overflow-hidden rounded-sm"
             >
-                <div className="absolute inset-0 bg-gradient-to-t from-blue-900/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.05)_0%,transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-blue-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 {renderCornerBrackets("border-blue-500/0 group-hover:border-blue-500/100 transition-all duration-500")}
                 
                 <div className="p-6 flex-1 flex flex-col items-center justify-center z-10">
-                    <div className="w-20 h-20 border border-zinc-800 group-hover:border-blue-500 rounded-full flex items-center justify-center mb-6 bg-zinc-950 shadow-[0_0_30px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_30px_rgba(59,130,246,0.2)] transition-all duration-500 relative">
+                    <div className="w-20 h-20 border border-zinc-800 group-hover:border-blue-500 rounded-full flex items-center justify-center mb-6 bg-zinc-950 shadow-[0_0_30px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_30px_rgba(59,130,246,0.2)] transition-all duration-500 relative group-hover:scale-110">
                          <div className="absolute inset-0 rounded-full border border-dashed border-blue-500/30 animate-spin-slow opacity-0 group-hover:opacity-100" style={{animationDirection: 'reverse'}}></div>
                         <BrainCircuit size={40} className="text-zinc-600 group-hover:text-blue-500 transition-colors" />
                     </div>
                     <h3 className="text-2xl md:text-3xl font-bold text-white group-hover:text-blue-400 font-mono tracking-tighter transition-colors">NEURAL UPGRADES</h3>
                     <p className="text-zinc-500 text-xs mt-2 max-w-[200px] text-center font-mono group-hover:text-blue-800 transition-colors">
-                        >> ENHANCE ALGORITHMS<br/>
-                        >> SOCIAL ENGINEERING<br/>
-                        >> UNLOCK NEW VECTORS
+                        &gt;&gt; ENHANCE ALGORITHMS<br/>
+                        &gt;&gt; SOCIAL ENGINEERING<br/>
+                        &gt;&gt; UNLOCK NEW VECTORS
                     </p>
                 </div>
                 <div className="p-2 bg-zinc-950 border-t border-zinc-800 group-hover:border-blue-500/50 flex justify-between items-center text-[10px] font-mono text-zinc-600 group-hover:text-blue-500 transition-colors">
@@ -229,21 +231,22 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
             <motion.button
                 variants={itemVariants}
                 onClick={() => onChangeView(GameView.SHOP)}
-                className="relative group bg-black border border-zinc-800 hover:border-purple-500 transition-all duration-500 flex flex-col overflow-hidden rounded-sm"
+                className="relative group bg-zinc-950 border border-zinc-800 hover:border-purple-500 transition-all duration-500 flex flex-col overflow-hidden rounded-sm"
             >
-                 <div className="absolute inset-0 bg-gradient-to-t from-purple-900/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                 <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(168,85,247,0.05)_50%,transparent_75%)] bg-[length:10px_10px] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                 <div className="absolute inset-0 bg-gradient-to-t from-purple-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 {renderCornerBrackets("border-purple-500/0 group-hover:border-purple-500/100 transition-all duration-500")}
                 
                 <div className="p-6 flex-1 flex flex-col items-center justify-center z-10">
-                    <div className="w-20 h-20 border border-zinc-800 group-hover:border-purple-500 rounded-full flex items-center justify-center mb-6 bg-zinc-950 shadow-[0_0_30px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_30px_rgba(168,85,247,0.2)] transition-all duration-500 relative">
+                    <div className="w-20 h-20 border border-zinc-800 group-hover:border-purple-500 rounded-full flex items-center justify-center mb-6 bg-zinc-950 shadow-[0_0_30px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_30px_rgba(168,85,247,0.2)] transition-all duration-500 relative group-hover:scale-110">
                         <div className="absolute inset-0 rounded-full border-2 border-dotted border-purple-500/30 animate-[spin_5s_linear_infinite] opacity-0 group-hover:opacity-100"></div>
                         <ShoppingBag size={40} className="text-zinc-600 group-hover:text-purple-500 transition-colors" />
                     </div>
                     <h3 className="text-2xl md:text-3xl font-bold text-white group-hover:text-purple-400 font-mono tracking-tighter transition-colors">BLACK MARKET</h3>
                     <p className="text-zinc-500 text-xs mt-2 max-w-[200px] text-center font-mono group-hover:text-purple-800 transition-colors">
-                        >> HARDWARE UPGRADES<br/>
-                        >> THREAT MITIGATION<br/>
-                        >> ILLICIT SERVICES
+                        &gt;&gt; HARDWARE UPGRADES<br/>
+                        &gt;&gt; THREAT MITIGATION<br/>
+                        &gt;&gt; ILLICIT SERVICES
                     </p>
                 </div>
                 <div className="p-2 bg-zinc-950 border-t border-zinc-800 group-hover:border-purple-500/50 flex justify-between items-center text-[10px] font-mono text-zinc-600 group-hover:text-purple-500 transition-colors">
@@ -283,16 +286,9 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
             </motion.div>
 
             {/* COL 2: HACKER ROOM (SAFEHOUSE) */}
-            <motion.div variants={itemVariants} className="md:col-span-5 bg-zinc-900/20 border border-zinc-800/60 p-0 relative overflow-hidden backdrop-blur-sm flex flex-col group">
-                {renderCornerBrackets("border-green-600/50 group-hover:border-green-500/80 transition-colors")}
-                <div className="absolute top-0 left-0 right-0 z-10 p-2 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
-                    <h4 className="text-[10px] text-green-500 font-bold uppercase tracking-widest flex items-center gap-2">
-                        <Home size={12}/> Safehouse Visualizer
-                    </h4>
-                </div>
-                <div className="flex-1 relative">
-                     <HackerRoom achievements={player.achievements} scamsCompleted={player.scamsCompleted} />
-                </div>
+            <motion.div variants={itemVariants} className="md:col-span-5 relative overflow-hidden flex flex-col group">
+                 {/* Render HackerRoom directly without extra styling wrappers to avoid double borders */}
+                 <HackerRoom achievements={player.achievements} scamsCompleted={player.scamsCompleted} />
             </motion.div>
 
             {/* COL 3: ACHIEVEMENTS */}

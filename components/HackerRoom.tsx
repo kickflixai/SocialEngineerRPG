@@ -28,7 +28,7 @@ const HackerRoom: React.FC<Props> = ({ achievements, scamsCompleted }) => {
   const hasGlobalMap = achievements.includes('ach_bec');
 
   return (
-    <div className="w-full h-full bg-zinc-900/80 border border-zinc-800 rounded-lg relative overflow-hidden group perspective-1000">
+    <div className="w-full h-full bg-zinc-900/80 relative overflow-hidden group perspective-1000">
       {/* BACKGROUND GRID (Walls) */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] opacity-30"></div>
       
