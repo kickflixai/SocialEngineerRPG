@@ -25,6 +25,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   const [showAbortConfirm, setShowAbortConfirm] = useState(false);
   const [intelExpanded, setIntelExpanded] = useState(true);
   const [mobileStatsExpanded, setMobileStatsExpanded] = useState(false); 
+  const [isExiting, setIsExiting] = useState(false);
   
   // Hint System
   const [hints, setHints] = useState<string[]>([]);
@@ -204,6 +205,9 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                 };
                 // Update parent
                 onUpdateScam(updatedScam);
+
+                // FIX: Force update log to match UI
+                setLastThought(`TARGET YIELDED DATA. "${nextActiveObjective.description.toUpperCase()}" VERIFIED.`);
              }
         }
 
@@ -492,10 +496,15 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                             <p className="text-green-400 font-mono uppercase tracking-widest text-sm md:text-base">Funds Transferred Successfully</p>
                         </div>
                         <button 
-                            onClick={() => onScamEnd('success')}
-                            className="w-full py-4 bg-green-600 hover:bg-green-500 text-black font-bold rounded-xl shadow-[0_0_30px_rgba(34,197,94,0.3)] hover:scale-[1.02] transition-all font-mono text-lg flex items-center justify-center gap-2"
+                            onClick={() => {
+                                if (isExiting) return;
+                                setIsExiting(true);
+                                onScamEnd('success');
+                            }}
+                            disabled={isExiting}
+                            className={`w-full py-4 rounded-xl shadow-[0_0_30px_rgba(34,197,94,0.3)] transition-all font-mono text-lg flex items-center justify-center gap-2 ${isExiting ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-500 text-black font-bold hover:scale-[1.02]'}`}
                         >
-                             SECURE FUNDS & EXIT <ArrowRight size={20} />
+                             {isExiting ? 'SECURING FUNDS...' : 'SECURE FUNDS & EXIT'} <ArrowRight size={20} />
                         </button>
                     </div>
                 </motion.div>
@@ -509,10 +518,15 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                             <p className="text-red-400 font-mono uppercase tracking-widest text-sm md:text-base">Target Alerted Authorities</p>
                         </div>
                         <button 
-                            onClick={() => onScamEnd('police')}
-                            className="w-full py-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl shadow-[0_0_30px_rgba(239,68,68,0.3)] hover:scale-[1.02] transition-all font-mono text-lg flex items-center justify-center gap-2"
+                            onClick={() => {
+                                if (isExiting) return;
+                                setIsExiting(true);
+                                onScamEnd('police');
+                            }}
+                            disabled={isExiting}
+                            className={`w-full py-4 rounded-xl shadow-[0_0_30px_rgba(239,68,68,0.3)] transition-all font-mono text-lg flex items-center justify-center gap-2 ${isExiting ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-red-600 hover:bg-red-500 text-white font-bold hover:scale-[1.02]'}`}
                         >
-                             EMERGENCY DISCONNECT <Power size={20} />
+                             {isExiting ? 'DISCONNECTING...' : 'EMERGENCY DISCONNECT'} <Power size={20} />
                         </button>
                     </div>
                 </motion.div>

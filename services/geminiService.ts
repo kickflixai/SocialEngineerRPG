@@ -130,9 +130,9 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
 
     // Tailored prompts based on difficulty to ensure personality matches mechanics
     const difficultyPrompts = {
-        easy: "Target is an elderly senior citizen (70-95 years old). Personality: Trusting, polite, perhaps slightly confused by modern complexity but eager to fix problems. Resistance Style: 'Apologetic confusion', 'Wants to verify but doesn't know how', 'Slow to understand'.",
-        medium: "Target is a working professional (30-50 years old). Personality: Busy, transactional, moderately skeptical. Resistance Style: 'Asks for verification', 'Too busy to talk', 'Professional skepticism'.",
-        hard: "Target is a C-Level Executive or High Net Worth Individual. Personality: Arrogant, paranoid, ruthless, highly intelligent. Resistance Style: 'Legal threats', 'Aggressive counter-interrogation', 'Demands immediate proof', 'Mocking intelligence'."
+        easy: "Target is an elderly senior citizen (70-95 years old). Personality: Trusting but confused, slightly hesitant about technology. Resistance Style: 'Apologetic confusion', 'Asks clarification questions', 'Needs reassurance'.",
+        medium: "Target is a working professional (30-50 years old). Personality: Busy, efficient, reasonable but cautious. Resistance Style: 'Asks for clarification', 'Checks details', 'Wants to resolve quickly'.",
+        hard: "Target is a C-Level Executive or High Net Worth Individual. Personality: Impatient, authoritative, risk-averse. Resistance Style: 'Demands efficiency', 'Questions authority', 'Protective of assets'."
     };
 
     // FORCE 50/50 Gender Split in prompt logic
@@ -283,9 +283,9 @@ export const getVictimResponse = async (
             - DO NOT HALLUCINATE COMPLETION. Only return TRUE if the text actually contains the surrendered info.
             
             BEHAVIOR RULES:
-            - **EASY**: Trusting. If they ask nicely or use fear, give the info.
-            - **MEDIUM**: Skeptical. Need a reason.
-            - **HARD**: Hostile. Require specific proof or doxxing.
+            - **EASY**: Elderly but cautious. Do not give sensitive info immediately if the request is abrupt or robotic. Reward creative, personal stories with compliance. Reject generic scripts.
+            - **MEDIUM**: Cautious but cooperative if the story makes sense. Willing to comply to avoid trouble, but hates wasting time.
+            - **HARD**: Strict and impatient. Responds well to confidence and authority. Will comply if they feel a threat to their assets or legal standing, but will shut down obvious weak attempts.
             
             Return JSON:
             {
@@ -338,20 +338,21 @@ export const arbitrateChat = async (
         const difficultyInstructions = {
             easy: `
                 MODE: EASY (Target is Vulnerable Senior).
-                - TRUST GAIN: HIGH (x1.2). They are willing to listen if you are polite.
-                - SUSPICION GAIN: MODERATE (x0.8). They overlook small technical errors or strange numbers, BUT if you ask for money/gift cards IMMEDIATELY without story setup, they will still get suspicious.
+                - RESISTANCE: 20% Higher than baseline.
+                - TRUST GAIN: HIGH (x1.2) for creative/personal approaches. LOWER (x0.8) for generic/robotic scripts.
+                - SUSPICION GAIN: MODERATE (x0.8). They overlook small errors but are wary of "textbook" demands without setup.
                 - LOGIC CHECK: Lenient on technical details, Strict on "Rudeness".
             `,
             medium: `
                 MODE: MEDIUM (Target is Business Owner).
-                - TRUST GAIN: NORMAL (x1.0). Requires logic and professional tone.
-                - SUSPICION GAIN: NORMAL (x1.0). Skeptical of big promises.
+                - TRUST GAIN: NORMAL (x1.1). Open to professional reasoning.
+                - SUSPICION GAIN: SLIGHTLY LOW (x0.9). Will overlook minor slip-ups if tone is professional.
             `,
             hard: `
                 MODE: HARD (Target is Paranoid Executive).
-                - TRUST GAIN: LOW (x0.5). Almost impossible without specific Doxxing Intel.
-                - SUSPICION GAIN: HIGH (x1.5). One wrong word ends the call.
-                - They are looking for a reason to bust you.
+                - TRUST GAIN: MODERATE (x0.8). Difficult but possible with strong authority.
+                - SUSPICION GAIN: HIGH (x1.2). Impatient with time-wasters, but won't hang up immediately unless insulted.
+                - They will fold if the threat feels real.
             `
         };
 
