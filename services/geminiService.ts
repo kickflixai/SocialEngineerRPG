@@ -324,7 +324,9 @@ export const getVictimResponse = async (
             1. Reply to the message in character. USE YOUR GENERATED SPEECH STYLE.
             2. KEEP RESPONSES SHORT. MAX 2-3 SENTENCES. Do not monologue. Be concise.
             3. If you are "Technologically Illiterate", act like it. If you are "Aggressive", be aggressive.
-            4. SYSTEM MESSAGES: If you see a message from 'system', REACT TO IT realistically.
+            4. SYSTEM MESSAGES: Messages starting with [SYSTEM ALERT] are physical events in your environment (e.g. lights flickering, printer noise). 
+               - You MUST react to these immediately and emotionally.
+               - If the player explains these events (e.g. "It's a ghost" or "Security check"), and you are gullible or superstitious (based on your FLAVOR), BELIEVE THEM.
             
             GAME OVER CONDITIONS (FAIL STATE):
             - If you feel extremely threatened, scared, or angry, you should HANG UP or CALL THE POLICE.
@@ -350,10 +352,14 @@ export const getVictimResponse = async (
             }
         `;
 
-        const chatHistory = history.map(h => ({
-            role: h.sender === 'player' ? 'user' : 'model', 
-            parts: [{ text: h.sender === 'system' ? `[SYSTEM ALERT: ${h.text}]` : h.text }]
-        }));
+        // Map history correctly: 'system' messages are external events (USER role), not things the victim (MODEL) said.
+        const chatHistory = history.map(h => {
+            const isSystem = h.sender === 'system';
+            // Player and System are both 'user' inputs to the Victim AI. Victim is 'model'.
+            const role = (h.sender === 'player' || isSystem) ? 'user' : 'model';
+            const text = isSystem ? `[SYSTEM ALERT: ${h.text}]` : h.text;
+            return { role, parts: [{ text }] };
+        });
 
         const chat = ai.chats.create({
             model: 'gemini-flash-lite-latest',
@@ -365,7 +371,8 @@ export const getVictimResponse = async (
         });
 
         const lastMsgObj = history[history.length - 1];
-        const lastMsgText = lastMsgObj.sender === 'system' ? `[SYSTEM ALERT: ${lastMsgObj.text}]` : lastMsgObj.text;
+        const isSystem = lastMsgObj.sender === 'system';
+        const lastMsgText = isSystem ? `[SYSTEM ALERT: ${lastMsgObj.text}]` : lastMsgObj.text;
 
         const result = await retryOperation<GenerateContentResponse>(() => chat.sendMessage({ message: lastMsgText }));
         
@@ -389,7 +396,8 @@ export const arbitrateChat = async (
     currentSuspicion: number,
     scamCategory: string, 
     activeObjective: ScamObjective,
-    hasCompletedFinal: boolean
+    hasCompletedFinal: boolean,
+    history: ChatMessage[] // Added history to check for synergy
 ): Promise<ArbiterResponse> => {
     try {
         const ai = getClient();
@@ -415,6 +423,10 @@ export const arbitrateChat = async (
             `
         };
 
+        // Construct context from recent history to detect Hack Synergy
+        const recentHistory = history.slice(-5); // Look at last 5 messages
+        const historyText = recentHistory.map(m => `[${m.sender.toUpperCase()}]: ${m.text}`).join('\n');
+
         const prompt = `
             Act as the 'Game Master' engine for a social engineering simulation.
             
@@ -424,7 +436,9 @@ export const arbitrateChat = async (
             Scam Strategy: ${scamCategory}.
             
             CURRENT ACTIVE OBJECTIVE: "${activeObjective.description}" (Step ${activeObjective.order}/3)
-            Player's Message: "${lastPlayerMessage}".
+            
+            RECENT CONVERSATION LOG:
+            ${historyText}
             
             Current Trust: ${currentTrust} / 100.
             Current Suspicion: ${currentSuspicion} / 100.
@@ -436,10 +450,16 @@ export const arbitrateChat = async (
             2. Determine SUSPICION increase (MUST be >= 0).
             3. Determine Creativity Score (0 to 10).
             
+            HACK SYNERGY CHECK (CRITICAL):
+            - Look at the RECENT CONVERSATION LOG.
+            - Did a [SYSTEM] event (Hack) occur recently (e.g. lights flickering, printer noise, fake notifications)?
+            - Does the Player's message USE that physical event to support their lie? (e.g. "The lights flickered because the secure connection is active" or "That noise is the ghost").
+            - IF YES: This is 'Creative Hacking'. Reward LARGE TRUST BONUS (+20) and MAX CREATIVITY.
+            
             MECHANICS:
             - **TRUST**: Increase if logical, authoritative, or plays into the victim's specific ARCHETYPE.
-            - **SUSPICION**: ONLY increase if the player threatens, contradicts themselves, or uses an obvious script. Weird roleplay (e.g. "I am eating lunch") is NOT suspicious.
-            - **CREATIVITY**: Reward specific jargon or made-up codes (e.g. "Error 404-B").
+            - **SUSPICION**: ONLY increase if the player threatens, contradicts themselves, or uses an obvious script. Weird roleplay is NOT suspicious if it fits the context.
+            - **CREATIVITY**: Reward specific jargon, made-up codes, or creative use of hacks.
             
             CRITICAL OBJECTIVE VALIDATION RULES:
             - 'objectiveComplete' is TRUE ONLY if the VICTIM has explicitly stated/revealed the requested info in the previous messages.
@@ -450,7 +470,7 @@ export const arbitrateChat = async (
                 "suspicionDelta": number (Integer >= 0),
                 "creativityScore": number (0-10),
                 "objectiveComplete": boolean,
-                "internalThought": "string (Short reasoning)",
+                "internalThought": "string (Short reasoning, mention if Hack Synergy was used)",
                 "scamStatus": "continue" | "success" | "failed" | "police_called"
             }
         `;

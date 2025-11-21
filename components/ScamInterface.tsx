@@ -236,7 +236,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             scam.suspicion, 
             scam.category, 
             activeObjective, 
-            allCompleted
+            allCompleted,
+            newHistory // Pass the full history (including the new message) for context
         );
         
         setLastThought(analysis.internalThought);
@@ -578,23 +579,22 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
            {/* TERMINAL LOG (Expanded to fill available space) */}
            <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl flex flex-col relative overflow-hidden shadow-xl flex-1 min-h-[12rem]">
                 <div className="p-2 border-b border-zinc-800 bg-black/40 flex justify-between items-center">
-                    <p className="text-green-600 uppercase font-bold text-[10px] flex items-center gap-2 tracking-widest"><Terminal size={12}/> SYS_LOG</p>
+                    <p className="text-green-600 uppercase font-bold text-[10px] flex items-center gap-2 tracking-widest"><Terminal size={12} className="text-green-500" /> SYS_LOG</p>
                     <Wifi size={12} className={processing ? "animate-pulse text-green-500" : "text-zinc-600"}/>
                 </div>
-                <div className="flex-1 p-2 font-mono text-[10px] overflow-y-auto custom-scrollbar">
-                     {processing ? (
-                        <div className="flex flex-col gap-1 text-green-500/50 h-full justify-end">
+                <div className="flex-1 p-2 font-mono text-[10px] overflow-y-auto custom-scrollbar flex flex-col">
+                     <div className="flex flex-col justify-start gap-2">
+                        <div className="text-zinc-500">&gt;&gt; CONNECTION ESTABLISHED</div>
+                         {lastThought && (
+                            <div className="text-green-400 typing-effect leading-tight">
+                                <span className="text-zinc-500 mr-2">&gt;&gt;</span>{lastThought}
+                            </div>
+                        )}
+                     </div>
+                     {processing && (
+                        <div className="flex flex-col gap-1 text-green-500/50 justify-start mt-2">
                              <div className="animate-pulse">&gt;&gt; ANALYZING INPUT VECTOR...</div>
                              <div className="animate-pulse delay-75">&gt;&gt; CALCULATING PROBABILITY...</div>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col h-full justify-end">
-                            <div className="text-zinc-500 mb-1">&gt;&gt; CONNECTION ESTABLISHED</div>
-                             {lastThought && (
-                                <div className="text-green-400 typing-effect leading-tight">
-                                    <span className="text-zinc-500 mr-2">&gt;&gt;</span>{lastThought}
-                                </div>
-                            )}
                         </div>
                     )}
                 </div>

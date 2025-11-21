@@ -588,7 +588,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     id: 'burner_phone',
     name: 'Burner Phone',
     description: 'Switch devices to confuse the trail. Reduces current Threat Level by 20.',
-    cost: 500,
+    cost: 1000,
     effect: 'reduce_threat',
     icon: 'Smartphone',
     usageContext: 'dashboard'
@@ -606,7 +606,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     id: 'grease_palm',
     name: 'Police Bribe',
     description: 'Pay off a local precinct. Reduces current Threat Level by 50.',
-    cost: 1200,
+    cost: 2000,
     effect: 'reduce_threat_major',
     icon: 'Briefcase',
     usageContext: 'dashboard'
@@ -624,7 +624,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     id: 'cleaner',
     name: 'The Cleaner',
     description: 'Wipe your entire digital footprint. Resets Threat Level to 0.',
-    cost: 5000,
+    cost: 3000,
     effect: 'reset_threat',
     icon: 'Trash2',
     usageContext: 'dashboard'
@@ -633,7 +633,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     id: 'ransomware',
     name: 'Ransomware Kit',
     description: 'Force success on current objective, but raises Suspicion +30.',
-    cost: 2000,
+    cost: 5000,
     effect: 'force_objective',
     icon: 'Lock',
     usageContext: 'scam'
