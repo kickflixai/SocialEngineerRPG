@@ -1,9 +1,15 @@
 
+import { HACKING_MUSIC_URL } from '../constants';
+
 class AudioService {
   private ctx: AudioContext | null = null;
   private bgmNodes: { osc1: OscillatorNode, osc2: OscillatorNode, gain: GainNode } | null = null;
   private hackingNodes: AudioNode[] = [];
   private scanNodes: AudioNode[] = [];
+  
+  // Hacking Music - External File
+  private hackingAudio: HTMLAudioElement | null = null;
+
   private isMuted: boolean = false;
   private bgmStarted: boolean = false;
   
@@ -25,6 +31,10 @@ class AudioService {
     if (this.ctx) {
         if (mute) this.ctx.suspend();
         else this.ctx.resume();
+    }
+    // Handle HTML5 Audio Element
+    if (this.hackingAudio) {
+        this.hackingAudio.muted = mute;
     }
   }
 
@@ -56,6 +66,18 @@ class AudioService {
   }
 
   public startHackingTheme() {
+      // If external URL is provided in constants, play that instead
+      if (HACKING_MUSIC_URL) {
+          if (this.hackingAudio) return; // Already playing or initialized
+          this.hackingAudio = new Audio(HACKING_MUSIC_URL);
+          this.hackingAudio.loop = true;
+          this.hackingAudio.volume = 0.3; 
+          this.hackingAudio.muted = this.isMuted;
+          this.hackingAudio.play().catch(e => console.error("External audio play failed:", e));
+          return;
+      }
+
+      // Fallback to Generative Synth
       if (this.hackingNodes.length > 0 || this.isMuted) return;
       this.init();
       if (!this.ctx) return;
@@ -112,6 +134,14 @@ class AudioService {
   }
 
   public stopHackingTheme() {
+      // Stop external audio
+      if (this.hackingAudio) {
+          this.hackingAudio.pause();
+          this.hackingAudio.currentTime = 0;
+          this.hackingAudio = null;
+      }
+
+      // Stop generative synth
       if (this.hackingInterval) clearTimeout(this.hackingInterval);
       this.hackingNodes.forEach(node => {
           if (node instanceof OscillatorNode) node.stop();
@@ -126,39 +156,38 @@ class AudioService {
       if (!this.ctx) return;
 
       const masterGain = this.ctx.createGain();
-      masterGain.gain.value = 0.01; 
+      masterGain.gain.value = 0.05; // Increased volume for scan
       masterGain.connect(this.ctx.destination);
 
-      // Play a slow, repeating arpeggio (E Minor 9: E - G - B - F#)
-      const notes = [329.63, 392.00, 493.88, 739.99]; 
-      let noteIndex = 0;
-
+      // New Sound: Rapid Data Stream Processing (Square wave blips)
       const playScanNote = () => {
           if (!this.ctx) return;
           const osc = this.ctx.createOscillator();
           const oscGain = this.ctx.createGain();
           
-          osc.type = 'sine';
-          osc.frequency.value = notes[noteIndex];
-          noteIndex = (noteIndex + 1) % notes.length;
+          osc.type = 'square'; // Digital sound
+          
+          // Random high frequency to sound like data calculation
+          osc.frequency.value = 800 + Math.random() * 1000;
 
           const now = this.ctx.currentTime;
           oscGain.gain.setValueAtTime(0, now);
-          oscGain.gain.linearRampToValueAtTime(0.3, now + 0.1);
-          oscGain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+          oscGain.gain.linearRampToValueAtTime(0.1, now + 0.01);
+          oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
 
           osc.connect(oscGain);
           oscGain.connect(masterGain);
 
           osc.start();
-          osc.stop(now + 1.6);
+          osc.stop(now + 0.1);
       };
 
       playScanNote();
-      const interval = window.setInterval(playScanNote, 800); // Slow pulse
+      // Fast interval for rapid data sound
+      const interval = window.setInterval(playScanNote, 100); 
       this.scanInterval = interval;
 
-      this.scanNodes = [masterGain]; // Only tracking master to disconnect
+      this.scanNodes = [masterGain]; 
   }
 
   public stopScanLoop() {
