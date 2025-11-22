@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective, VictimTraits } from "../types";
 import { OCCUPATIONS, QUIRKS, MALE_FIRST_NAMES, FEMALE_FIRST_NAMES, LAST_NAMES, MALE_FLAVORS, FEMALE_FLAVORS, NEUTRAL_FLAVORS } from "../constants";
@@ -537,13 +538,18 @@ export const arbitrateChat = async (
             Current Suspicion: ${currentSuspicion} / 100.
             
             PLAYER SKILLS:
-            - Cold Reading: ${hasColdReading}
+            - Cold Reading: ${hasColdReading} (If TRUE: Internal Thought must be deeper/psychological)
             - Authority Voice: ${hasAuthVoice}
             
             TASK:
             1. Trust Change (Hard to earn).
             2. Suspicion Change (>= 0).
             3. Creativity Score (0-10).
+            4. Internal Thought: Analytical commentary on the player's *last move*.
+               - STRICTLY 3rd person (e.g. "The player's appeal to authority worked...").
+               - DO NOT address the user ("You should...").
+               - DO NOT suggest future actions.
+               - Analyze the psychological impact on the victim.
             
             RULES:
             - If Suspicion increases, Trust MUST decrease.
