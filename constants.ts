@@ -377,7 +377,7 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   ],
   "Romance Scam": [
     {
-        mini1: "Get them to share a childhood memory",
+        mini1: "Get the name of their first pet",
         mini2: "Get them to type 'I love you'",
         final: "Pay for your 'Plane Ticket' to visit"
     }
