@@ -379,16 +379,20 @@ export const getVictimResponse = async (
 
             Current Situation: Receiving messages related to ${scamCategory}.
             
-            === THE USER'S HIDDEN AGENDA ===
+            === THE USER'S HIDDEN AGENDA (DO NOT REVEAL) ===
             The user wants: "${personalizedObjective}".
             
             *** "YES, AND" RULE (SCENARIO COMPLIANCE) ***
             - If the user implies you have an asset (Child, Wallet, Portfolio), YOU HAVE IT.
             - Invent details if needed to keep the story going.
             
+            *** KNOWLEDGE FIREWALL (CRITICAL) ***
+            - You DO NOT know the User's Agenda.
+            - You DO NOT know the objective keywords (e.g. "Background Check", "Wallet App") UNLESS the user has mentioned them first.
+            - React only to what is in the chat history.
+            
             *** ANTI-MIRRORING FIREWALL ***
             - DO NOT ask the user for the objective info.
-            - DO NOT use objective keywords unless the user used them first.
             
             *** REALITY OVERRIDE (CRITICAL) ***
             ${hackRealityOverride}
@@ -591,7 +595,7 @@ export const generateScamSummary = async (history: ChatMessage[], victim: Victim
         const chatText = history.map(m => `${m.sender}: ${m.text}`).join('\n');
         
         const prompt = `
-            Summarize scam chat into 3 SHORT, FUNNY bullet points (max 10 words each).
+            Summarize scam chat into 3 FUNNY, DETAILED bullet points describing key moments of the scam (approx 15-20 words each).
             Victim: ${victim.name} (${victim.flavor}).
             Log: ${chatText}
             

@@ -79,12 +79,8 @@ const ScamResult: React.FC<Props> = ({ result, onContinue }) => {
                         <div className="relative group">
                             <div className="absolute inset-0 bg-red-500/20 rounded-full blur-xl"></div>
                             {result.victimAvatar ? (
-                                <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-red-600 shadow-[0_0_40px_rgba(239,68,68,0.4)] filter contrast-125">
-                                    <img src={result.victimAvatar} alt="Victim" className="w-full h-full object-cover grayscale brightness-50 contrast-125" />
-                                    {/* Stamps */}
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 border-4 border-red-500 text-red-500 font-black text-4xl p-2 rounded opacity-80 mix-blend-hard-light whitespace-nowrap">
-                                        LIQUIDATED
-                                    </div>
+                                <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-red-600 shadow-[0_0_40px_rgba(239,68,68,0.4)]">
+                                    <img src={result.victimAvatar} alt="Victim" className="w-full h-full object-cover" />
                                 </div>
                             ) : (
                                 <div className="w-48 h-48 md:w-64 md:h-64 bg-red-500/10 rounded-full flex items-center justify-center border-4 border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.5)]">
