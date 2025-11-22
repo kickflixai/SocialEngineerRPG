@@ -384,6 +384,18 @@ export const getVictimResponse = async (
             }
         }
 
+        // DETERMINE COMPLIANCE LEVEL BASED ON TRUST
+        let complianceLevel = "HOSTILE";
+        if (currentTrust >= 90) {
+            complianceLevel = "BRAINWASHED (Total Obedience)";
+        } else if (currentTrust >= 70) {
+            complianceLevel = "TRUSTING (Willing to help, minor questions)";
+        } else if (currentTrust >= 40) {
+            complianceLevel = "HESITANT (Needs convincing/logic, will deflect)";
+        } else {
+            complianceLevel = "SKEPTICAL (Refuse information, demand proof, act defensive)";
+        }
+
         const context = `
             You are roleplaying as ${victim.name}, a ${victim.age}-year-old ${victim.gender} ${victim.occupation}.
             
@@ -419,18 +431,23 @@ export const getVictimResponse = async (
             
             *** REALITY OVERRIDE (CRITICAL) ***
             ${hackRealityOverride}
-            If a SYSTEM OVERRIDE is present above, it is an absolute fact in the simulation. You cannot deny it. You must react to it as truth.
+            If a SYSTEM OVERRIDE is present above, it is an absolute fact in the simulation. You cannot deny it. You must react to it as truth, regardless of trust.
             
-            CURRENT TRUST: ${currentTrust}%
-            - 90%+: Brainwashed. Believe everything.
-            - <30%: Skeptical.
+            *** TRUST COMPLIANCE PROTOCOL (CURRENT TRUST: ${currentTrust}%) ***
+            Current State: ${complianceLevel}
+            
+            RULES FOR INFORMATION DISCLOSURE (User's Hidden Agenda):
+            - If State is SKEPTICAL (<40%): REFUSE to give the requested info/action. Ask who they are. Demand proof. Be hostile.
+            - If State is HESITANT (40-69%): Deflect or ask "Why do you need this?". Do NOT give the info yet unless a Hack Override forces you.
+            - If State is TRUSTING (70-89%): You are willing, but might ask "Is this safe?". Give the info if the user asks politely.
+            - If State is BRAINWASHED (90%+): Give the info immediately and enthusiastically.
             
             ${hasAuthVoice}
             
             INSTRUCTIONS:
             1. Respond in character using your TRAITS, FLAVOR, and AGE.
             2. Keep it realistic. Short (2-3 sentences).
-            3. If trust is high OR if a Hack Override validates the request, provide the info requested in the Hidden Agenda.
+            3. ADHERE TO THE TRUST COMPLIANCE PROTOCOL ABOVE. Do not be too easy if trust is low.
             
             Return JSON:
             {
