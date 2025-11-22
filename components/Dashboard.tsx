@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { PlayerState, GameView } from '../types';
-import { ShieldAlert, ShoppingBag, BrainCircuit, Package, Power, Zap, Crosshair, MapPin, Activity, Trophy, Award, Lock, History, UserX, BarChart3 } from 'lucide-react';
+import { ShieldAlert, ShoppingBag, BrainCircuit, Package, Power, Zap, Crosshair, MapPin, Activity, Trophy, Award, Lock, History, UserX, BarChart3, User } from 'lucide-react';
 import { ACHIEVEMENTS } from '../constants';
 import { motion } from 'framer-motion';
 
@@ -285,8 +285,12 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
                         <div className="space-y-2">
                             {player.history.map(item => (
                                 <div key={item.id} className="bg-black/40 border border-zinc-800 rounded p-2 flex gap-3 items-center group hover:border-green-500/30 transition-colors">
-                                     <div className={`w-8 h-8 rounded border flex items-center justify-center shrink-0 overflow-hidden ${item.outcome === 'success' ? 'border-green-900' : 'border-red-900'}`}>
-                                         <img src={item.victimAvatar} alt="" className="w-full h-full object-cover grayscale" />
+                                     <div className={`w-8 h-8 rounded border flex items-center justify-center shrink-0 overflow-hidden ${item.outcome === 'success' ? 'border-green-900' : 'border-red-900'} ${!item.victimAvatar ? 'bg-zinc-800' : ''}`}>
+                                         {item.victimAvatar ? (
+                                            <img src={item.victimAvatar} alt="" className="w-full h-full object-cover grayscale" />
+                                         ) : (
+                                            <User size={14} className={item.outcome === 'success' ? 'text-green-800' : 'text-red-800'}/>
+                                         )}
                                      </div>
                                      <div className="flex-1 min-w-0">
                                          <div className="flex justify-between items-baseline">

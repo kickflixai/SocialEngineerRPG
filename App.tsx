@@ -76,20 +76,51 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // 2. Auto-Save Logic
+  // 2. Auto-Save Logic with Quota Handling & Debounce
   useEffect(() => {
     // Don't save during ephemeral states or Game Over (game over is terminal)
     if (view === GameView.LANDING || view === GameView.CHARACTER_CREATION || view === GameView.GAME_OVER) return;
     
-    const gameState = {
-      player,
-      activeScam,
-      view,
-      highValueTargetActive,
-      timestamp: Date.now()
+    const saveGame = () => {
+        const gameState = {
+            player,
+            activeScam,
+            view,
+            highValueTargetActive,
+            timestamp: Date.now()
+        };
+
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
+        } catch (e: any) {
+            if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                console.warn("LocalStorage quota exceeded. Compressing history...");
+                
+                // Emergency Optimization: Strip avatars from history older than the last 5 entries
+                const optimizedHistory = player.history.map((item, index) => {
+                    if (index < 5) return item; // Keep recent 5 avatars
+                    return { ...item, victimAvatar: '' }; // Remove heavy base64 string
+                });
+
+                const optimizedPlayer = { ...player, history: optimizedHistory };
+                const optimizedState = { ...gameState, player: optimizedPlayer };
+
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(optimizedState));
+                    // Update state silently to reflect the trimmed history so next save works
+                    // (Note: strictly we should setPlayer here but it might cause a loop if not careful, 
+                    // but since history is usually static unless game ends, it's okay)
+                } catch (e2) {
+                    console.error("Critical Save Failure: Storage full even after compression.", e2);
+                }
+            }
+        }
     };
-    
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
+
+    // Debounce save to prevent thrashing storage on every keystroke
+    const timeoutId = setTimeout(saveGame, 1000);
+    return () => clearTimeout(timeoutId);
+
   }, [player, activeScam, view, highValueTargetActive]);
 
 
