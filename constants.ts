@@ -47,6 +47,14 @@ export const HACK_ABILITIES: HackAbility[] = [
     
     // --- TIER 2: UTILITY ---
     {
+        id: 'time_skip',
+        name: 'Time Skip',
+        description: 'Advance simulation clock by 24h. Resolves "waiting" delays.',
+        cost: 50,
+        icon: 'Clock',
+        systemMessage: '>> SYSTEM CLOCK OVERRIDE. TEMPORAL JUMP: +24 HOURS. SCHEDULED EVENTS TRIGGERED.'
+    },
+    {
         id: 'delay_packet',
         name: 'Lag Switch',
         description: 'Simulate connection issues to explain delays.',

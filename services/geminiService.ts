@@ -399,6 +399,8 @@ export const getVictimResponse = async (
                 hackRealityOverride = "SYSTEM OVERRIDE: You just received a document that looks like a valid receipt. You assume the transaction is real.";
             } else if (txt.includes("IOT") || txt.includes("PRINTER") || txt.includes("LIGHTS")) {
                 hackRealityOverride = "SYSTEM OVERRIDE: Your physical environment just malfunctioned (lights flickering, printer going crazy). You are scared and confused. Mention this.";
+            } else if (txt.includes("SYSTEM CLOCK OVERRIDE") || txt.includes("TEMPORAL JUMP")) {
+                hackRealityOverride = "SYSTEM OVERRIDE: A significant amount of time (24 hours) has just passed instantly. Any tasks you were delaying (going to bank, waiting for mail, waiting for call) are now happening OR have just happened. You are no longer waiting.";
             }
         }
 

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Zap, Code, Mail, Bell, Speaker, WifiOff, Shuffle, FileCheck, BadgeCheck, Search, Key, Printer, Lightbulb, MonitorX, AppWindow, Music, Disc, Thermometer, Ghost, MousePointer2, Video, Lock } from 'lucide-react';
+import { X, Zap, Code, Mail, Bell, Speaker, WifiOff, Shuffle, FileCheck, BadgeCheck, Search, Key, Printer, Lightbulb, MonitorX, AppWindow, Music, Disc, Thermometer, Ghost, MousePointer2, Video, Lock, Clock } from 'lucide-react';
 import { HackAbility } from '../types';
 
 interface Props {
@@ -40,6 +40,7 @@ const HackingTerminalModal: React.FC<Props> = ({ isOpen, onClose, abilities, soc
         case 'Ghost': return <Ghost size={20}/>;
         case 'MousePointer2': return <MousePointer2 size={20}/>;
         case 'Video': return <Video size={20}/>;
+        case 'Clock': return <Clock size={20}/>;
         default: return <Code size={20}/>;
     }
   };
