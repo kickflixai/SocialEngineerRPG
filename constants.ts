@@ -301,7 +301,7 @@ export const CLOTHING_STYLES = ['Business Suit', 'Hoodie & Jeans', 'Tactical Gea
 export const FACIAL_FEATURES = ['Clean Shaven', 'Full Beard', 'Scarred', 'Piercings', 'Heavy Makeup', 'Glasses', 'Tattooed', 'Weathered', 'Gold Teeth', 'Eye Patch'];
 export const ACCESSORIES = ['Headphones', 'Gold Chain', 'VR Headset', 'Sunglasses', 'Fedora', 'Medical Mask', 'Smart Watch', 'Cybernetic Implant (Fake)', 'None'];
 export const AGES = ['18-25', '26-35', '36-50', '50+'];
-export const SPEECH_STYLES_BY_AGE: Record<string, string> = {}; // Kept for TS compatibility, functionality moved to AI inference
+export const SPEECH_STYLES_BY_AGE: Record<string, string> = {}; 
 
 export const SCAM_CATEGORIES = [
   "Grandson in Trouble",
@@ -317,7 +317,10 @@ export const SCAM_CATEGORIES = [
   "Employment Mule Scam",
   "NFT Art Commission",
   "Apartment Rental",
-  "Subscription Refund"
+  "Subscription Refund",
+  "Influencer Brand Deal",
+  "Fake Scholarship",
+  "Lost Pet Return"
 ];
 
 interface ScamScenario {
@@ -326,18 +329,24 @@ interface ScamScenario {
     final: string;
 }
 
-// UPDATED SCENARIOS: Varied and Concrete Objectives
+// UPDATED SCENARIOS: Massive Variety Expansion & Concrete Verification
+// Each category now has 3 distinct paths to prevent repetition.
 export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   "Grandson in Trouble": [
     {
         mini1: "Get them to say your name (guess)",
         mini2: "Get them to promise not to tell your parents",
-        final: "Secure bail/medical payment details"
+        final: "Secure bail money via wire transfer"
     },
     {
         mini1: "Convince them you are in Mexico City",
         mini2: "Get them to ask to speak to your 'Lawyer'",
-        final: "Get agreement to send gift cards"
+        final: "Get agreement to send Gift Cards codes"
+    },
+    {
+        mini1: "Get them to confirm they are alone",
+        mini2: "Make them say 'I will help you'",
+        final: "Pay for 'Emergency Medical Surgery'"
     }
   ],
   "IRS Tax Audit": [
@@ -350,6 +359,11 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
         mini1: "Verify their mailing address",
         mini2: "Make them repeat the 'Case ID' back to you",
         final: "Purchase 'Federal Vouchers' (Gift Cards)"
+    },
+    {
+        mini1: "Get them to state their SSN (last 4 digits)",
+        mini2: "Get them to apologize for the 'error'",
+        final: "Wire transfer to 'US Treasury' (Fake Account)"
     }
   ],
   "Tech Support Virus": [
@@ -374,6 +388,16 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
         mini1: "Confirm their date of birth",
         mini2: "Confirm their email address",
         final: "Pay 'Customs Duty' fee via Bank Transfer"
+    },
+    {
+        mini1: "Get them to shout 'I Won!'",
+        mini2: "Get them to choose 'Lump Sum' payment",
+        final: "Pay the 'Processing Fee' via Western Union"
+    },
+    {
+        mini1: "Get them to name a car they want to buy",
+        mini2: "Confirm their home address for 'Check Delivery'",
+        final: "Pay 'State Tax' via Gift Cards"
     }
   ],
   "Crypto Investment Opportunity": [
@@ -386,6 +410,11 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
         mini1: "Get them to name a coin they own",
         mini2: "Get them to admit they lost money before",
         final: "Share their Private Seed Phrase"
+    },
+    {
+        mini1: "Get them to say 'I want financial freedom'",
+        mini2: "Convince them to join the 'VIP Telegram'",
+        final: "Connect wallet to 'dApp' (Malicious Link)"
     }
   ],
   "Romance Scam": [
@@ -410,6 +439,16 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
         mini1: "Get the name of their Accounting Manager",
         mini2: "Get the Invoice Number of last payment",
         final: "Change vendor bank account details"
+    },
+    {
+        mini1: "Get their direct work phone extension",
+        mini2: "Make them agree to 'keep this confidential'",
+        final: "Approve 'Urgent CEO Wire' transfer"
+    },
+    {
+        mini1: "Confirm the company's bank name",
+        mini2: "Get them to forward the 'Overdue Invoice'",
+        final: "Pay the 'Auditor' immediately"
     }
   ],
   "Kidnapping Hoax": [
@@ -417,6 +456,16 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
         mini1: "Confirm their child's name",
         mini2: "Make them promise not to call police",
         final: "Drop cash at the specific location"
+    },
+    {
+        mini1: "Get them to describe what their child was wearing",
+        mini2: "Make them say 'Please don't hurt them'",
+        final: "Wire ransom money immediately"
+    },
+    {
+        mini1: "Get them to verify their own phone number",
+        mini2: "Make them drive to a 'Safe Point'",
+        final: "Purchase untraceable Crypto for ransom"
     }
   ],
   "Charity Fraud": [
@@ -424,20 +473,50 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
         mini1: "Get them to say they support the cause",
         mini2: "Get their billing zip code",
         final: "Set up recurring credit card donation"
+    },
+    {
+        mini1: "Get them to name a relative they lost",
+        mini2: "Get them to agree to be a 'Gold Member'",
+        final: "Donate $500 to the 'Foundation'"
+    },
+    {
+        mini1: "Confirm they are a 'Registered Voter'",
+        mini2: "Get their email for the 'Newsletter'",
+        final: "Purchase a 'Charity Gala' ticket"
     }
   ],
   "Inheritance Advance Fee": [
     {
-        mini1: "Get a scan of their Passport ID",
+        mini1: "Get a photo of a Government ID (Passport/DL)",
         mini2: "Get their personal bank name",
         final: "Pay 'Legal Fees' to release funds"
+    },
+    {
+        mini1: "Confirm their father's middle name",
+        mini2: "Get them to sign the 'Non-Disclosure Agreement'",
+        final: "Pay the 'Bank Transfer Tax'"
+    },
+    {
+        mini1: "Get them to state their citizenship",
+        mini2: "Get them to say 'I accept the inheritance'",
+        final: "Pay the 'Notary Public' fee"
     }
   ],
   "Employment Mule Scam": [
     {
         mini1: "Confirm their current employment status",
-        mini2: "Get a photo of their Driver's License",
+        mini2: "Get a photo of a Government ID (DL or Passport)",
         final: "Purchase 'Office Equipment' from fake vendor"
+    },
+    {
+        mini1: "Get the name of their last boss",
+        mini2: "Get them to sign the 'Employment Contract'",
+        final: "Cash a fake check and return the difference"
+    },
+    {
+        mini1: "Confirm they have a home office",
+        mini2: "Get their Direct Deposit routing number",
+        final: "Pay for 'Software License' fees"
     }
   ],
   "NFT Art Commission": [
@@ -450,6 +529,11 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
         mini1: "Get the name of their portfolio website",
         mini2: "Get them to set up a 'MetaMask' wallet",
         final: "Authorize the 'smart contract' transaction"
+    },
+    {
+        mini1: "Get them to say 'WAGMI'",
+        mini2: "Convince them to download a 'Collab Tool'",
+        final: "Drain wallet via 'Validation' link"
     }
   ],
   "Apartment Rental": [
@@ -462,6 +546,11 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
         mini1: "Get them to list their current landlord's name",
         mini2: "Make them agree to a 'sight-unseen' lease",
         final: "Pay the 'Application Fee' via CashApp"
+    },
+    {
+        mini1: "Confirm they have no pets",
+        mini2: "Get a photo of their ID for 'Background Check'",
+        final: "Wire First Month's Rent to 'Owner'"
     }
   ],
   "Subscription Refund": [
@@ -469,6 +558,67 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
         mini1: "Confirm they use 'Amazon' or 'Norton'",
         mini2: "Get them to log into their bank account",
         final: "Send back the 'Over-refunded' amount"
+    },
+    {
+        mini1: "Get them to type the 'Refund Code' (run command)",
+        mini2: "Get them to open 'TeamViewer'",
+        final: "Buy Gift Cards to 'Return' the money"
+    },
+    {
+        mini1: "Confirm the last item they bought online",
+        mini2: "Get them to check their 'Spam Folder'",
+        final: "Approve the 'Correction Transaction'"
+    }
+  ],
+  "Influencer Brand Deal": [
+    {
+        mini1: "Get their social media handle",
+        mini2: "Get them to agree to 'Post a Story'",
+        final: "Pay for 'Shipping' of free product"
+    },
+    {
+        mini1: "Confirm their follower count",
+        mini2: "Get their clothing size for 'Merch'",
+        final: "Pay 'Agent Fee' for the contract"
+    },
+    {
+        mini1: "Get them to say 'I love your brand'",
+        mini2: "Get their shipping address",
+        final: "Pay 'Customs Duty' for the sample kit"
+    }
+  ],
+  "Fake Scholarship": [
+    {
+        mini1: "Confirm their GPA or grade level",
+        mini2: "Get them to write a 1-sentence 'Essay'",
+        final: "Pay 'Registration Fee' to claim grant"
+    },
+    {
+        mini1: "Get the name of their University/School",
+        mini2: "Confirm they have financial need",
+        final: "Pay 'Processing Tax' on the scholarship"
+    },
+    {
+        mini1: "Get them to state their major",
+        mini2: "Get a photo of their Student ID",
+        final: "Wire 'Disbursement Fee' to admin"
+    }
+  ],
+  "Lost Pet Return": [
+    {
+        mini1: "Get the name of their lost pet",
+        mini2: "Get them to describe the pet's collar",
+        final: "Pay for 'Pet Airline Crating' to return it"
+    },
+    {
+        mini1: "Confirm the date the pet went missing",
+        mini2: "Get them to cry or say 'Thank you'",
+        final: "Pay 'Vet Bill' for alleged injury"
+    },
+    {
+        mini1: "Get them to confirm their home address",
+        mini2: "Make them promise a 'Reward'",
+        final: "Send 'Gas Money' for delivery"
     }
   ]
 };

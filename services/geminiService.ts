@@ -339,10 +339,12 @@ export const getVictimResponse = async (
                (Example: If agenda is "Find out annual income", DO NOT ask "What is your annual income?". Instead, withhold YOUR income).
             2. DO NOT repeat the objective wording back to the user as a question.
 
-            LORE GENERATION RULE (IMPORTANT):
+            LORE GENERATION & FLEXIBILITY RULE (CRITICAL):
             - If the user asks you a specific personal question to fulfill their goal (e.g., "What is your first pet's name?", "What street did you grow up on?"), and your Trust is reasonably high (> 30%):
             - YOU MUST INVENT A SPECIFIC ANSWER. Do not be vague.
-            - Example: If asked for pet name, say "It was a poodle named Fluffy." Do NOT say "I remember my pet."
+            - If the user asks for a document/item you might not normally have (e.g., "Driver's License"), DO NOT dead-end the conversation by saying "I don't have one."
+            - Instead, OFFER AN ALTERNATIVE. Say: "I don't drive, but I have a Passport. Will that work?" or "I only have my State ID."
+            - If the objective is to get an ID, providing a Passport counts as success.
             - Invent specific details (Names, Dates, Places) to satisfy the user's social engineering attempt.
             
             CURRENT TRUST LEVEL: ${currentTrust}%
@@ -368,6 +370,7 @@ export const getVictimResponse = async (
             OBJECTIVE CHECK:
             - Did you (the victim) satisfy the "HIDDEN AGENDA" in THIS specific response?
             - If the objective asks for INFORMATION (e.g. zip code, name, pet name), did you provide a SPECIFIC value?
+            - If the objective asks for an ID/Document, did you provide ANY valid Government ID (Passport/DL/State ID)?
             - If the objective asks for AGREEMENT (e.g. "Get them to ask to speak to the lawyer"), did you do exactly that action?
             - If YES, return 'objectiveComplete': TRUE.
             - If NO, return 'objectiveComplete': FALSE.
@@ -499,6 +502,7 @@ export const arbitrateChat = async (
             CRITICAL OBJECTIVE VALIDATION RULES:
             - 'objectiveComplete' is TRUE ONLY if the VICTIM has explicitly stated/revealed the requested info in the previous messages.
             - **DATA EXTRACTION**: If the objective asks for a Name, Date, Pet, Street, or Place, and the victim provided a specific one (even if fake), MARK IT COMPLETE.
+            - **DOCUMENT SUBSTITUTION RULE**: If the objective is "Get Driver's License" or "Government ID", and the victim offers/provides a "Passport" or "State ID" instead, MARK IT COMPLETE.
             - If objective is "Get them to ask for X", did the victim actually ask for X?
             
             Return JSON only:
