@@ -274,6 +274,15 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             onScamEnd('police', newSuspicion >= 100 ? 'Suspicion threshold breached' : 'Target alerted authorities');
             return;
         }
+
+        // IMMEDIATE SUCCESS CHECK - DO NOT WAIT FOR VICTIM RESPONSE
+        const isAllDone = updatedObjectives.every(o => o.isCompleted);
+        if (isAllDone) {
+            audioManager.playSuccess();
+            setViewSuccessModal(true);
+            setProcessing(false);
+            return;
+        }
         
         const nextActiveObjective = updatedObjectives.find(o => !o.isCompleted) || updatedObjectives[updatedObjectives.length - 1];
         const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, nextActiveObjective, newTrust, player.skills);

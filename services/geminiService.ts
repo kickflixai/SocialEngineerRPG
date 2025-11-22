@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective, VictimTraits } from "../types";
 import { OCCUPATIONS, QUIRKS, MALE_FIRST_NAMES, FEMALE_FIRST_NAMES, LAST_NAMES, MALE_FLAVORS, FEMALE_FLAVORS, NEUTRAL_FLAVORS } from "../constants";
@@ -564,17 +565,24 @@ export const generateScamHint = async (
     }
 }
 
-export const generateScamSummary = async (history: ChatMessage[], victim: Victim): Promise<string[]> => {
+export const generateScamSummary = async (history: ChatMessage[], victim: Victim): Promise<{summary: string[], aftermath: string}> => {
     try {
         const ai = getClient();
         const chatText = history.map(m => `${m.sender}: ${m.text}`).join('\n');
         
         const prompt = `
-            Summarize scam chat into 3 SHORT, FUNNY bullet points.
+            Summarize scam chat into 3 SHORT, FUNNY bullet points (max 10 words each).
             Victim: ${victim.name} (${victim.flavor}).
             Log: ${chatText}
-            Requirements: Sarcastic. One sentence each. Based on actual events.
-            Return JSON array of strings.
+            
+            ALSO, generate a "Pathetic Aftermath" sentence describing their sad, ruined life after being scammed.
+            (e.g., "Now eats cat food in a bunker," "Wife left him for a yoga instructor," "Living in a cardboard box behind Wendy's")
+            
+            Return JSON:
+            {
+                "summary": ["string", "string", "string"],
+                "aftermath": "string"
+            }
         `;
 
         const response = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
@@ -583,8 +591,15 @@ export const generateScamSummary = async (history: ChatMessage[], victim: Victim
             config: { responseMimeType: 'application/json' }
         }));
         
-        return parseJSON(response.text || "[]") || ["Victim was easily manipulated", "Transfer complete", "No trace left"];
+        const parsed = parseJSON(response.text || "{}");
+        return {
+            summary: parsed?.summary || ["Target compromised", "Funds secured", "Trace scrubbed"],
+            aftermath: parsed?.aftermath || "They are now destitute and confused."
+        };
     } catch (e) {
-        return ["Operation successful", "Funds secured", "Target compromised"];
+        return {
+            summary: ["Operation successful", "Funds secured", "Target compromised"],
+            aftermath: "The target is financially ruined."
+        };
     }
 };

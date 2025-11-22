@@ -1,6 +1,6 @@
 
 import React, { useRef, useState } from 'react';
-import { CheckCircle2, ShieldAlert, Banknote, AlertTriangle, ArrowRight, Home, Share2, Quote, Loader2, Download } from 'lucide-react';
+import { CheckCircle2, ShieldAlert, Banknote, AlertTriangle, ArrowRight, Home, Share2, Quote, Loader2, Download, Smile } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
       victimAvatar?: string;
       victimFlavor?: string;
       summary?: string[];
+      victimAftermath?: string;
   };
   onContinue: () => void;
 }
@@ -64,11 +65,11 @@ const ScamResult: React.FC<Props> = ({ result, onContinue }) => {
 
         <div 
             ref={cardRef}
-            className={`max-w-5xl w-full bg-zinc-950 border-2 rounded-3xl overflow-hidden relative z-10 shadow-[0_0_100px_rgba(0,0,0,0.8)] flex flex-col md:flex-row ${isSuccess ? 'border-green-500 shadow-green-900/30' : 'border-red-500 shadow-red-900/30'}`}
+            className={`max-w-5xl w-full bg-zinc-950 border-2 rounded-3xl overflow-hidden relative z-10 shadow-[0_0_100px_rgba(0,0,0,0.8)] flex flex-col md:flex-row ${isSuccess ? 'border-red-500 shadow-red-900/30' : 'border-zinc-700 shadow-red-900/30'}`}
         >
             
             {/* LEFT SIDE: TITLE & STATS */}
-            <div className="p-8 md:p-12 w-full md:w-[45%] flex flex-col items-center justify-center text-center border-b md:border-b-0 md:border-r border-zinc-800 bg-zinc-900/20 relative">
+            <div className="p-6 md:p-10 w-full md:w-[45%] flex flex-col items-center justify-center text-center border-b md:border-b-0 md:border-r border-zinc-800 bg-zinc-900/20 relative">
                 {/* Background Pattern for Screenshot aesthetics */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.03)_0%,transparent_50%)] pointer-events-none"></div>
 
@@ -76,18 +77,22 @@ const ScamResult: React.FC<Props> = ({ result, onContinue }) => {
                 <div className="mb-6 relative">
                     {isSuccess ? (
                         <div className="relative group">
-                            <div className="absolute inset-0 bg-green-500/20 rounded-full blur-xl"></div>
+                            <div className="absolute inset-0 bg-red-500/20 rounded-full blur-xl"></div>
                             {result.victimAvatar ? (
-                                <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-green-500 shadow-[0_0_40px_rgba(34,197,94,0.4)]">
-                                    <img src={result.victimAvatar} alt="Victim" className="w-full h-full object-cover" />
+                                <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-red-600 shadow-[0_0_40px_rgba(239,68,68,0.4)] filter contrast-125">
+                                    <img src={result.victimAvatar} alt="Victim" className="w-full h-full object-cover grayscale brightness-50 contrast-125" />
+                                    {/* Stamps */}
+                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 border-4 border-red-500 text-red-500 font-black text-4xl p-2 rounded opacity-80 mix-blend-hard-light whitespace-nowrap">
+                                        LIQUIDATED
+                                    </div>
                                 </div>
                             ) : (
-                                <div className="w-48 h-48 md:w-64 md:h-64 bg-green-500/10 rounded-full flex items-center justify-center border-4 border-green-500 shadow-[0_0_30px_rgba(34,197,94,0.5)]">
-                                    <CheckCircle2 size={64} className="text-green-500"/>
+                                <div className="w-48 h-48 md:w-64 md:h-64 bg-red-500/10 rounded-full flex items-center justify-center border-4 border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.5)]">
+                                    <CheckCircle2 size={64} className="text-red-500"/>
                                 </div>
                             )}
                             {isSuccess && result.victimFlavor && (
-                                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-black border border-green-500 text-green-400 text-xs md:text-sm uppercase font-bold px-4 py-1.5 rounded-full whitespace-nowrap shadow-xl z-20">
+                                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-black border border-red-500 text-red-500 text-xs md:text-sm uppercase font-bold px-4 py-1.5 rounded-full whitespace-nowrap shadow-xl z-20">
                                     {result.victimFlavor}
                                 </div>
                             )}
@@ -99,10 +104,10 @@ const ScamResult: React.FC<Props> = ({ result, onContinue }) => {
                     )}
                 </div>
 
-                <h2 className={`text-4xl md:text-6xl font-black font-mono mb-2 tracking-tighter leading-none ${isSuccess ? 'text-white' : 'text-white'}`}>
-                    {isSuccess ? 'SUCCESS' : isPolice ? 'BUSTED' : 'FAILED'}
+                <h2 className={`text-4xl md:text-6xl font-black font-mono mb-2 tracking-tighter leading-none ${isSuccess ? 'text-red-500' : 'text-white'}`}>
+                    {isSuccess ? 'SCAMMED' : isPolice ? 'BUSTED' : 'FAILED'}
                 </h2>
-                <p className={`text-sm md:text-base font-mono uppercase tracking-widest mb-8 ${isSuccess ? 'text-green-500' : 'text-red-500'}`}>
+                <p className={`text-sm md:text-base font-mono uppercase tracking-widest mb-8 ${isSuccess ? 'text-zinc-500' : 'text-red-500'}`}>
                     {isSuccess ? result.victimName : result.reason || 'Connection Terminated'}
                 </p>
 
@@ -128,31 +133,42 @@ const ScamResult: React.FC<Props> = ({ result, onContinue }) => {
             </div>
 
             {/* RIGHT SIDE: SUMMARY (If success) or CONTINUE */}
-            <div className="p-8 md:p-12 flex-1 flex flex-col justify-between bg-zinc-950 relative">
+            <div className="p-6 md:p-10 flex-1 flex flex-col bg-zinc-950 relative">
                 {isSuccess && result.summary && result.summary.length > 0 ? (
-                    <div className="flex-1 flex flex-col">
-                        <div className="mb-8">
-                            <h3 className="text-zinc-500 font-mono text-xs uppercase tracking-widest mb-6 flex items-center gap-2 border-b border-zinc-800 pb-2">
-                                <Quote size={14} className="text-green-500"/> Mission Debrief
+                    <div className="flex-1 flex flex-col gap-6">
+                        {/* Aftermath Quote */}
+                        <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 relative">
+                            <Quote size={20} className="text-zinc-700 absolute top-4 left-4" />
+                            <p className="text-center text-sm md:text-base text-zinc-300 italic font-medium px-6 py-2">
+                                "{result.victimAftermath || "They are now financially ruined and confused."}"
+                            </p>
+                            <div className="text-center mt-2">
+                                <span className="text-[10px] uppercase font-bold text-red-900 bg-red-950/30 px-2 py-1 rounded">Current Status: Ruined</span>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto custom-scrollbar">
+                            <h3 className="text-zinc-600 font-mono text-[10px] uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-zinc-900 pb-2">
+                                OPERATION LOG
                             </h3>
-                            <ul className="space-y-4">
+                            <ul className="space-y-3">
                                 {result.summary.map((point, idx) => (
-                                    <li key={idx} className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl text-sm md:text-lg text-zinc-200 italic relative group hover:border-green-500/30 transition-colors font-medium leading-relaxed">
-                                        <span className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-[2px] bg-zinc-700 group-hover:bg-green-500 transition-colors"></span>
-                                        "{point}"
+                                    <li key={idx} className="flex gap-3 text-xs md:text-sm text-zinc-400">
+                                        <span className="text-green-900 select-none font-mono">0{idx+1}</span>
+                                        <span>{point}</span>
                                     </li>
                                 ))}
                             </ul>
                         </div>
                         
-                        <div className="mt-auto" data-html2canvas-ignore>
+                        <div className="mt-auto pt-4" data-html2canvas-ignore>
                             <button 
                                 onClick={handleShare}
                                 disabled={capturing}
-                                className="w-full py-4 mb-4 bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 border border-[#1DA1F2]/30 hover:border-[#1DA1F2] text-[#1DA1F2] rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+                                className="w-full py-3 mb-3 bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 border border-[#1DA1F2]/30 hover:border-[#1DA1F2] text-[#1DA1F2] rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
                             >
-                                {capturing ? <Loader2 size={18} className="animate-spin"/> : <Download size={18} />}
-                                {capturing ? 'Generating Proof...' : 'Download Proof & Share on X'}
+                                {capturing ? <Loader2 size={16} className="animate-spin"/> : <Download size={16} />}
+                                {capturing ? 'Generating Proof...' : 'Share Victory on X'}
                             </button>
                         </div>
                     </div>
@@ -162,12 +178,12 @@ const ScamResult: React.FC<Props> = ({ result, onContinue }) => {
                     </div>
                 )}
 
-                <div className="pt-4 border-t border-zinc-900" data-html2canvas-ignore>
+                <div className="pt-2 border-t border-zinc-900" data-html2canvas-ignore>
                     <button 
                         onClick={onContinue}
-                        className={`w-full py-5 rounded-xl font-bold text-lg font-mono flex items-center justify-center gap-3 transition-all hover:scale-[1.02] shadow-xl ${isSuccess ? 'bg-green-600 hover:bg-green-500 text-black shadow-green-900/20' : 'bg-zinc-800 hover:bg-zinc-700 text-white'}`}
+                        className={`w-full py-4 rounded-xl font-bold text-base font-mono flex items-center justify-center gap-3 transition-all hover:scale-[1.02] shadow-xl ${isSuccess ? 'bg-zinc-100 hover:bg-white text-black' : 'bg-zinc-800 hover:bg-zinc-700 text-white'}`}
                     >
-                        {isSuccess ? <ArrowRight size={24}/> : <Home size={24}/>}
+                        {isSuccess ? <ArrowRight size={20}/> : <Home size={20}/>}
                         {isSuccess ? 'SECURE FUNDS & RETURN' : 'RETURN TO DASHBOARD'}
                     </button>
                 </div>

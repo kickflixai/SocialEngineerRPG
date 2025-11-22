@@ -51,7 +51,8 @@ const App: React.FC = () => {
       reason?: string,
       victimAvatar: string,
       victimFlavor: string,
-      summary: string[]
+      summary: string[],
+      victimAftermath?: string
     } | null>(null);
 
   // Save Data Summary for Landing Screen
@@ -372,6 +373,7 @@ const App: React.FC = () => {
     let moneyChange = 0;
     let threatChange = 0;
     let summary: string[] = [];
+    let victimAftermath = "";
 
     const countryStats = COUNTRY_DATA[player.attributes.country];
     const payoutMult = countryStats?.modifiers?.payoutMultiplier || 1.0;
@@ -386,9 +388,11 @@ const App: React.FC = () => {
         const totalMult = payoutMult * skillMult * hvtMult;
         moneyChange = Math.floor((baseReward + Math.floor(Math.random() * 1000)) * totalMult);
 
-        // Fetch funny summary
+        // Fetch funny summary and aftermath
         incrementAiUsage();
-        summary = await generateScamSummary(activeScam.history, activeScam.victim);
+        const aiSummary = await generateScamSummary(activeScam.history, activeScam.victim);
+        summary = aiSummary.summary;
+        victimAftermath = aiSummary.aftermath;
 
     } else if (result === 'police') {
         audioManager.playFailure();
@@ -437,6 +441,7 @@ const App: React.FC = () => {
         victimAvatar: activeScam.victim.avatarUrl,
         victimFlavor: activeScam.victim.flavor,
         summary,
+        victimAftermath,
         reason
     });
 
