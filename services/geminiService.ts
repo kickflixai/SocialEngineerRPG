@@ -175,11 +175,6 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         baseImpulsivity = Math.min(100, baseImpulsivity + 20);
     }
 
-    // Elderly have greatly reduced skepticism (awareness of scams)
-    if (isElderly) {
-        // Ensure they are not too guarded
-    }
-
     const baseTech = isElderly ? 30 : age < 30 ? 80 : 50;
 
     const traits: VictimTraits = {
@@ -208,9 +203,8 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         - Tech Literacy: ${traits.techLiteracy}%
         
         INSTRUCTIONS:
-        1. Personality: Write 1-2 sentences describing them based on the TRAITS and FLAVOR. 
-           (e.g., If high Impulsivity + "Gambler" flavor -> "Makes rash decisions and loves high stakes.")
-        2. Hidden Fact: Max 12 words. Something embarrassing or illegal.
+        1. Personality: Write 1-2 sentences describing them. YOU MUST EXPLICITLY MENTION OR REFERENCE THEIR FLAVOR ("${randFlavor}") AND QUIRK ("${combinedQuirks}") in this description. Explain how these traits manifest in their daily life or behavior.
+        2. Hidden Fact: Max 12 words. Something embarrassing or illegal related to their flavor/quirk if possible.
         3. Weakness: Max 6 words. What psychological lever works best?
         
         Return valid JSON:

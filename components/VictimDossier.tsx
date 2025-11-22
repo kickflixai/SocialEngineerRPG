@@ -65,17 +65,17 @@ const VictimDossier: React.FC<Props> = ({ victim, player, onExecute, loading }) 
            </div>
 
            <div className="w-full bg-zinc-900/30 p-3 md:p-4 rounded border border-zinc-800/50 mb-4">
-               <h4 className="text-zinc-400 text-xs font-bold uppercase mb-2 flex items-center gap-2 tracking-wider">
+               <h4 className="text-zinc-400 text-xs font-bold uppercase mb-2 flex items-center gap-2 tracking-wider justify-center md:justify-start">
                    <Fingerprint size={14} className="text-blue-500"/> Psych Profile
                </h4>
-               <p className="text-zinc-300 text-xs leading-relaxed font-mono">{victim.personality}</p>
+               <p className="text-zinc-300 text-xs leading-relaxed font-mono text-center md:text-left">{victim.personality}</p>
            </div>
         </div>
 
         {/* Right: Intel & Strategy Selection */}
-        <div className="w-full md:w-2/3 p-6 md:p-8 bg-zinc-900/20 flex flex-col h-auto relative">
-           <div className="mb-6 shrink-0">
-               <h3 className="text-xl md:text-2xl font-bold text-white font-mono mb-1 flex items-center gap-3 tracking-tighter">
+        <div className="w-full md:w-2/3 p-6 md:p-8 bg-zinc-900/20 flex flex-col h-auto relative items-center md:items-stretch text-center md:text-left">
+           <div className="mb-6 shrink-0 w-full">
+               <h3 className="text-xl md:text-2xl font-bold text-white font-mono mb-1 flex items-center justify-center md:justify-start gap-3 tracking-tighter">
                    <Database size={24} className="text-green-500"/> INTEL_DATABASE
                </h3>
                <p className="text-zinc-500 text-sm font-mono">Decrypting subject metadata...</p>
@@ -83,8 +83,8 @@ const VictimDossier: React.FC<Props> = ({ victim, player, onExecute, loading }) 
 
            {/* PSYCHOMETRICS (New Section) */}
            {victim.traits && (
-               <div className="mb-6 bg-zinc-950/50 border border-zinc-800 p-4 rounded-xl shrink-0">
-                    <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+               <div className="mb-6 bg-zinc-950/50 border border-zinc-800 p-4 rounded-xl shrink-0 w-full text-left">
+                    <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3 flex items-center justify-center md:justify-start gap-2 text-center md:text-left">
                         <BrainCircuit size={14} className="text-purple-500"/> Psychometrics
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -97,7 +97,7 @@ const VictimDossier: React.FC<Props> = ({ victim, player, onExecute, loading }) 
            )}
 
            {/* Intel Grid */}
-           <div className="grid grid-cols-1 gap-4 mb-8 shrink-0">
+           <div className="grid grid-cols-1 gap-4 mb-8 shrink-0 w-full text-left">
                {/* Hidden Fact */}
                <div className={`p-5 rounded-xl border backdrop-blur-sm transition-all ${hasDoxxing ? 'bg-green-950/20 border-green-500/30' : 'bg-zinc-950/50 border-zinc-800'}`}>
                    <div className="flex justify-between items-start mb-3">
@@ -134,8 +134,8 @@ const VictimDossier: React.FC<Props> = ({ victim, player, onExecute, loading }) 
            </div>
 
            {/* Strategy Selection */}
-           <div className="flex-1 flex flex-col min-h-0">
-                <h3 className="text-sm font-bold text-white font-mono mb-4 uppercase tracking-widest border-b border-zinc-800 pb-2">Select Payload Strategy</h3>
+           <div className="flex-1 flex flex-col min-h-0 w-full">
+                <h3 className="text-sm font-bold text-white font-mono mb-4 uppercase tracking-widest border-b border-zinc-800 pb-2 text-center md:text-left">Select Payload Strategy</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-2">
                     {SCAM_CATEGORIES.map((cat) => (
                         <button
@@ -155,8 +155,8 @@ const VictimDossier: React.FC<Props> = ({ victim, player, onExecute, loading }) 
            </div>
 
            {/* Footer Actions */}
-           <div className="mt-6 pt-6 border-t border-zinc-800 flex flex-col md:flex-row justify-end items-center gap-4 shrink-0 relative z-20 pb-8 md:pb-0">
-               <div className="w-full md:w-auto flex items-center gap-4 order-1 md:order-2">
+           <div className="mt-6 pt-6 border-t border-zinc-800 flex flex-col md:flex-row justify-end items-center gap-4 shrink-0 relative z-20 pb-8 md:pb-0 w-full">
+               <div className="w-full md:w-auto flex items-center justify-center md:justify-end gap-4 order-1 md:order-2">
                    {loading && <span className="text-green-500 font-mono text-xs animate-pulse hidden md:inline">ESTABLISHING UPLINK...</span>}
                    <button 
                     onClick={() => selectedCategory && onExecute(selectedCategory)}
