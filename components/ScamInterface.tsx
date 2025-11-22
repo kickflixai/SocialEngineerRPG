@@ -232,7 +232,16 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         setLastThought(analysis.internalThought);
 
         let trustDelta = analysis.trustDelta;
-        if (trustDelta > 0) trustDelta = Math.ceil(trustDelta * 0.5);
+
+        // AGE-BASED TRUST SCALING: Elderly targets gain trust significantly faster
+        if (trustDelta > 0) {
+            const isElderly = scam.victim.age >= 60;
+            // Elderly: No dampener (100% of Arbiter's trust award)
+            // Others: 50% dampener (Harder gameplay)
+            const ageMultiplier = isElderly ? 1.0 : 0.5;
+            trustDelta = Math.ceil(trustDelta * ageMultiplier);
+        }
+
         if (player.skills.includes('silver_tongue') && trustDelta < 0) trustDelta = Math.round(trustDelta * 0.8); 
         if (player.skills.includes('empathy_mirror') && trustDelta > 0) trustDelta = Math.round(trustDelta * 1.25); 
 
