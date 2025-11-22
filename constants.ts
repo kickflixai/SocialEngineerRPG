@@ -340,6 +340,7 @@ interface ScamScenario {
 
 // UPDATED SCENARIOS: Massive Variety Expansion & Concrete Verification
 // Each category now has 3 distinct paths to prevent repetition.
+// CLEANED: Removed "for Background Check" or "from Fake Vendor" context that confused AI.
 export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   "Grandson in Trouble": [
     {
@@ -372,7 +373,7 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
     {
         mini1: "Get them to state their SSN (last 4 digits)",
         mini2: "Get them to apologize for the 'error'",
-        final: "Wire transfer to 'US Treasury' (Fake Account)"
+        final: "Wire transfer to 'US Treasury'"
     }
   ],
   "Tech Support Virus": [
@@ -405,7 +406,7 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
     },
     {
         mini1: "Get them to name a car they want to buy",
-        mini2: "Confirm their home address for 'Check Delivery'",
+        mini2: "Confirm their home address",
         final: "Pay 'State Tax' via Gift Cards"
     }
   ],
@@ -515,7 +516,7 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
     {
         mini1: "Confirm their current employment status",
         mini2: "Get a photo of a Government ID (DL or Passport)",
-        final: "Purchase 'Office Equipment' from fake vendor"
+        final: "Purchase 'Office Equipment' online"
     },
     {
         mini1: "Get the name of their last boss",
@@ -558,7 +559,7 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
     },
     {
         mini1: "Confirm they have no pets",
-        mini2: "Get a photo of their ID for 'Background Check'",
+        mini2: "Get a photo of their ID",
         final: "Wire First Month's Rent to 'Owner'"
     }
   ],
