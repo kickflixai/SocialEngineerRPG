@@ -68,9 +68,9 @@ export const generatePlayerAvatar = async (attrs: PlayerAttributes): Promise<str
         // Get specific visual cues for the country, fallback to generic if not found
         const countryVisuals = COUNTRY_VISUALS[attrs.country] || `Citizens of ${attrs.country}`;
 
-        // Enhanced prompt for photorealism with Country bias
+        // Enhanced prompt for REALISM
         const prompt = `
-            RAW candid photograph of a person, 8k resolution, highly detailed.
+            RAW candid photograph of a person, real life, amateur photography style.
             Subject: ${attrs.age} year old ${attrs.gender}, Role: ${attrs.archetype}.
             Origin: ${attrs.country}.
             CRITICAL VISUAL TRAITS: ${countryVisuals}.
@@ -78,10 +78,9 @@ export const generatePlayerAvatar = async (attrs: PlayerAttributes): Promise<str
             Facial Features: ${attrs.facialFeatures}.
             Accessories: ${attrs.accessories}.
             
-            Style: Shot on Sony A7R IV, 85mm lens, f/1.8. Realistic skin texture, pores visible, natural lighting, slightly gritty cyber-noir atmosphere.
+            Style: Shot on iPhone or consumer camera, slight noise, natural uneven lighting, candid expression, photorealistic skin texture (pores, imperfections).
             
-            Constraint: The image must look like a real photograph. 
-            Do NOT generate: 3D render, CGI, illustration, cartoon, anime, painting, plastic skin, smooth skin, doll-like.
+            NEGATIVE PROMPT: Do NOT generate 3D render, painting, illustration, drawing, cartoon, anime, smooth skin, airbrushed, studio lighting, perfect composition.
         `;
         
         const imageResponse = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
@@ -242,10 +241,13 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         const imageResponse = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
             model: 'gemini-2.5-flash-image',
             contents: { parts: [{ text: `
-                Raw, photorealistic portrait of ${data.name}, a ${data.age} year old ${data.gender} ${data.occupation}.
-                Vibe: ${data.archetype} / ${randFlavor}. Feature: ${data.personality}.
-                Style: Cinematic portrait, highly detailed, character study, imperfections, natural lighting.
-                Do NOT generate: CGI, 3D, cartoon, illustration.
+                Real selfie photo of ${data.name}, ${data.age} year old ${data.gender}, ${data.flavor}.
+                Context: Social media profile picture, low quality webcam or phone camera.
+                Lighting: Bad indoor lighting, flash, or natural candid light.
+                Texture: Grainy, noisy, skin pores, imperfections, realistic, amateur.
+                Background: Cluttered room, car interior, or generic wall.
+                
+                NEGATIVE PROMPT: Do NOT generate painting, drawing, illustration, 3D render, CGI, cartoon, anime, perfect studio lighting, smooth skin, beauty filter, professional photography.
             ` }] },
             config: {
                 imageConfig: {

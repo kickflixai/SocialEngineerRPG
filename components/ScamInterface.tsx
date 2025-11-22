@@ -241,7 +241,17 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         let updatedObjectives = [...scam.objectives];
         let isObjectiveComplete = analysis.objectiveComplete;
 
-        if (isObjectiveComplete) {
+        // IMPORTANT: If success, do NOT return immediately. 
+        // We want the victim to reply confirming the success first.
+        if (analysis.scamStatus === 'success') {
+            // Mark final objective as complete, but let the flow continue to get victim response
+            const objIndex = updatedObjectives.findIndex(o => o.id === activeObjective.id);
+            if (objIndex !== -1) {
+                updatedObjectives[objIndex] = { ...updatedObjectives[objIndex], isCompleted: true };
+            }
+            isObjectiveComplete = true;
+        } else if (isObjectiveComplete) {
+            // Normal objective completion
             audioManager.playSuccess(); 
             const objIndex = updatedObjectives.findIndex(o => o.id === activeObjective.id);
             if (objIndex !== -1) {
@@ -249,6 +259,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             }
         }
 
+        // Update state partially before getting victim response
         let updatedScam = {
             ...scam,
             history: newHistory,
@@ -259,15 +270,14 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         };
         onUpdateScam(updatedScam);
 
+        // Check for Failures (Immediate)
         if (analysis.scamStatus === 'police_called' || newSuspicion >= 100) {
             onScamEnd('police', newSuspicion >= 100 ? 'Suspicion threshold breached' : 'Target alerted authorities');
             return;
         }
-        if (analysis.scamStatus === 'success') {
-            onScamEnd('success');
-            return;
-        }
-
+        
+        // --- VICTIM RESPONSE PHASE ---
+        // Even if success, we get one last message (e.g. "Okay I sent the money!")
         const nextActiveObjective = updatedObjectives.find(o => !o.isCompleted) || updatedObjectives[updatedObjectives.length - 1];
         const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, nextActiveObjective, newTrust);
         audioManager.playMessageReceived();
@@ -289,17 +299,18 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
               return;
         }
 
+        // Double check objective completion from Victim's side (e.g. they provided the data in this text)
         if (replyData.objectiveComplete && !isObjectiveComplete) {
              audioManager.playSuccess();
              const objIndex = updatedObjectives.findIndex(o => o.id === nextActiveObjective.id);
              if (objIndex !== -1) {
                 updatedObjectives[objIndex] = { ...updatedObjectives[objIndex], isCompleted: true };
                 updatedScam = { ...updatedScam, objectives: updatedObjectives };
-                onUpdateScam(updatedScam);
                 setLastThought(`TARGET YIELDED DATA. "${nextActiveObjective.description.toUpperCase()}" VERIFIED.`);
              }
         }
 
+        // Final State Update
         onUpdateScam({
             ...updatedScam,
             history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() }]

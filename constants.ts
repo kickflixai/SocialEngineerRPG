@@ -302,6 +302,7 @@ export const CLOTHING_STYLES = ['Business Suit', 'Hoodie & Jeans', 'Tactical Gea
 export const FACIAL_FEATURES = ['Clean Shaven', 'Full Beard', 'Scarred', 'Piercings', 'Heavy Makeup', 'Glasses', 'Tattooed', 'Weathered', 'Gold Teeth', 'Eye Patch'];
 export const ACCESSORIES = ['Headphones', 'Gold Chain', 'VR Headset', 'Sunglasses', 'Fedora', 'Medical Mask', 'Smart Watch', 'Cybernetic Implant (Fake)', 'None'];
 export const AGES = ['18-25', '26-35', '36-50', '50+'];
+export const SPEECH_STYLES_BY_AGE: Record<string, string> = {}; // Kept for TS compatibility, functionality moved to AI inference
 
 export const SCAM_CATEGORIES = [
   "Grandson in Trouble",
@@ -323,16 +324,16 @@ interface ScamScenario {
     final: string;
 }
 
-// UPDATED SCENARIOS: Objectives are now more concrete "actions" that the victim can do, rather than abstract "convince them" states.
+// UPDATED SCENARIOS: Varied and Concrete Objectives
 export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   "Grandson in Trouble": [
     {
-        mini1: "Make them guess your name (don't say it first)",
-        mini2: "Get them to say 'I won't tell your parents'",
+        mini1: "Get them to say your name (guess)",
+        mini2: "Get them to promise not to tell your parents",
         final: "Secure bail/medical payment details"
     },
     {
-        mini1: "Convince them you are in a specific city (e.g. Mexico City)",
+        mini1: "Convince them you are in Mexico City",
         mini2: "Get them to ask to speak to your 'Lawyer'",
         final: "Get agreement to send gift cards"
     }
@@ -352,13 +353,18 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
   "Tech Support Virus": [
     {
         mini1: "Get them to read the 'Error Code' on screen",
-        mini2: "Make them agree to download 'AnyDesk' or 'TeamViewer'",
+        mini2: "Make them agree to download 'AnyDesk'",
         final: "Grant remote access control"
     },
     {
         mini1: "Identify their Computer Model",
         mini2: "Find the 'Windows Key' on their keyboard",
         final: "Pay $400 'Firewall Fee' via Card"
+    },
+    {
+        mini1: "Get them to restart their router",
+        mini2: "Get them to read their IP address",
+        final: "Buy 'Anti-Hacker' lifetime subscription"
     }
   ],
   "Lottery Winner": [
@@ -373,6 +379,11 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
         mini1: "Find out their annual income",
         mini2: "Get them to download a specific Wallet App",
         final: "Send ETH to your 'Investment Pool'"
+    },
+    {
+        mini1: "Get them to name a coin they own",
+        mini2: "Get them to admit they lost money before",
+        final: "Share their Private Seed Phrase"
     }
   ],
   "Romance Scam": [
@@ -380,6 +391,16 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
         mini1: "Get the name of their first pet",
         mini2: "Get them to type 'I love you'",
         final: "Pay for your 'Plane Ticket' to visit"
+    },
+    {
+        mini1: "Find out the name of the street they grew up on",
+        mini2: "Get them to say they are lonely",
+        final: "Send money for 'Emergency Surgery'"
+    },
+    {
+        mini1: "Get the name of their favorite childhood teacher",
+        mini2: "Get them to promise to marry you",
+        final: "Pay 'Customs Fee' for the engagement ring"
     }
   ],
   "Business Email Compromise": [
