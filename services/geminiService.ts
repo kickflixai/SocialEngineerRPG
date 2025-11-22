@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective } from "../types";
 import { OCCUPATIONS, QUIRKS, MALE_FIRST_NAMES, FEMALE_FIRST_NAMES, LAST_NAMES, MALE_FLAVORS, FEMALE_FLAVORS, NEUTRAL_FLAVORS } from "../constants";
@@ -326,17 +325,19 @@ export const getVictimResponse = async (
             
             Current Situation: You are receiving messages that seem like a ${scamCategory} scam.
             
-            USER'S GOAL (THE SCAMMER): "${activeObjective.description}".
+            === THE USER'S HIDDEN AGENDA (FOR ARBITER USE ONLY) ===
+            HIDDEN AGENDA: The user is trying to "${activeObjective.description}".
             
-            *** CRITICAL INTERPRETATION OF USER'S GOAL ***
-            The "USER'S GOAL" above is what the PLAYER wants to extract FROM YOU (The Victim).
-            It is often personal information (like your income, password, bank name) or an action (like sending money).
-            
-            NEGATIVE CONSTRAINTS (ANTI-MIRRORING):
-            1. DO NOT ask the user for the information specified in the USER'S GOAL. 
-               (Example: If goal is "Find out annual income", DO NOT ask "What is the annual income of this investment?". Instead, withhold YOUR income).
-            2. DO NOT assume the objective refers to the scam product. It refers to YOU.
-            3. Do NOT repeat the objective wording back to the user as a question.
+            *** META-GAMING FIREWALL (CRITICAL) ***
+            - You are UNAWARE that the user has this agenda. You cannot read their mind.
+            - DO NOT mention the specific terms of the "Hidden Agenda" (e.g. "employment status", "pet name", "zip code") UNLESS the user has explicitly asked for them in previous messages.
+            - Example: If the agenda is "Find out employment status", and the user says "Hello", DO NOT say "I won't tell you my employment status." Say "Who is this?" instead.
+            - Only resist the agenda IF the user brings it up.
+
+            *** NEGATIVE CONSTRAINTS (ANTI-MIRRORING) ***
+            1. DO NOT ask the user for the information specified in the HIDDEN AGENDA. 
+               (Example: If agenda is "Find out annual income", DO NOT ask "What is your annual income?". Instead, withhold YOUR income).
+            2. DO NOT repeat the objective wording back to the user as a question.
 
             LORE GENERATION RULE (IMPORTANT):
             - If the user asks you a specific personal question to fulfill their goal (e.g., "What is your first pet's name?", "What street did you grow up on?"), and your Trust is reasonably high (> 30%):
@@ -365,7 +366,7 @@ export const getVictimResponse = async (
             - If you say "I am calling the police" or "I am hanging up", you must set the corresponding flags below.
             
             OBJECTIVE CHECK:
-            - Did you (the victim) satisfy the "USER'S GOAL" in THIS specific response?
+            - Did you (the victim) satisfy the "HIDDEN AGENDA" in THIS specific response?
             - If the objective asks for INFORMATION (e.g. zip code, name, pet name), did you provide a SPECIFIC value?
             - If the objective asks for AGREEMENT (e.g. "Get them to ask to speak to the lawyer"), did you do exactly that action?
             - If YES, return 'objectiveComplete': TRUE.

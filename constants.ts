@@ -1,4 +1,3 @@
-
 import { Skill, ShopItem, CountryStats, Achievement, HackAbility } from './types';
 
 export const INITIAL_MONEY = 1000;
@@ -315,7 +314,10 @@ export const SCAM_CATEGORIES = [
   "Kidnapping Hoax",
   "Charity Fraud",
   "Inheritance Advance Fee",
-  "Employment Mule Scam"
+  "Employment Mule Scam",
+  "NFT Art Commission",
+  "Apartment Rental",
+  "Subscription Refund"
 ];
 
 interface ScamScenario {
@@ -437,6 +439,37 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
         mini2: "Get a photo of their Driver's License",
         final: "Purchase 'Office Equipment' from fake vendor"
     }
+  ],
+  "NFT Art Commission": [
+    {
+        mini1: "Get them to describe their art style",
+        mini2: "Make them admit they need exposure",
+        final: "Pay 'Minting Gas Fee' to receive payment"
+    },
+    {
+        mini1: "Get the name of their portfolio website",
+        mini2: "Get them to set up a 'MetaMask' wallet",
+        final: "Authorize the 'smart contract' transaction"
+    }
+  ],
+  "Apartment Rental": [
+    {
+        mini1: "Confirm their desired move-in date",
+        mini2: "Get them to say they love the photos",
+        final: "Send 'Security Deposit' via Zelle"
+    },
+    {
+        mini1: "Get them to list their current landlord's name",
+        mini2: "Make them agree to a 'sight-unseen' lease",
+        final: "Pay the 'Application Fee' via CashApp"
+    }
+  ],
+  "Subscription Refund": [
+    {
+        mini1: "Confirm they use 'Amazon' or 'Norton'",
+        mini2: "Get them to log into their bank account",
+        final: "Send back the 'Over-refunded' amount"
+    }
   ]
 };
 
@@ -456,6 +489,9 @@ export const ACHIEVEMENTS: Achievement[] = [
     { id: 'ach_charity', title: 'Cold Hearted', description: 'Success: Charity Fraud', icon: 'HeartOff' },
     { id: 'ach_inherit', title: 'The Prince', description: 'Success: Inheritance Advance Fee', icon: 'Crown' },
     { id: 'ach_mule', title: 'Job Creator', description: 'Success: Employment Mule Scam', icon: 'Briefcase' },
+    { id: 'ach_nft', title: 'Right Click Save', description: 'Success: NFT Art Commission', icon: 'Image' },
+    { id: 'ach_rental', title: 'Landlord', description: 'Success: Apartment Rental', icon: 'Home' },
+    { id: 'ach_refund', title: 'Refunds Dept', description: 'Success: Subscription Refund', icon: 'RefreshCcw' },
 ];
 
 export const SKILLS: Skill[] = [
