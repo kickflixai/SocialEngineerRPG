@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective, VictimTraits } from "../types";
 import { OCCUPATIONS, QUIRKS, MALE_FIRST_NAMES, FEMALE_FIRST_NAMES, LAST_NAMES, MALE_FLAVORS, FEMALE_FLAVORS, NEUTRAL_FLAVORS } from "../constants";
@@ -321,6 +320,27 @@ export const getVictimResponse = async (
             Tech Literacy: ${victim.traits.techLiteracy}/100 (High=Understand tech, Low=Grandma)
         `;
 
+        // CHECK FOR HACKS IN LAST MESSAGE
+        const lastMsg = history[history.length - 1];
+        let hackRealityOverride = "";
+        
+        if (lastMsg.sender === 'system') {
+            const txt = lastMsg.text.toUpperCase();
+            if (txt.includes("EMAIL SPOOFING")) {
+                hackRealityOverride = "SYSTEM OVERRIDE: You just received a new email in your inbox. It looks extremely legitimate (e.g., from your boss, bank, or the user). You MUST acknowledge seeing it. This confirms the User's story.";
+            } else if (txt.includes("BANK ALERT") || txt.includes("SMS INJECTION")) {
+                hackRealityOverride = "SYSTEM OVERRIDE: You just received a terrifying text message or notification on your phone about a security breach. You MUST react to this immediately with concern.";
+            } else if (txt.includes("AUDIO DEEPFAKE")) {
+                hackRealityOverride = "SYSTEM OVERRIDE: You just heard a voice clip that sounds exactly like a relative or authority figure. You are convinced it was them.";
+            } else if (txt.includes("FED DATABASE") || txt.includes("AGENT CREDENTIALS")) {
+                hackRealityOverride = "SYSTEM OVERRIDE: You just saw official-looking credentials appear on your screen or were sent a badge. You believe the user is an authority figure.";
+            } else if (txt.includes("WIRE RECEIPT") || txt.includes("TRANSACTION_SUCCESS")) {
+                hackRealityOverride = "SYSTEM OVERRIDE: You just received a document that looks like a valid receipt. You assume the transaction is real.";
+            } else if (txt.includes("IOT") || txt.includes("PRINTER") || txt.includes("LIGHTS")) {
+                hackRealityOverride = "SYSTEM OVERRIDE: Your physical environment just malfunctioned (lights flickering, printer going crazy). You are scared and confused. Mention this.";
+            }
+        }
+
         const context = `
             You are roleplaying as ${victim.name}, a ${victim.age}-year-old ${victim.gender} ${victim.occupation}.
             
@@ -349,6 +369,10 @@ export const getVictimResponse = async (
             - DO NOT ask the user for the objective info.
             - DO NOT use objective keywords unless the user used them first.
             
+            *** REALITY OVERRIDE (CRITICAL) ***
+            ${hackRealityOverride}
+            If a SYSTEM OVERRIDE is present above, it is an absolute fact in the simulation. You cannot deny it. You must react to it as truth.
+            
             CURRENT TRUST: ${currentTrust}%
             - 90%+: Brainwashed. Believe everything.
             - <30%: Skeptical.
@@ -358,7 +382,7 @@ export const getVictimResponse = async (
             INSTRUCTIONS:
             1. Respond in character using your TRAITS and FLAVOR.
             2. Keep it realistic. Short (2-3 sentences).
-            3. If trust is high, provide the info requested in the Hidden Agenda.
+            3. If trust is high OR if a Hack Override validates the request, provide the info requested in the Hidden Agenda.
             
             Return JSON:
             {
@@ -372,7 +396,7 @@ export const getVictimResponse = async (
         const chatHistory = history.map(h => {
             const isSystem = h.sender === 'system';
             const role = (h.sender === 'player' || isSystem) ? 'user' : 'model';
-            const text = isSystem ? `[SYSTEM ALERT: ${h.text}]` : h.text;
+            const text = isSystem ? `[SYSTEM EVENT: ${h.text}]` : h.text;
             return { role, parts: [{ text }] };
         });
 
@@ -387,7 +411,7 @@ export const getVictimResponse = async (
 
         const lastMsgObj = history[history.length - 1];
         const isSystem = lastMsgObj.sender === 'system';
-        const lastMsgText = isSystem ? `[SYSTEM ALERT: ${lastMsgObj.text}]` : lastMsgObj.text;
+        const lastMsgText = isSystem ? `[SYSTEM EVENT - REALITY UPDATE]: ${lastMsgObj.text}` : lastMsgObj.text;
 
         const result = await retryOperation<GenerateContentResponse>(() => chat.sendMessage({ message: lastMsgText }));
         
@@ -408,7 +432,7 @@ export const arbitrateChat = async (
     lastPlayerMessage: string, 
     victim: Victim, 
     currentTrust: number, 
-    currentSuspicion: number,
+    currentSuspicion: number, 
     scamCategory: string, 
     activeObjective: ScamObjective,
     hasCompletedFinal: boolean,
@@ -451,7 +475,11 @@ export const arbitrateChat = async (
             
             RULES:
             - If Suspicion increases, Trust MUST decrease.
-            - Hack Synergy: Did a [SYSTEM] event happen? Did player explain it well?
+            - HACK DETECTED? If a [SYSTEM] message appears in the recent log:
+              - IMPORTANT: Hacks do NOT directly increase Trust. They generate *Proof*, not *Rapport*.
+              - Trust Delta should be minimal (+0 to +5) unless the player's *explanation* is exceptionally charming.
+              - The primary effect of a hack is to CONVINCE the victim of a fact (Reality Override).
+              - If the hack supports the objective, the victim should yield the data/action, even if Trust is not 100%.
             - OBJECTIVE VALIDATION:
               - MARK COMPLETE ONLY if victim explicitly gave the info/agreed.
               - Accept Substitutes (Passport instead of DL).
