@@ -76,6 +76,16 @@ export interface PlayerState {
   history: ScamHistoryItem[];
 }
 
+export interface VictimTraits {
+  openness: number;      // 0-100: Conservative vs Liberal/Creative
+  conscientiousness: number; // 0-100: Careless vs Organized
+  extraversion: number;  // 0-100: Solitary vs Outgoing
+  agreeableness: number; // 0-100: Critical vs Friendly
+  neuroticism: number;   // 0-100: Confident vs Anxious
+  skepticism: number;    // 0-100: Gullible vs Paranoid
+  techLiteracy: number;  // 0-100: Luddite vs Hacker
+}
+
 export interface Victim {
   id: string;
   name: string;
@@ -85,11 +95,12 @@ export interface Victim {
   avatarUrl: string; 
   occupation: string;
   personality: string;
-  archetype: string; // New: e.g. "Conspiracy Theorist"
-  flavor: string; // New: The edgy trait
+  archetype: string; 
+  flavor: string; 
   hiddenFact: string; 
   weakness: string;
   resistanceStyle: string; 
+  traits: VictimTraits; // New personality matrix
 }
 
 export interface ChatMessage {

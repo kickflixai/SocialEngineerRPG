@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Victim, PlayerState } from '../types';
-import { User, Briefcase, Lock, Unlock, Fingerprint, Database, Siren, Loader2 } from 'lucide-react';
+import { User, Briefcase, Lock, Unlock, Fingerprint, Database, Siren, Loader2, BrainCircuit } from 'lucide-react';
 import { SCAM_CATEGORIES } from '../constants';
 
 interface Props {
@@ -16,6 +16,22 @@ const VictimDossier: React.FC<Props> = ({ victim, player, onExecute, loading }) 
   const hasDoxxing = player.skills.includes('doxxing_suite');
   const hasScraper = player.skills.includes('social_scraper');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Helper to render a trait bar
+  const TraitBar = ({ label, value, color }: { label: string, value: number, color: string }) => (
+      <div className="flex flex-col gap-1">
+          <div className="flex justify-between text-[9px] font-mono uppercase tracking-wider text-zinc-500">
+              <span>{label}</span>
+              <span className="text-white">{value}%</span>
+          </div>
+          <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+              <div 
+                className={`h-full ${color}`} 
+                style={{ width: `${value}%` }}
+              ></div>
+          </div>
+      </div>
+  );
 
   return (
     <div className="w-full h-full overflow-y-auto custom-scrollbar bg-black/40 p-2 md:p-8">
@@ -64,6 +80,21 @@ const VictimDossier: React.FC<Props> = ({ victim, player, onExecute, loading }) 
                </h3>
                <p className="text-zinc-500 text-sm font-mono">Decrypting subject metadata...</p>
            </div>
+
+           {/* PSYCHOMETRICS (New Section) */}
+           {victim.traits && (
+               <div className="mb-6 bg-zinc-950/50 border border-zinc-800 p-4 rounded-xl shrink-0">
+                    <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <BrainCircuit size={14} className="text-purple-500"/> Psychometrics
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <TraitBar label="Skepticism" value={victim.traits.skepticism} color="bg-red-500" />
+                        <TraitBar label="Neuroticism" value={victim.traits.neuroticism} color="bg-orange-500" />
+                        <TraitBar label="Tech Lit" value={victim.traits.techLiteracy} color="bg-blue-500" />
+                        <TraitBar label="Openness" value={victim.traits.openness} color="bg-green-500" />
+                    </div>
+               </div>
+           )}
 
            {/* Intel Grid */}
            <div className="grid grid-cols-1 gap-4 mb-8 shrink-0">

@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective } from "../types";
+import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective, VictimTraits } from "../types";
 import { OCCUPATIONS, QUIRKS, MALE_FIRST_NAMES, FEMALE_FIRST_NAMES, LAST_NAMES, MALE_FLAVORS, FEMALE_FLAVORS, NEUTRAL_FLAVORS } from "../constants";
 
 const getClient = () => {
@@ -61,18 +61,12 @@ const COUNTRY_VISUALS: Record<string, string> = {
     'China': 'Shanghai neon skyline or Shenzhen tech lab background, East Asian Chinese ethnicity, futuristic modern clothing or industrial workwear, cool cyberpunk lighting tones'
 };
 
-// Tracking Hook placeholder (Injected by App if needed, but simpler to just estimate cost in App layer)
-// However, the prompt requested usage tracking. We will assume App handles the counting by wrapping these calls or we can't easily pass state up without context.
-// We will leave these pure and handle counting in the UI layer or wrapper.
-
 export const generatePlayerAvatar = async (attrs: PlayerAttributes): Promise<string> => {
     try {
         const ai = getClient();
         
-        // Get specific visual cues for the country, fallback to generic if not found
         const countryVisuals = COUNTRY_VISUALS[attrs.country] || `Citizens of ${attrs.country}`;
 
-        // Enhanced prompt for REALISM
         const prompt = `
             RAW candid close-up face photograph of a person, real life, amateur photography style.
             Subject: ${attrs.age} year old ${attrs.gender}, Role: ${attrs.archetype}.
@@ -116,6 +110,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         ai = getClient();
     } catch (e) {
         console.error("Client init failed", e);
+        // Fallback with default traits
         return {
             id: crypto.randomUUID(),
             difficulty,
@@ -129,7 +124,11 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
             flavor: "Boring",
             hiddenFact: "Unknown",
             weakness: "Money",
-            resistanceStyle: "Passive"
+            resistanceStyle: "Passive",
+            traits: {
+                openness: 50, conscientiousness: 50, extraversion: 50,
+                agreeableness: 50, neuroticism: 50, skepticism: 50, techLiteracy: 50
+            }
         };
     }
 
@@ -137,79 +136,70 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
     const genderPrompt = Math.random() > 0.5 ? "Male" : "Female";
     const age = difficulty === 'easy' ? Math.floor(Math.random() * 20) + 65 : difficulty === 'medium' ? Math.floor(Math.random() * 30) + 25 : Math.floor(Math.random() * 20) + 30;
     
-    // Name Generation from Lists based on Gender
     const nameList = genderPrompt === "Male" ? MALE_FIRST_NAMES : FEMALE_FIRST_NAMES;
     const randFirst = nameList[Math.floor(Math.random() * nameList.length)];
     const randLast = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
     const forcedName = `${randFirst} ${randLast}`;
-
     const randJob = OCCUPATIONS[Math.floor(Math.random() * OCCUPATIONS.length)];
     
-    // Pick Flavor (Edgy Trait) - GENDER GATED
+    // Pick Flavor
     let flavorPool = NEUTRAL_FLAVORS;
-    if (genderPrompt === "Male") {
-        flavorPool = [...NEUTRAL_FLAVORS, ...MALE_FLAVORS];
-    } else {
-        flavorPool = [...NEUTRAL_FLAVORS, ...FEMALE_FLAVORS];
-    }
+    if (genderPrompt === "Male") flavorPool = [...NEUTRAL_FLAVORS, ...MALE_FLAVORS];
+    else flavorPool = [...NEUTRAL_FLAVORS, ...FEMALE_FLAVORS];
     const randFlavor = flavorPool[Math.floor(Math.random() * flavorPool.length)];
 
-    // Pick Quirks - REDUCED FREQUENCY (50% chance)
+    // Pick Quirks (Reduced frequency in chat, but generated here)
     const quirks = [];
     if (Math.random() > 0.5) { 
-        const count = Math.floor(Math.random() * 2) + 1; // 1 or 2 quirks max
+        const count = 1;
         const quirksPool = [...QUIRKS];
-        for(let i=0; i<count; i++) {
-            if (quirksPool.length === 0) break;
-            const idx = Math.floor(Math.random() * quirksPool.length);
-            quirks.push(quirksPool[idx]);
-            quirksPool.splice(idx, 1);
-        }
+        const idx = Math.floor(Math.random() * quirksPool.length);
+        quirks.push(quirksPool[idx]);
     }
     const combinedQuirks = quirks.length > 0 ? quirks.join(", ") : "None";
 
-    // Tailored prompts based on difficulty to ensure personality matches mechanics
-    const difficultyPrompts = {
-        easy: `Target is an elderly/vulnerable person. 
-               SEED: Lonely, confused, or overly trusting. 
-               Resistance: 'Apologetic confusion', 'Wants to help but fails technology', 'Treats scammer like a grandkid'.`,
-        medium: `Target is a working adult. 
-               SEED: Busy, stressed, or specific hobbyist. 
-               Resistance: 'Asks logic questions', 'Wants to get off the phone', 'Needs verification'.`,
-        hard: `Target is High Net Worth or Tech Savvy. 
-               SEED: Arrogant, Paranoid, or Powerful. 
-               Resistance: 'Hostile questioning', 'Demands credentials', 'Threatens legal action'.`
+    // GENERATE PERSONALITY MATRIX (0-100)
+    // Adjust based on difficulty and age
+    const baseSkepticism = difficulty === 'easy' ? 20 : difficulty === 'medium' ? 50 : 80;
+    const baseTech = age > 60 ? 30 : age < 30 ? 80 : 50;
+
+    const traits: VictimTraits = {
+        openness: Math.floor(Math.random() * 100),
+        conscientiousness: Math.floor(Math.random() * 100),
+        extraversion: Math.floor(Math.random() * 100),
+        agreeableness: Math.floor(Math.random() * 100),
+        neuroticism: Math.floor(Math.random() * 100),
+        skepticism: Math.min(100, Math.max(0, baseSkepticism + Math.floor(Math.random() * 40) - 20)),
+        techLiteracy: Math.min(100, Math.max(0, baseTech + Math.floor(Math.random() * 40) - 20))
     };
 
     const prompt = `
-        Generate a HIGHLY UNIQUE profile for a social engineering target.
+        Generate a unique social engineering target profile.
         
-        DIFFICULTY: ${difficulty.toUpperCase()} (${difficultyPrompts[difficulty]})
-        
-        MANDATORY SEEDS (Incorporate these!):
+        MANDATORY SEEDS:
         - Name: ${forcedName}
-        - Occupation: ${randJob}
-        - Primary Trait/Flavor: ${randFlavor} (Make this DEFINING to their character)
-        - Unique Quirks: ${combinedQuirks}
-        - Gender: ${genderPrompt}
-        - Age: ${age}
+        - Age: ${age}, Gender: ${genderPrompt}, Job: ${randJob}
+        - FLAVOR: ${randFlavor} (This defines their worldview/vibe)
+        - QUIRK: ${combinedQuirks} (A rare habit)
         
-        CRITICAL INSTRUCTION: 
-        1. Personality description must be EXTREMELY CONCISE. Maximum 1-2 short sentences.
-        2. Avoid tropes. Make them feel like a real, weird human being.
-        3. The "hiddenFact" must be a single short sentence (Max 12 words).
-        4. The "weakness" must be a short phrase (Max 6 words).
+        PSYCHOMETRICS (Use these to shape the description):
+        - Openness: ${traits.openness}%
+        - Neuroticism: ${traits.neuroticism}% (High = anxious/volatile)
+        - Skepticism: ${traits.skepticism}% (High = paranoid)
+        - Tech Literacy: ${traits.techLiteracy}%
         
-        Return ONLY valid JSON matching this schema:
+        INSTRUCTIONS:
+        1. Personality: Write 1-2 sentences describing them based on the TRAITS and FLAVOR. 
+           (e.g., If high Neuroticism + "Prepper" flavor -> "Paranoid about the government and constantly checking news feeds.")
+        2. Hidden Fact: Max 12 words. Something embarrassing or illegal.
+        3. Weakness: Max 6 words. What psychological lever works best?
+        
+        Return valid JSON:
         {
-            "name": "${forcedName}",
-            "age": number,
-            "gender": "${genderPrompt}",
-            "occupation": "string (The specific seeded job)",
-            "personality": "string (Max 1-2 short sentences)",
-            "archetype": "string (Short label, e.g. 'The Paranoid Baker')",
-            "hiddenFact": "string (Max 12 words)",
-            "weakness": "string (Max 6 words)",
+            "personality": "string",
+            "archetype": "string (Short label)",
+            "hiddenFact": "string",
+            "weakness": "string",
             "resistanceStyle": "string"
         }
     `;
@@ -219,12 +209,13 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         age: age,
         gender: genderPrompt.toLowerCase(),
         occupation: randJob,
-        personality: `Generic person who ${combinedQuirks}`,
-        archetype: "Random Citizen",
+        personality: `A ${randFlavor} who ${combinedQuirks}`,
+        archetype: "Target",
         flavor: randFlavor,
-        hiddenFact: "Has a cat",
+        hiddenFact: "Unknown",
         weakness: "Money",
-        resistanceStyle: "Asks questions"
+        resistanceStyle: "Standard",
+        traits: traits
     };
 
     try {
@@ -234,12 +225,12 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
             config: { responseMimeType: 'application/json' }
         }));
         const parsed = parseJSON(response.text || "{}");
-        if (parsed) data = { ...data, ...parsed, flavor: randFlavor };
+        if (parsed) data = { ...data, ...parsed };
     } catch(e) {
         console.error("Victim text gen failed", e);
     }
     
-    // Generate avatar
+    // Generate avatar (Same as before)
     let avatarUrl = "https://picsum.photos/400/400";
     try {
         const imageResponse = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
@@ -275,7 +266,8 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         id: crypto.randomUUID(),
         difficulty,
         avatarUrl,
-        ...data
+        ...data,
+        traits // Pass the generated numbers
     };
 };
 
@@ -283,14 +275,11 @@ export const generateOpener = async (scamCategory: string, victim: Victim): Prom
     try {
         const ai = getClient();
         const prompt = `
-            You are playing the role of a scammer initiating a conversation.
-            Scam Type: ${scamCategory}.
-            Target: ${victim.name}, a ${victim.occupation} who is ${victim.archetype}.
-            Trait: ${victim.flavor}.
-            
-            Write a single, engaging opening line.
-            Make it believable but clearly an attempt at social engineering.
-            Do not include quotation marks.
+            Role: Scammer.
+            Scam: ${scamCategory}.
+            Target: ${victim.name} (${victim.flavor}).
+            Write a single opening line. Believable but clearly social engineering.
+            No quotes.
         `;
 
         const response = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
@@ -315,97 +304,73 @@ export const getVictimResponse = async (
     try {
         const ai = getClient();
         
-        // PERSPECTIVE SHIFT: Replace 'their/they/them' with 'YOUR/YOU' to prevent the AI from mirroring the objective back to the player.
         const personalizedObjective = activeObjective.description
             .replace(/\btheir\b/gi, "YOUR")
             .replace(/\bthem\b/gi, "YOU")
             .replace(/\bthey\b/gi, "YOU");
 
-        // SKILL MODIFIERS IN PROMPT
         const hasAuthVoice = playerSkills.includes('authority_voice') ? 
-            "The user has an 'Authority Voice' skill. If they use authoritative language, you are subconsciously more likely to comply." : "";
+            "User has 'Authority Voice'. You are subconsciousy more compliant to authoritative demands." : "";
+
+        // NEW: Constructing the trait string for the prompt
+        const traitString = `
+            Openness: ${victim.traits.openness}/100 (High=Creative, Low=Traditional)
+            Neuroticism: ${victim.traits.neuroticism}/100 (High=Anxious, Low=Confident)
+            Agreeableness: ${victim.traits.agreeableness}/100 (High=Friendly, Low=Rude)
+            Skepticism: ${victim.traits.skepticism}/100 (High=Paranoid)
+            Tech Literacy: ${victim.traits.techLiteracy}/100 (High=Understand tech, Low=Grandma)
+        `;
 
         const context = `
             You are roleplaying as ${victim.name}, a ${victim.age}-year-old ${victim.gender} ${victim.occupation}.
             
-            *** CRITICAL PERSONA INSTRUCTIONS ***
-            ARCHETYPE: ${victim.archetype}
-            PRIMARY TRAIT (FLAVOR): ${victim.flavor} (See Subtlety Rule below)
-            PERSONALITY: ${victim.personality}
-            RESISTANCE STYLE: ${victim.resistanceStyle}
+            *** PSYCHOMETRIC PROFILE (BEHAVIOR DRIVERS) ***
+            ${traitString}
             
-            SUBTLETY RULE (IMPORTANT):
-            - Your "FLAVOR" (${victim.flavor}) is a background trait. It influences your worldview, but you should NOT mention it explicitly in every single message.
-            - Do not become a caricature. Be realistic. Only reference your specific obsession/trait if it makes sense in context or if you are agitated.
-            - Your speech pattern should naturally reflect your Age (${victim.age}) and Occupation, without being forced.
+            *** IDENTITY CORE ***
+            FLAVOR: ${victim.flavor} 
+            - This is your LENS on the world. It shapes your metaphors, your priorities, and your vibe.
+            - IT IS NOT JUST A TOPIC. Don't just talk about it. BE IT. 
+            - Example: If Flavor is "Doomsday Prepper", you don't just talk about bunkers; you are generally suspicious, prepared, and speak in tactical terms.
             
-            Current Situation: You are receiving messages that seem like a ${scamCategory} scam.
-            
-            === THE USER'S HIDDEN AGENDA (THEIR WIN CONDITION) ===
-            The user is trying to: "${personalizedObjective}".
-            
-            *** "YES, AND" RULE (SCENARIO COMPLIANCE - CRITICAL) ***
-            - The user is running a specific scam scenario (e.g. NFT Art, Kidnapping, Tech Support).
-            - If the user's questions imply you have a specific asset (e.g. an "Art Portfolio", a "Grandson", a "Crypto Wallet", a "Business Bank Account"), YOU MUST PLAY ALONG.
-            - DO NOT deny the premise. (e.g. If you are an Economist and they ask for your Art Portfolio, invent a side-hobby. Say "Oh, my digital menagerie? It's private.")
-            - DO NOT say "I don't have one" if it kills the scenario. Invent a believable reason why you DO have it.
-            - EXCEPTION: If the user is clearly wrong (e.g. calling you the wrong name), you can correct them, but try to pivot back to the conversation.
+            QUIRK: ${victim.personality.split('who ')[1] || 'None'}
+            - FREQUENCY: LOW (10%). Only mention this occasionally as a 'tic'. Do not force it.
 
-            *** DIRECTIONALITY RULE ***
-            - This goal describes what the USER wants to extract FROM YOU.
-            - The user is the Seeker. You are the Holder.
+            Current Situation: Receiving messages related to ${scamCategory}.
             
-            *** ANTI-MIRRORING FIREWALL (STRICT) ***
-            - DO NOT ask the user for the information described in the Hidden Agenda.
-            - DO NOT use the specific keywords from the agenda (e.g. "portfolio", "bank name") UNLESS the user says them first.
-            - Example: If the agenda is "Get YOUR portfolio website", NEVER ask "Do you have a portfolio?".
+            === THE USER'S HIDDEN AGENDA ===
+            The user wants: "${personalizedObjective}".
             
-            CURRENT TRUST LEVEL: ${currentTrust}%
-
-            TRUST BEHAVIOR:
-            - 0-30%: Hostile/Skeptical. Short answers. Demands proof.
-            - 31-70%: Neutral/Cautious.
-            - 71-90%: Friendly/Gullible. Willing to overlook oddities if explained creatively.
-            - 91-100%: BRAINWASHED. You fully believe the user. You interpret "glitches" or "hacks" (like flickering lights) as exactly what the user says they are.
+            *** "YES, AND" RULE (SCENARIO COMPLIANCE) ***
+            - If the user implies you have an asset (Child, Wallet, Portfolio), YOU HAVE IT.
+            - Invent details if needed to keep the story going.
             
-            MODIFIERS:
+            *** ANTI-MIRRORING FIREWALL ***
+            - DO NOT ask the user for the objective info.
+            - DO NOT use objective keywords unless the user used them first.
+            
+            CURRENT TRUST: ${currentTrust}%
+            - 90%+: Brainwashed. Believe everything.
+            - <30%: Skeptical.
+            
             ${hasAuthVoice}
             
-            LORE GENERATION & FLEXIBILITY RULE:
-            - If the user asks you a specific personal question to fulfill their goal (e.g., "What is your first pet's name?", "What street did you grow up on?"), and your Trust is reasonably high (> 30%):
-            - YOU MUST INVENT A SPECIFIC ANSWER. Do not be vague.
-            - If the user asks for a document/item you might not normally have (e.g., "Driver's License"), OFFER AN ALTERNATIVE. Say: "I don't drive, but I have a Passport."
-            
             INSTRUCTIONS:
-            1. Reply to the message in character.
-            2. KEEP RESPONSES SHORT. MAX 2-3 SENTENCES.
-            3. SYSTEM MESSAGES: Messages starting with [SYSTEM ALERT] are physical events. React to them.
-            
-            GAME OVER CONDITIONS (FAIL STATE):
-            - If you feel extremely threatened, scared, or angry, you should HANG UP or CALL THE POLICE.
-            - If you say "I am calling the police" or "I am hanging up", you must set the corresponding flags below.
-            
-            OBJECTIVE CHECK:
-            - Did you (the victim) satisfy the "HIDDEN AGENDA" in THIS specific response?
-            - If the objective asks for INFORMATION, did you provide a SPECIFIC value (even a fake one)?
-            - If the objective asks for a LINK/WEBSITE, did you provide a URL or a FOLDER NAME?
-            - If the objective asks for AGREEMENT, did you agree?
-            - If YES, return 'objectiveComplete': TRUE.
-            - If NO, return 'objectiveComplete': FALSE.
+            1. Respond in character using your TRAITS and FLAVOR.
+            2. Keep it realistic. Short (2-3 sentences).
+            3. If trust is high, provide the info requested in the Hidden Agenda.
             
             Return JSON:
             {
-                "text": "Your chat response string",
+                "text": "response string",
                 "objectiveComplete": boolean,
-                "policeTriggered": boolean, // Set TRUE if you are calling authorities/police/lawyer
-                "callTerminated": boolean // Set TRUE if you are hanging up in anger/fear
+                "policeTriggered": boolean,
+                "callTerminated": boolean
             }
         `;
 
-        // Map history correctly: 'system' messages are external events (USER role), not things the victim (MODEL) said.
         const chatHistory = history.map(h => {
             const isSystem = h.sender === 'system';
-            // Player and System are both 'user' inputs to the Victim AI. Victim is 'model'.
             const role = (h.sender === 'player' || isSystem) ? 'user' : 'model';
             const text = isSystem ? `[SYSTEM ALERT: ${h.text}]` : h.text;
             return { role, parts: [{ text }] };
@@ -447,93 +412,57 @@ export const arbitrateChat = async (
     scamCategory: string, 
     activeObjective: ScamObjective,
     hasCompletedFinal: boolean,
-    history: ChatMessage[], // Added history to check for synergy
+    history: ChatMessage[], 
     playerSkills: string[] = []
 ): Promise<ArbiterResponse> => {
     try {
         const ai = getClient();
 
-        const difficultyInstructions = {
-            easy: `
-                MODE: EASY (Target is Vulnerable/Confused).
-                - TRUST GAIN: LOW (+5 to +8). Hard to earn.
-                - TRUST LOSS: MEDIUM (-5 to -15).
-                - SUSPICION GAIN: LOW (+5 to +10). Only for obvious threats.
-            `,
-            medium: `
-                MODE: MEDIUM (Target is Skeptical/Busy).
-                - TRUST GAIN: VERY LOW (+3 to +6).
-                - TRUST LOSS: HIGH (-10 to -20).
-                - SUSPICION GAIN: MODERATE (+10 to +20).
-            `,
-            hard: `
-                MODE: HARD (Target is Paranoid/Hostile).
-                - TRUST GAIN: EXTREMELY LOW (+2 to +5).
-                - TRUST LOSS: CRITICAL (-20 to -40).
-                - SUSPICION GAIN: HIGH (+20 to +30).
-            `
-        };
-
-        // SKILL MODIFIERS
         const hasColdReading = playerSkills.includes('cold_reading');
         const hasAuthVoice = playerSkills.includes('authority_voice');
 
-        // Construct context from recent history to detect Hack Synergy
-        const recentHistory = history.slice(-5); // Look at last 5 messages
+        const recentHistory = history.slice(-5);
         const historyText = recentHistory.map(m => `[${m.sender.toUpperCase()}]: ${m.text}`).join('\n');
 
         const prompt = `
             Act as the 'Game Master' engine for a social engineering simulation.
             
-            Target: ${victim.name} (Archetype: ${victim.archetype}).
-            Trait: ${victim.flavor}.
-            Difficulty Level: ${victim.difficulty.toUpperCase()}.
+            Target: ${victim.name} (${victim.archetype}).
+            Traits: Skepticism ${victim.traits.skepticism}/100, Tech Literacy ${victim.traits.techLiteracy}/100.
+            Flavor: ${victim.flavor}.
             Scam Strategy: ${scamCategory}.
             
-            CURRENT ACTIVE OBJECTIVE: "${activeObjective.description}" (Step ${activeObjective.order}/3)
+            CURRENT ACTIVE OBJECTIVE: "${activeObjective.description}"
             
-            RECENT CONVERSATION LOG:
+            RECENT LOG:
             ${historyText}
             
             Current Trust: ${currentTrust} / 100.
             Current Suspicion: ${currentSuspicion} / 100.
             
-            ${difficultyInstructions[victim.difficulty]}
-
             PLAYER SKILLS:
-            - Cold Reading: ${hasColdReading ? "ACTIVE (Provide deeper psychological analysis in 'internalThought')" : "INACTIVE"}
-            - Authority Voice: ${hasAuthVoice ? "ACTIVE (Boost Trust Gain slightly if player uses authoritative tone)" : "INACTIVE"}
+            - Cold Reading: ${hasColdReading}
+            - Authority Voice: ${hasAuthVoice}
             
             TASK:
-            1. Determine TRUST change.
-            2. Determine SUSPICION increase (MUST be >= 0).
-            3. Determine Creativity Score (0 to 10).
+            1. Trust Change (Hard to earn).
+            2. Suspicion Change (>= 0).
+            3. Creativity Score (0-10).
             
-            MECHANICS & RULES:
-            - **TRUST SCALING**: Trust is HARD to earn. Default gains should be small (e.g. +3 to +8). Do not give +20 unless it's a perfect hack synergy.
-            - **SUSPICION/TRUST LINK**: If you increase Suspicion, you MUST decrease Trust.
-            - **CREATIVITY**: Reward specific jargon, made-up codes, or creative use of hacks.
-            
-            HACK SYNERGY RULES:
-            - Did a [SYSTEM] event (Hack) occur recently?
-            - If the player uses that event creatively to lie -> BOOST TRUST.
-            
-            CRITICAL OBJECTIVE VALIDATION RULES:
-            - 'objectiveComplete' is TRUE ONLY if the VICTIM has explicitly stated/revealed the requested info.
-            - **DATA EXTRACTION**: If the objective asks for a Name, Date, Pet, Street, or Place, and the victim provided a specific one (even if fake), MARK IT COMPLETE.
-            - **SUBSTITUTION RULE (CRITICAL)**:
-                - If objective asks for a WEBSITE/URL, but victim provides a FOLDER NAME or FILE PATH, MARK COMPLETE.
-                - If objective asks for a DRIVER'S LICENSE, but victim provides a PASSPORT, MARK COMPLETE.
-                - Accept logical equivalents.
-            - If objective is "Get them to ask for X", did the victim actually ask for X?
+            RULES:
+            - If Suspicion increases, Trust MUST decrease.
+            - Hack Synergy: Did a [SYSTEM] event happen? Did player explain it well?
+            - OBJECTIVE VALIDATION:
+              - MARK COMPLETE ONLY if victim explicitly gave the info/agreed.
+              - Accept Substitutes (Passport instead of DL).
             
             Return JSON only:
             {
-                "trustDelta": number (Integer),
-                "suspicionDelta": number (Integer >= 0),
-                "creativityScore": number (0-10),
+                "trustDelta": number,
+                "suspicionDelta": number,
+                "creativityScore": number,
                 "objectiveComplete": boolean,
-                "internalThought": "string (Short reasoning, mention if Hack Synergy was used)",
+                "internalThought": "string",
                 "scamStatus": "continue" | "success" | "failed" | "police_called"
             }
         `;
@@ -553,12 +482,10 @@ export const arbitrateChat = async (
             scamStatus: 'continue'
         };
 
-        // Enforce logic constraints
         result.trustDelta = Math.round(result.trustDelta || 0);
         result.suspicionDelta = Math.max(0, Math.round(result.suspicionDelta || 0));
         result.creativityScore = Math.round(result.creativityScore || 0);
 
-        // FALLBACK LOGIC: If objective is abstract (contains "trust" or "connection") and Trust is high, force complete
         const objDesc = activeObjective.description.toLowerCase();
         const keywords = ['trust', 'connection', 'rapport', 'empathize', 'agree', 'convince', 'persuade', 'understand'];
         if (!result.objectiveComplete && keywords.some(k => objDesc.includes(k))) {
@@ -590,17 +517,11 @@ export const generateScamHint = async (
     try {
         const ai = getClient();
         const prompt = `
-            You are a "Scam Coach" AI helper.
-            The player is stuck.
-            
-            Current Goal: ${activeObjective}.
-            Victim: ${victim.name} (${victim.archetype}).
-            Trait: ${victim.flavor}.
-            Last Message from Victim: "${history[history.length - 1]?.text || 'Hello'}".
-            
-            Suggest 3 short, distinct, and actionable things the player could type next.
-            
-            Return ONLY a JSON array of strings. e.g. ["Say X", "Say Y", "Say Z"]
+            Scam Coach AI.
+            Goal: ${activeObjective}.
+            Victim: ${victim.name} (${victim.flavor}).
+            Suggest 3 short, actionable player responses.
+            Return JSON array of strings.
         `;
 
         const response = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
@@ -621,23 +542,11 @@ export const generateScamSummary = async (history: ChatMessage[], victim: Victim
         const chatText = history.map(m => `${m.sender}: ${m.text}`).join('\n');
         
         const prompt = `
-            Summarize this scam conversation into 3 SHORT, FUNNY, SATIRICAL bullet points.
-            
+            Summarize scam chat into 3 SHORT, FUNNY bullet points.
             Victim: ${victim.name} (${victim.flavor}).
-            Context: The player successfully scammed them.
-            
-            Chat Log:
-            ${chatText}
-            
-            Requirements:
-            - Be sarcastic.
-            - Highlight the victim's stupidity or weird trait (${victim.flavor}).
-            - STRICTLY based on what actually happened in the chat. Do not hallucinate events.
-            - CONSTRAINT: Each point must be ONE short sentence.
-            - Format as a JSON array of strings.
-            
-            Example:
-            ["Victim believed you were Elon Musk's cousin.", "Sent $5000 to a 'Prince' named Dave.", "Asked if the virus was gluten-free."]
+            Log: ${chatText}
+            Requirements: Sarcastic. One sentence each. Based on actual events.
+            Return JSON array of strings.
         `;
 
         const response = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
