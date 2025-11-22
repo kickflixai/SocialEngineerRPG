@@ -89,7 +89,7 @@ export interface VictimTraits {
   extraversion: number;  // 0-100: Solitary vs Outgoing
   agreeableness: number; // 0-100: Critical vs Friendly
   neuroticism: number;   // 0-100: Confident vs Anxious
-  skepticism: number;    // 0-100: Gullible vs Paranoid
+  impulsivity: number;   // 0-100: Deliberate vs Rash (Replaces Skepticism)
   techLiteracy: number;  // 0-100: Luddite vs Hacker
 }
 

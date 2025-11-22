@@ -88,7 +88,7 @@ const VictimDossier: React.FC<Props> = ({ victim, player, onExecute, loading }) 
                         <BrainCircuit size={14} className="text-purple-500"/> Psychometrics
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <TraitBar label="Skepticism" value={victim.traits.skepticism} color="bg-red-500" />
+                        <TraitBar label="Impulsivity" value={victim.traits.impulsivity} color="bg-red-500" />
                         <TraitBar label="Neuroticism" value={victim.traits.neuroticism} color="bg-orange-500" />
                         <TraitBar label="Tech Lit" value={victim.traits.techLiteracy} color="bg-blue-500" />
                         <TraitBar label="Openness" value={victim.traits.openness} color="bg-green-500" />

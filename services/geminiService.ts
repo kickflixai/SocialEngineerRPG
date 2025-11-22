@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective, VictimTraits } from "../types";
 import { OCCUPATIONS, QUIRKS, MALE_FIRST_NAMES, FEMALE_FIRST_NAMES, LAST_NAMES, MALE_FLAVORS, FEMALE_FLAVORS, NEUTRAL_FLAVORS } from "../constants";
@@ -131,7 +132,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
             resistanceStyle: "Passive",
             traits: {
                 openness: 50, conscientiousness: 50, extraversion: 50,
-                agreeableness: 50, neuroticism: 50, skepticism: 50, techLiteracy: 50
+                agreeableness: 50, neuroticism: 50, impulsivity: 50, techLiteracy: 50
             }
         };
     }
@@ -163,13 +164,15 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
     const combinedQuirks = quirks.length > 0 ? quirks.join(", ") : "None";
 
     // GENERATE PERSONALITY MATRIX (0-100)
-    // Adjust based on difficulty and age
     const isElderly = age >= 60;
-    let baseSkepticism = difficulty === 'easy' ? 20 : difficulty === 'medium' ? 50 : 80;
     
-    // ELDERLY MODIFIER: Significantly reduce skepticism
+    // IMPULSIVITY REPLACES SKEPTICISM
+    // Easy = High Impulsivity (Rash). Hard = Low Impulsivity (Deliberate).
+    // Elderly often have higher impulsivity due to reduced inhibition.
+    let baseImpulsivity = difficulty === 'easy' ? 70 : difficulty === 'medium' ? 50 : 30;
+    
     if (isElderly) {
-        baseSkepticism = Math.max(0, baseSkepticism - 20);
+        baseImpulsivity = Math.min(100, baseImpulsivity + 20);
     }
 
     const baseTech = isElderly ? 30 : age < 30 ? 80 : 50;
@@ -180,7 +183,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         extraversion: Math.floor(Math.random() * 100),
         agreeableness: Math.floor(Math.random() * 100),
         neuroticism: Math.floor(Math.random() * 100),
-        skepticism: Math.min(100, Math.max(0, baseSkepticism + Math.floor(Math.random() * 40) - 20)),
+        impulsivity: Math.min(100, Math.max(0, baseImpulsivity + Math.floor(Math.random() * 40) - 20)),
         techLiteracy: Math.min(100, Math.max(0, baseTech + Math.floor(Math.random() * 40) - 20))
     };
 
@@ -196,12 +199,12 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         PSYCHOMETRICS (Use these to shape the description):
         - Openness: ${traits.openness}%
         - Neuroticism: ${traits.neuroticism}% (High = anxious/volatile)
-        - Skepticism: ${traits.skepticism}% (High = paranoid)
+        - Impulsivity: ${traits.impulsivity}% (High = Rash/Hasty, Low = Deliberate/Cautious)
         - Tech Literacy: ${traits.techLiteracy}%
         
         INSTRUCTIONS:
         1. Personality: Write 1-2 sentences describing them based on the TRAITS and FLAVOR. 
-           (e.g., If high Neuroticism + "Prepper" flavor -> "Paranoid about the government and constantly checking news feeds.")
+           (e.g., If high Impulsivity + "Gambler" flavor -> "Makes rash decisions and loves high stakes.")
         2. Hidden Fact: Max 12 words. Something embarrassing or illegal.
         3. Weakness: Max 6 words. What psychological lever works best?
         
@@ -352,7 +355,7 @@ export const getVictimResponse = async (
             Openness: ${victim.traits.openness}/100 (High=Creative, Low=Traditional)
             Neuroticism: ${victim.traits.neuroticism}/100 (High=Anxious, Low=Confident)
             Agreeableness: ${victim.traits.agreeableness}/100 (High=Friendly, Low=Rude)
-            Skepticism: ${victim.traits.skepticism}/100 (High=Paranoid)
+            Impulsivity: ${victim.traits.impulsivity}/100 (High=Rash/Hasty/Easy to trick, Low=Cautious/Deliberate/Slow)
             Tech Literacy: ${victim.traits.techLiteracy}/100 (High=Understand tech, Low=Grandma)
         `;
 
@@ -463,6 +466,7 @@ export const getVictimResponse = async (
             1. Respond in character using your TRAITS, FLAVOR, and AGE.
             2. Keep it realistic. Short (2-3 sentences).
             3. ADHERE TO THE TRUST COMPLIANCE PROTOCOL ABOVE. Do not be too easy if trust is low.
+            4. IMPULSIVITY CHECK: High impulsivity characters ignore red flags and trust faster. Low impulsivity characters overthink and need reassurance.
             
             Return JSON:
             {
@@ -532,7 +536,7 @@ export const arbitrateChat = async (
             Act as the 'Game Master' engine for a social engineering simulation.
             
             Target: ${victim.name} (${victim.archetype}).
-            Traits: Skepticism ${victim.traits.skepticism}/100, Tech Literacy ${victim.traits.techLiteracy}/100.
+            Traits: Impulsivity ${victim.traits.impulsivity}/100, Tech Literacy ${victim.traits.techLiteracy}/100.
             Flavor: ${victim.flavor}.
             Scam Strategy: ${scamCategory}.
             
