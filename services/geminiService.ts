@@ -25,7 +25,7 @@ const parseJSON = (text: string) => {
     }
 };
 
-// RETRY HELPER: Handles Rate Limiting (429) with Exponential Backoff
+// RETRY HELPER: Handles Rate Limiting (429) and Server Errors (5xx) with Exponential Backoff
 const retryOperation = async <T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> => {
     for (let i = 0; i < retries; i++) {
         try {
@@ -37,8 +37,13 @@ const retryOperation = async <T>(fn: () => Promise<T>, retries = 3, delay = 2000
                                 error?.message?.includes('quota') ||
                                 error?.message?.includes('RESOURCE_EXHAUSTED');
             
-            if (isRateLimit && i < retries - 1) {
-                console.warn(`Rate limit hit. Retrying in ${delay}ms... (Attempt ${i + 1}/${retries})`);
+            const isServerFail = error?.status === 503 || 
+                                 error?.status === 500 || 
+                                 error?.message?.includes('503') || 
+                                 error?.message?.includes('Overloaded');
+            
+            if ((isRateLimit || isServerFail) && i < retries - 1) {
+                console.warn(`API Hit (Status ${error?.status || 'Unknown'}). Retrying in ${delay}ms... (Attempt ${i + 1}/${retries})`);
                 await new Promise(resolve => setTimeout(resolve, delay));
                 delay *= 2; // Exponential backoff
                 continue;
@@ -232,41 +237,59 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
     
     // Generate avatar - WE MUST AWAIT THIS TO ENSURE IT'S READY
     let avatarUrl = "https://picsum.photos/400/400";
-    try {
-        // Enforce age visuals
-        const ageDesc = age > 60 ? "elderly, wrinkled, senior citizen" : age > 40 ? "middle aged" : "young adult";
-
+    
+    const generateImageAttempt = async (promptText: string) => {
         const imageResponse = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
             model: 'gemini-2.5-flash-image',
-            contents: { parts: [{ text: `
-                Real close-up face selfie photo of ${data.name}, ${data.age} year old ${ageDesc} ${data.gender}, ${data.flavor}.
-                Context: Social media profile picture, face shot, low quality webcam or phone camera.
-                Lighting: Bad indoor lighting, flash, or natural candid light.
-                Texture: Grainy, noisy, skin pores, imperfections, realistic, amateur.
-                Background: Cluttered room, car interior, or generic wall.
-                
-                NEGATIVE PROMPT: Do NOT generate painting, drawing, illustration, 3D render, CGI, cartoon, anime, perfect studio lighting, smooth skin, beauty filter, professional photography, full body shot.
-            ` }] },
+            contents: { parts: [{ text: promptText }] },
             config: {
                 imageConfig: {
                     aspectRatio: '1:1'
                 }
             }
-        }));
+        }), 3, 3000); // 3 retries, 3s delay
         
         const parts = imageResponse.candidates?.[0]?.content?.parts || [];
         for (const part of parts) {
             if (part.inlineData) {
-                avatarUrl = `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${part.inlineData.data}`;
-                break;
+                return `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${part.inlineData.data}`;
             }
         }
-    } catch (e) {
-        console.error("Victim avatar failed", e);
-    }
+        throw new Error("No image data returned");
+    };
 
-    // Wait 100ms just to be safe if anything async lagged
-    await new Promise(r => setTimeout(r, 100));
+    try {
+        // Enforce age visuals
+        const ageDesc = age > 60 ? "elderly, wrinkled, senior citizen" : age > 40 ? "middle aged" : "young adult";
+
+        // PRIMARY PROMPT: Detailed, candid, gritty
+        const primaryPrompt = `
+            Real close-up face selfie photo of ${data.name}, ${data.age} year old ${ageDesc} ${data.gender}, ${data.flavor}.
+            Context: Social media profile picture, face shot, low quality webcam or phone camera.
+            Lighting: Bad indoor lighting, flash, or natural candid light.
+            Texture: Grainy, noisy, skin pores, imperfections, realistic, amateur.
+            Background: Cluttered room, car interior, or generic wall.
+            
+            NEGATIVE PROMPT: Do NOT generate painting, drawing, illustration, 3D render, CGI, cartoon, anime, perfect studio lighting, smooth skin, beauty filter, professional photography, full body shot.
+        `;
+
+        avatarUrl = await generateImageAttempt(primaryPrompt);
+
+    } catch (e) {
+        console.warn("Primary avatar gen failed, trying fallback prompt...", e);
+        try {
+            // FALLBACK PROMPT: Simpler, safer, less likely to trigger filters
+            const fallbackPrompt = `
+                Close up portrait face photo of ${data.age} year old ${data.gender}.
+                Style: Realistic, photorealistic, high quality portrait.
+                Background: Blurred neutral background.
+            `;
+            avatarUrl = await generateImageAttempt(fallbackPrompt);
+        } catch (e2) {
+            console.error("All avatar generation attempts failed.", e2);
+            // Keeps default Picsum URL
+        }
+    }
 
     return {
         id: crypto.randomUUID(),
