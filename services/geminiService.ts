@@ -175,6 +175,11 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         baseImpulsivity = Math.min(100, baseImpulsivity + 20);
     }
 
+    // Elderly have greatly reduced skepticism (awareness of scams)
+    if (isElderly) {
+        // Ensure they are not too guarded
+    }
+
     const baseTech = isElderly ? 30 : age < 30 ? 80 : 50;
 
     const traits: VictimTraits = {
@@ -363,22 +368,40 @@ export const getVictimResponse = async (
         const isElderly = victim.age >= 60;
         
         // Dynamic Trust Thresholds based on Age (Elderly = easier)
-        const t_hesitant = isElderly ? 25 : 40;
-        const t_trusting = isElderly ? 55 : 70;
-        const t_brainwashed = isElderly ? 80 : 90;
+        let t_hesitant = isElderly ? 15 : 40;
+        let t_trusting = isElderly ? 40 : 70;
+        let t_brainwashed = isElderly ? 65 : 90;
 
         let ageProtocol = "";
         if (isElderly) {
             ageProtocol = `
             *** ELDERLY PROTOCOL ACTIVE (Age: ${victim.age}) ***
             - NAIVETY BONUS: You are significantly more trusting than average.
-            - SCAM BLINDNESS: You are unaware that scams exist on the internet. You assume people are generally honest and wouldn't lie to you for money.
+            - SCAM BLINDNESS: You are unaware that scams exist on the internet. You assume people are generally honest.
             - You are confused by modern tech jargon.
             - You type slowly (short sentences).
             - You might sign your messages (e.g., "- Love, Grandma" or "- ${victim.name}").
             - You misuse capitalization randomly.
-            - You are polite but easily confused.
             `;
+        }
+
+        // KIDNAPPING PROTOCOL (Special Logic)
+        let scenarioProtocol = "";
+        if (scamCategory === "Kidnapping Hoax") {
+            scenarioProtocol = `
+            *** KIDNAPPING PROTOCOL (FEAR OVERRIDES LOGIC) ***
+            - You are TERRIFIED. Your relative's life is at stake.
+            - LOGIC IS BROKEN: Even if the story has holes, you are too scared to question it.
+            - RESPONSE TO THREATS: If the user threatens violence, screams, or demands speed, you SUBMIT immediately.
+            - TRUST MECHANIC CHANGE: In this scenario, "High Trust" means "High Fear/Submission".
+            - If Trust > 30%: You are crying, begging, and willing to do anything to stop the hurting.
+            - SKEPTICISM: You might doubt initially, but violent threats DESTROY your skepticism instantly.
+            - You will NOT disconnect if threatened; you will beg for mercy.
+            `;
+            // Lower thresholds for Kidnapping because fear is easier to induce than rapport
+            t_hesitant = 10;
+            t_trusting = 30;
+            t_brainwashed = 70;
         }
 
         // CHECK FOR HACKS IN LAST MESSAGE
@@ -427,12 +450,12 @@ export const getVictimResponse = async (
             FLAVOR: ${victim.flavor} 
             - This is your LENS on the world. It shapes your metaphors, your priorities, and your vibe.
             - IT IS NOT JUST A TOPIC. Don't just talk about it. BE IT. 
-            - Example: If Flavor is "Doomsday Prepper", you don't just talk about bunkers; you are generally suspicious, prepared, and speak in tactical terms.
             
             QUIRK: ${victim.personality.split('who ')[1] || 'None'}
             - FREQUENCY: LOW (10%). Only mention this occasionally as a 'tic'. Do not force it.
 
             Current Situation: Receiving messages related to ${scamCategory}.
+            ${scenarioProtocol}
             
             === THE USER'S HIDDEN AGENDA (DO NOT REVEAL) ===
             The user wants: "${personalizedObjective}".
@@ -467,8 +490,8 @@ export const getVictimResponse = async (
             INSTRUCTIONS:
             1. Respond in character using your TRAITS, FLAVOR, and AGE.
             2. Keep it realistic. Short (2-3 sentences).
-            3. ADHERE TO THE TRUST COMPLIANCE PROTOCOL ABOVE. Do not be too easy if trust is low.
-            4. IMPULSIVITY CHECK: High impulsivity characters ignore red flags and trust faster. Low impulsivity characters overthink and need reassurance.
+            3. ADHERE TO THE TRUST COMPLIANCE PROTOCOL ABOVE.
+            4. IMPULSIVITY CHECK: High impulsivity characters ignore red flags and trust faster. Low impulsivity characters overthink.
             
             Return JSON:
             {
@@ -534,6 +557,17 @@ export const arbitrateChat = async (
         const recentHistory = history.slice(-5);
         const historyText = recentHistory.map(m => `[${m.sender.toUpperCase()}]: ${m.text}`).join('\n');
 
+        let scenarioRules = "";
+        if (scamCategory === "Kidnapping Hoax") {
+            scenarioRules = `
+            *** KIDNAPPING SCENARIO RULES ***
+            - AGGRESSION IS GOOD: Threats, shouting, and urgency should INCREASE Trust (Compliance).
+            - FEAR = TRUST: The goal is to terrify the victim into submission, not befriend them.
+            - Do not punish aggressive language. Reward it.
+            - If the user is polite, trust gain is minimal.
+            `;
+        }
+
         const prompt = `
             Act as the 'Game Master' engine for a social engineering simulation.
             
@@ -575,6 +609,8 @@ export const arbitrateChat = async (
               - MARK COMPLETE ONLY if victim explicitly gave the info/agreed.
               - Accept Substitutes (Passport instead of DL).
             
+            ${scenarioRules}
+
             Return JSON only:
             {
                 "trustDelta": number,
