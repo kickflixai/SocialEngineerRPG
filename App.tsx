@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { GameView, PlayerState, ScamState, PlayerAttributes, Skill, ScamObjective, ShopItem, ScamHistoryItem } from './types';
-import { INITIAL_MONEY, INITIAL_THREAT, SCAM_CATEGORIES, MAX_THREAT, SKILLS, SHOP_ITEMS, COUNTRY_DATA, SCAM_SCENARIOS, ACHIEVEMENTS } from './constants';
+import { INITIAL_MONEY, INITIAL_THREAT, SCAM_CATEGORIES, MAX_THREAT, SKILLS, SHOP_ITEMS, COUNTRY_DATA, SCAM_SCENARIOS, ACHIEVEMENTS, AI_COSTS } from './constants';
 import { generateVictim, generateOpener, generateScamSummary } from './services/geminiService';
 import { audioManager } from './services/audioService';
 
@@ -29,7 +29,8 @@ const App: React.FC = () => {
     inventory: [],
     skills: [],
     achievements: [],
-    history: []
+    history: [],
+    stats: { textRequests: 0, imageRequests: 0, totalCost: 0 }
   });
   
   const [activeScam, setActiveScam] = useState<ScamState | null>(null);
@@ -38,9 +39,6 @@ const App: React.FC = () => {
   const [showInventory, setShowInventory] = useState(false);
   const [highValueTargetActive, setHighValueTargetActive] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  
-  // AI Usage Tracking (Session Based)
-  const [aiRequests, setAiRequests] = useState(0);
   
   // Last Result for Result Screen
   const [lastResult, setLastResult] = useState<{
@@ -121,8 +119,19 @@ const App: React.FC = () => {
       setIsMuted(muted);
   };
 
-  const incrementAiUsage = () => {
-      setAiRequests(prev => prev + 1);
+  const trackUsage = (type: 'text' | 'image') => {
+      setPlayer(prev => {
+          const cost = type === 'text' ? AI_COSTS.TEXT_REQUEST : AI_COSTS.IMAGE_REQUEST;
+          return {
+              ...prev,
+              stats: {
+                  ...prev.stats,
+                  textRequests: prev.stats.textRequests + (type === 'text' ? 1 : 0),
+                  imageRequests: prev.stats.imageRequests + (type === 'image' ? 1 : 0),
+                  totalCost: prev.stats.totalCost + cost
+              }
+          };
+      });
   };
 
   // --- ACTION HANDLERS ---
@@ -132,6 +141,10 @@ const App: React.FC = () => {
     if (raw) {
       try {
         const data = JSON.parse(raw);
+        // Migrations check if stats missing
+        if (!data.player.stats) {
+            data.player.stats = { textRequests: 0, imageRequests: 0, totalCost: 0 };
+        }
         setPlayer(data.player);
         setActiveScam(data.activeScam);
         setHighValueTargetActive(data.highValueTargetActive);
@@ -161,11 +174,11 @@ const App: React.FC = () => {
         inventory: [],
         skills: [],
         achievements: [],
-        history: []
+        history: [],
+        stats: { textRequests: 0, imageRequests: 0, totalCost: 0 }
     });
     setActiveScam(null);
     setHighValueTargetActive(false);
-    setAiRequests(0);
 
     // Start
     audioManager.startDashboardTheme();
@@ -175,12 +188,14 @@ const App: React.FC = () => {
 
   const handleCharacterComplete = (attrs: PlayerAttributes) => {
     audioManager.playSuccess();
-    incrementAiUsage(); // Avatar gen
+    trackUsage('image'); // Avatar gen
+
     // Retrieve Country Data
     const countryStats = COUNTRY_DATA[attrs.country] || COUNTRY_DATA['USA'];
 
     // Merge Country Stats into Initial Player State
-    setPlayer({
+    setPlayer(prev => ({
+        ...prev,
         attributes: attrs,
         money: countryStats.startingMoney,
         threatLevel: countryStats.startingThreat,
@@ -189,7 +204,7 @@ const App: React.FC = () => {
         skills: [...countryStats.startingSkills],
         achievements: [],
         history: []
-    });
+    }));
 
     setView(GameView.DASHBOARD);
   };
@@ -227,9 +242,9 @@ const App: React.FC = () => {
     audioManager.startScanLoop(); 
     setLoadingScam(true);
     try {
-        incrementAiUsage(); // Find target
+        trackUsage('text'); // Find target JSON
         const victim = await generateVictim(difficulty);
-        incrementAiUsage(); // Avatar gen for victim
+        trackUsage('image'); // Avatar gen for victim
         
         const countryStats = COUNTRY_DATA[player.attributes.country];
         const trustBonus = countryStats?.modifiers?.trustStartBonus || 0;
@@ -238,8 +253,7 @@ const App: React.FC = () => {
         
         // Skill: Love Bomb
         if (player.skills.includes('love_bomb')) {
-             // Applied later during finalizeScam if category matches, or we apply generically now?
-             // Since category isn't chosen yet, we apply it in finalizeScam
+             // Applied later during finalizeScam if category matches
         }
 
         setActiveScam({
@@ -274,7 +288,7 @@ const App: React.FC = () => {
       audioManager.playSuccess();
       setGeneratingOpener(true);
       try {
-          incrementAiUsage(); // Opener
+          trackUsage('text'); // Opener
           const opener = await generateOpener(category, activeScam.victim);
           
           const scenarios = SCAM_SCENARIOS[category] || SCAM_SCENARIOS["Grandson in Trouble"];
@@ -389,7 +403,7 @@ const App: React.FC = () => {
         moneyChange = Math.floor((baseReward + Math.floor(Math.random() * 1000)) * totalMult);
 
         // Fetch funny summary and aftermath
-        incrementAiUsage();
+        trackUsage('text'); // Summary gen
         const aiSummary = await generateScamSummary(activeScam.history, activeScam.victim);
         summary = aiSummary.summary;
         victimAftermath = aiSummary.aftermath;
@@ -495,9 +509,9 @@ const App: React.FC = () => {
 
   const handleScamAction = (type: 'message_sent') => {
       if (type === 'message_sent') {
-          // Arbiter + Victim Response = 2 requests usually
-          incrementAiUsage();
-          incrementAiUsage();
+          // Arbiter + Victim Response = 2 text requests usually
+          trackUsage('text');
+          trackUsage('text');
           
           // BOTNET MINER SKILL
           if (player.skills.includes('botnet')) {
@@ -542,12 +556,19 @@ const App: React.FC = () => {
                 
                 <div className="flex items-center gap-2 md:gap-6">
                     {/* AI Usage Counter */}
-                    <div className="hidden lg:flex flex-col items-end text-[10px] font-mono text-zinc-500 border-r border-zinc-800 pr-6">
+                    <div className="hidden lg:flex flex-col items-end text-[10px] font-mono text-zinc-500 border-r border-zinc-800 pr-6 relative group cursor-help">
                         <div className="flex items-center gap-2">
-                            <Zap size={10} className="text-blue-500"/> API USAGE: {aiRequests} REQS
+                            <Zap size={10} className="text-blue-500"/> TOTAL AI COST: ${player.stats?.totalCost.toFixed(4) || "0.0000"}
                         </div>
                         <div className="text-blue-400/60">
-                            EST. COST: ${(aiRequests * 0.0002).toFixed(4)}
+                           TXT: {player.stats?.textRequests || 0} | IMG: {player.stats?.imageRequests || 0}
+                        </div>
+                        
+                        {/* Cost Breakdown Tooltip */}
+                        <div className="absolute top-full right-0 mt-2 bg-zinc-900 border border-zinc-700 p-2 rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-48 z-50">
+                            <div className="text-white font-bold mb-1 border-b border-zinc-700 pb-1">SESSION COSTS</div>
+                            <div className="flex justify-between"><span>Text:</span> <span className="text-zinc-400">${(player.stats?.textRequests * AI_COSTS.TEXT_REQUEST).toFixed(4)}</span></div>
+                            <div className="flex justify-between"><span>Image:</span> <span className="text-zinc-400">${(player.stats?.imageRequests * AI_COSTS.IMAGE_REQUEST).toFixed(4)}</span></div>
                         </div>
                     </div>
 

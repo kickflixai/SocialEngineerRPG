@@ -65,6 +65,12 @@ export interface ScamHistoryItem {
   failReason?: string; 
 }
 
+export interface AiStats {
+  textRequests: number;
+  imageRequests: number;
+  totalCost: number;
+}
+
 export interface PlayerState {
   attributes: PlayerAttributes;
   money: number;
@@ -74,6 +80,7 @@ export interface PlayerState {
   skills: string[];
   achievements: string[];
   history: ScamHistoryItem[];
+  stats: AiStats;
 }
 
 export interface VictimTraits {

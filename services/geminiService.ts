@@ -230,13 +230,16 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         console.error("Victim text gen failed", e);
     }
     
-    // Generate avatar (Same as before)
+    // Generate avatar - WE MUST AWAIT THIS TO ENSURE IT'S READY
     let avatarUrl = "https://picsum.photos/400/400";
     try {
+        // Enforce age visuals
+        const ageDesc = age > 60 ? "elderly, wrinkled, senior citizen" : age > 40 ? "middle aged" : "young adult";
+
         const imageResponse = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({
             model: 'gemini-2.5-flash-image',
             contents: { parts: [{ text: `
-                Real close-up face selfie photo of ${data.name}, ${data.age} year old ${data.gender}, ${data.flavor}.
+                Real close-up face selfie photo of ${data.name}, ${data.age} year old ${ageDesc} ${data.gender}, ${data.flavor}.
                 Context: Social media profile picture, face shot, low quality webcam or phone camera.
                 Lighting: Bad indoor lighting, flash, or natural candid light.
                 Texture: Grainy, noisy, skin pores, imperfections, realistic, amateur.
@@ -261,6 +264,9 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
     } catch (e) {
         console.error("Victim avatar failed", e);
     }
+
+    // Wait 100ms just to be safe if anything async lagged
+    await new Promise(r => setTimeout(r, 100));
 
     return {
         id: crypto.randomUUID(),
@@ -321,6 +327,19 @@ export const getVictimResponse = async (
             Tech Literacy: ${victim.traits.techLiteracy}/100 (High=Understand tech, Low=Grandma)
         `;
 
+        // AGE PROTOCOL
+        let ageProtocol = "";
+        if (victim.age > 60) {
+            ageProtocol = `
+            *** ELDERLY PROTOCOL ACTIVE (Age: ${victim.age}) ***
+            - You are confused by modern tech jargon.
+            - You type slowly (short sentences).
+            - You might sign your messages (e.g., "- Love, Grandma" or "- ${victim.name}").
+            - You misuse capitalization randomly.
+            - You are polite but easily confused.
+            `;
+        }
+
         // CHECK FOR HACKS IN LAST MESSAGE
         const lastMsg = history[history.length - 1];
         let hackRealityOverride = "";
@@ -347,6 +366,7 @@ export const getVictimResponse = async (
             
             *** PSYCHOMETRIC PROFILE (BEHAVIOR DRIVERS) ***
             ${traitString}
+            ${ageProtocol}
             
             *** IDENTITY CORE ***
             FLAVOR: ${victim.flavor} 
@@ -381,7 +401,7 @@ export const getVictimResponse = async (
             ${hasAuthVoice}
             
             INSTRUCTIONS:
-            1. Respond in character using your TRAITS and FLAVOR.
+            1. Respond in character using your TRAITS, FLAVOR, and AGE.
             2. Keep it realistic. Short (2-3 sentences).
             3. If trust is high OR if a Hack Override validates the request, provide the info requested in the Hidden Agenda.
             
