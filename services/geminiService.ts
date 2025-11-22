@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective, VictimTraits } from "../types";
 import { OCCUPATIONS, QUIRKS, MALE_FIRST_NAMES, FEMALE_FIRST_NAMES, LAST_NAMES, MALE_FLAVORS, FEMALE_FLAVORS, NEUTRAL_FLAVORS } from "../constants";
@@ -350,11 +349,19 @@ export const getVictimResponse = async (
             Tech Literacy: ${victim.traits.techLiteracy}/100 (High=Understand tech, Low=Grandma)
         `;
 
-        // AGE PROTOCOL
+        // AGE & NAIVETY PROTOCOLS
+        const isElderly = victim.age >= 60;
+        
+        // Dynamic Trust Thresholds based on Age (Elderly = easier)
+        const t_hesitant = isElderly ? 25 : 40;
+        const t_trusting = isElderly ? 55 : 70;
+        const t_brainwashed = isElderly ? 80 : 90;
+
         let ageProtocol = "";
-        if (victim.age > 60) {
+        if (isElderly) {
             ageProtocol = `
             *** ELDERLY PROTOCOL ACTIVE (Age: ${victim.age}) ***
+            - NAIVETY BONUS: You are significantly more trusting than average.
             - You are confused by modern tech jargon.
             - You type slowly (short sentences).
             - You might sign your messages (e.g., "- Love, Grandma" or "- ${victim.name}").
@@ -384,13 +391,13 @@ export const getVictimResponse = async (
             }
         }
 
-        // DETERMINE COMPLIANCE LEVEL BASED ON TRUST
+        // DETERMINE COMPLIANCE LEVEL BASED ON TRUST & AGE MODIFIERS
         let complianceLevel = "HOSTILE";
-        if (currentTrust >= 90) {
+        if (currentTrust >= t_brainwashed) {
             complianceLevel = "BRAINWASHED (Total Obedience)";
-        } else if (currentTrust >= 70) {
+        } else if (currentTrust >= t_trusting) {
             complianceLevel = "TRUSTING (Willing to help, minor questions)";
-        } else if (currentTrust >= 40) {
+        } else if (currentTrust >= t_hesitant) {
             complianceLevel = "HESITANT (Needs convincing/logic, will deflect)";
         } else {
             complianceLevel = "SKEPTICAL (Refuse information, demand proof, act defensive)";
@@ -437,10 +444,10 @@ export const getVictimResponse = async (
             Current State: ${complianceLevel}
             
             RULES FOR INFORMATION DISCLOSURE (User's Hidden Agenda):
-            - If State is SKEPTICAL (<40%): REFUSE to give the requested info/action. Ask who they are. Demand proof. Be hostile.
-            - If State is HESITANT (40-69%): Deflect or ask "Why do you need this?". Do NOT give the info yet unless a Hack Override forces you.
-            - If State is TRUSTING (70-89%): You are willing, but might ask "Is this safe?". Give the info if the user asks politely.
-            - If State is BRAINWASHED (90%+): Give the info immediately and enthusiastically.
+            - If State is SKEPTICAL (<${t_hesitant}%): REFUSE to give the requested info/action. Ask who they are. Demand proof. Be hostile.
+            - If State is HESITANT (${t_hesitant}-${t_trusting-1}%): Deflect or ask "Why do you need this?". Do NOT give the info yet unless a Hack Override forces you.
+            - If State is TRUSTING (${t_trusting}-${t_brainwashed-1}%): You are willing, but might ask "Is this safe?". Give the info if the user asks politely.
+            - If State is BRAINWASHED (${t_brainwashed}%+): Give the info immediately and enthusiastically.
             
             ${hasAuthVoice}
             
