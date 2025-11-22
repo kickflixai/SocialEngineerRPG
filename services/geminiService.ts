@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective, VictimTraits } from "../types";
 import { OCCUPATIONS, QUIRKS, MALE_FIRST_NAMES, FEMALE_FIRST_NAMES, LAST_NAMES, MALE_FLAVORS, FEMALE_FLAVORS, NEUTRAL_FLAVORS } from "../constants";
@@ -165,8 +164,15 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
 
     // GENERATE PERSONALITY MATRIX (0-100)
     // Adjust based on difficulty and age
-    const baseSkepticism = difficulty === 'easy' ? 20 : difficulty === 'medium' ? 50 : 80;
-    const baseTech = age > 60 ? 30 : age < 30 ? 80 : 50;
+    const isElderly = age >= 60;
+    let baseSkepticism = difficulty === 'easy' ? 20 : difficulty === 'medium' ? 50 : 80;
+    
+    // ELDERLY MODIFIER: Significantly reduce skepticism
+    if (isElderly) {
+        baseSkepticism = Math.max(0, baseSkepticism - 20);
+    }
+
+    const baseTech = isElderly ? 30 : age < 30 ? 80 : 50;
 
     const traits: VictimTraits = {
         openness: Math.floor(Math.random() * 100),
@@ -363,6 +369,7 @@ export const getVictimResponse = async (
             ageProtocol = `
             *** ELDERLY PROTOCOL ACTIVE (Age: ${victim.age}) ***
             - NAIVETY BONUS: You are significantly more trusting than average.
+            - SCAM BLINDNESS: You are unaware that scams exist on the internet. You assume people are generally honest and wouldn't lie to you for money.
             - You are confused by modern tech jargon.
             - You type slowly (short sentences).
             - You might sign your messages (e.g., "- Love, Grandma" or "- ${victim.name}").
