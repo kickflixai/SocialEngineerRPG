@@ -61,6 +61,10 @@ const COUNTRY_VISUALS: Record<string, string> = {
     'China': 'Shanghai neon skyline or Shenzhen tech lab background, East Asian Chinese ethnicity, futuristic modern clothing or industrial workwear, cool cyberpunk lighting tones'
 };
 
+// Tracking Hook placeholder (Injected by App if needed, but simpler to just estimate cost in App layer)
+// However, the prompt requested usage tracking. We will assume App handles the counting by wrapping these calls or we can't easily pass state up without context.
+// We will leave these pure and handle counting in the UI layer or wrapper.
+
 export const generatePlayerAvatar = async (attrs: PlayerAttributes): Promise<string> => {
     try {
         const ai = getClient();
@@ -305,7 +309,8 @@ export const getVictimResponse = async (
     victim: Victim, 
     scamCategory: string, 
     activeObjective: ScamObjective,
-    currentTrust: number
+    currentTrust: number,
+    playerSkills: string[] = []
 ): Promise<{ text: string, objectiveComplete: boolean, policeTriggered: boolean, callTerminated: boolean }> => {
     try {
         const ai = getClient();
@@ -315,6 +320,10 @@ export const getVictimResponse = async (
             .replace(/\btheir\b/gi, "YOUR")
             .replace(/\bthem\b/gi, "YOU")
             .replace(/\bthey\b/gi, "YOU");
+
+        // SKILL MODIFIERS IN PROMPT
+        const hasAuthVoice = playerSkills.includes('authority_voice') ? 
+            "The user has an 'Authority Voice' skill. If they use authoritative language, you are subconsciously more likely to comply." : "";
 
         const context = `
             You are roleplaying as ${victim.name}, a ${victim.age}-year-old ${victim.gender} ${victim.occupation}.
@@ -358,6 +367,9 @@ export const getVictimResponse = async (
             - 31-70%: Neutral/Cautious.
             - 71-90%: Friendly/Gullible. Willing to overlook oddities if explained creatively.
             - 91-100%: BRAINWASHED. You fully believe the user. You interpret "glitches" or "hacks" (like flickering lights) as exactly what the user says they are.
+            
+            MODIFIERS:
+            ${hasAuthVoice}
             
             LORE GENERATION & FLEXIBILITY RULE:
             - If the user asks you a specific personal question to fulfill their goal (e.g., "What is your first pet's name?", "What street did you grow up on?"), and your Trust is reasonably high (> 30%):
@@ -435,7 +447,8 @@ export const arbitrateChat = async (
     scamCategory: string, 
     activeObjective: ScamObjective,
     hasCompletedFinal: boolean,
-    history: ChatMessage[] // Added history to check for synergy
+    history: ChatMessage[], // Added history to check for synergy
+    playerSkills: string[] = []
 ): Promise<ArbiterResponse> => {
     try {
         const ai = getClient();
@@ -461,6 +474,10 @@ export const arbitrateChat = async (
             `
         };
 
+        // SKILL MODIFIERS
+        const hasColdReading = playerSkills.includes('cold_reading');
+        const hasAuthVoice = playerSkills.includes('authority_voice');
+
         // Construct context from recent history to detect Hack Synergy
         const recentHistory = history.slice(-5); // Look at last 5 messages
         const historyText = recentHistory.map(m => `[${m.sender.toUpperCase()}]: ${m.text}`).join('\n');
@@ -482,6 +499,10 @@ export const arbitrateChat = async (
             Current Suspicion: ${currentSuspicion} / 100.
             
             ${difficultyInstructions[victim.difficulty]}
+
+            PLAYER SKILLS:
+            - Cold Reading: ${hasColdReading ? "ACTIVE (Provide deeper psychological analysis in 'internalThought')" : "INACTIVE"}
+            - Authority Voice: ${hasAuthVoice ? "ACTIVE (Boost Trust Gain slightly if player uses authoritative tone)" : "INACTIVE"}
             
             TASK:
             1. Determine TRUST change.

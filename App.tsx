@@ -12,7 +12,7 @@ import VictimDossier from './components/VictimDossier';
 import LandingScreen from './components/LandingScreen'; 
 import InventoryModal from './components/InventoryModal';
 import ScamResult from './components/ScamResult';
-import { Siren, Skull, ArrowLeft, Cpu, AlertOctagon, Terminal, Shield, Volume2, VolumeX } from 'lucide-react';
+import { Siren, Skull, ArrowLeft, Cpu, AlertOctagon, Terminal, Shield, Volume2, VolumeX, Zap } from 'lucide-react';
 
 const STORAGE_KEY = 'SCAM_SIM_SAVE_V1';
 
@@ -38,6 +38,9 @@ const App: React.FC = () => {
   const [showInventory, setShowInventory] = useState(false);
   const [highValueTargetActive, setHighValueTargetActive] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  
+  // AI Usage Tracking (Session Based)
+  const [aiRequests, setAiRequests] = useState(0);
   
   // Last Result for Result Screen
   const [lastResult, setLastResult] = useState<{
@@ -117,6 +120,10 @@ const App: React.FC = () => {
       setIsMuted(muted);
   };
 
+  const incrementAiUsage = () => {
+      setAiRequests(prev => prev + 1);
+  };
+
   // --- ACTION HANDLERS ---
 
   const handleResumeGame = () => {
@@ -157,6 +164,7 @@ const App: React.FC = () => {
     });
     setActiveScam(null);
     setHighValueTargetActive(false);
+    setAiRequests(0);
 
     // Start
     audioManager.startDashboardTheme();
@@ -166,6 +174,7 @@ const App: React.FC = () => {
 
   const handleCharacterComplete = (attrs: PlayerAttributes) => {
     audioManager.playSuccess();
+    incrementAiUsage(); // Avatar gen
     // Retrieve Country Data
     const countryStats = COUNTRY_DATA[attrs.country] || COUNTRY_DATA['USA'];
 
@@ -217,13 +226,21 @@ const App: React.FC = () => {
     audioManager.startScanLoop(); 
     setLoadingScam(true);
     try {
+        incrementAiUsage(); // Find target
         const victim = await generateVictim(difficulty);
+        incrementAiUsage(); // Avatar gen for victim
         
         const countryStats = COUNTRY_DATA[player.attributes.country];
         const trustBonus = countryStats?.modifiers?.trustStartBonus || 0;
 
         let baseTrust = difficulty === 'easy' ? 40 : difficulty === 'medium' ? 20 : 0;
         
+        // Skill: Love Bomb
+        if (player.skills.includes('love_bomb')) {
+             // Applied later during finalizeScam if category matches, or we apply generically now?
+             // Since category isn't chosen yet, we apply it in finalizeScam
+        }
+
         setActiveScam({
             victim,
             category: '', 
@@ -256,6 +273,7 @@ const App: React.FC = () => {
       audioManager.playSuccess();
       setGeneratingOpener(true);
       try {
+          incrementAiUsage(); // Opener
           const opener = await generateOpener(category, activeScam.victim);
           
           const scenarios = SCAM_SCENARIOS[category] || SCAM_SCENARIOS["Grandson in Trouble"];
@@ -267,11 +285,18 @@ const App: React.FC = () => {
               { id: '3', description: randomScenario.final, isCompleted: false, isFinal: true, order: 3 }
           ];
 
+          // Apply 'Love Bomb' Skill
+          let initialTrust = activeScam.trust;
+          if (category === 'Romance Scam' && player.skills.includes('love_bomb')) {
+              initialTrust = Math.min(100, initialTrust + 15);
+          }
+
           setActiveScam(prev => prev ? ({
               ...prev,
               category: category,
               objectives: objectives,
-              history: [{ sender: 'player', text: opener, timestamp: Date.now() }]
+              history: [{ sender: 'player', text: opener, timestamp: Date.now() }],
+              trust: initialTrust
           }) : null);
           setView(GameView.ACTIVE_SCAM);
       } catch (e) {
@@ -362,6 +387,7 @@ const App: React.FC = () => {
         moneyChange = Math.floor((baseReward + Math.floor(Math.random() * 1000)) * totalMult);
 
         // Fetch funny summary
+        incrementAiUsage();
         summary = await generateScamSummary(activeScam.history, activeScam.victim);
 
     } else if (result === 'police') {
@@ -462,6 +488,19 @@ const App: React.FC = () => {
       }
   };
 
+  const handleScamAction = (type: 'message_sent') => {
+      if (type === 'message_sent') {
+          // Arbiter + Victim Response = 2 requests usually
+          incrementAiUsage();
+          incrementAiUsage();
+          
+          // BOTNET MINER SKILL
+          if (player.skills.includes('botnet')) {
+              setPlayer(prev => ({...prev, money: prev.money + 5}));
+          }
+      }
+  };
+
   if (view === GameView.GAME_OVER) {
       return (
           <div className="w-screen h-[100dvh] bg-red-950 flex items-center justify-center flex-col text-red-500 space-y-8 relative overflow-hidden">
@@ -495,7 +534,18 @@ const App: React.FC = () => {
                         <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest hidden md:block">Dark Web Interface // Secured</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2 md:gap-4">
+                
+                <div className="flex items-center gap-2 md:gap-6">
+                    {/* AI Usage Counter */}
+                    <div className="hidden lg:flex flex-col items-end text-[10px] font-mono text-zinc-500 border-r border-zinc-800 pr-6">
+                        <div className="flex items-center gap-2">
+                            <Zap size={10} className="text-blue-500"/> API USAGE: {aiRequests} REQS
+                        </div>
+                        <div className="text-blue-400/60">
+                            EST. COST: ${(aiRequests * 0.0002).toFixed(4)}
+                        </div>
+                    </div>
+
                     <button onClick={toggleAudio} className="p-2 rounded bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-white hover:border-zinc-600 transition-colors">
                         {isMuted ? <VolumeX size={16}/> : <Volume2 size={16}/>}
                     </button>
@@ -574,6 +624,7 @@ const App: React.FC = () => {
                         setShowInventory(true);
                     }}
                     onConsumeItem={handleConsumeItem}
+                    onAction={handleScamAction}
                 />
             )}
             
@@ -685,7 +736,7 @@ const App: React.FC = () => {
                             const canAfford = player.money >= finalCost;
                             
                             return (
-                                <div key={item.id} className={`bg-zinc-900/50 border border-zinc-800 p-6 md:p-8 rounded-2xl flex flex-col justify-between transition-all group backdrop-blur-sm ${canAfford ? 'hover:border-purple-500/50' : 'opacity-50 grayscale cursor-not-allowed'}`}>
+                                <div key={item.id} className={`bg-zinc-900/50 border border-zinc-800 p-6 md:p-8 rounded-2xl flex flex-col justify-between transition-all group backdrop-blur-sm ${canAfford ? 'hover:border-purple-500/50' : 'opacity-80 grayscale cursor-not-allowed'}`}>
                                     <div>
                                         <div className="flex justify-between items-start mb-4">
                                             <h3 className={`font-bold text-lg md:text-xl transition-colors ${canAfford ? 'text-white group-hover:text-purple-400' : 'text-zinc-500'}`}>{item.name}</h3>
@@ -766,11 +817,11 @@ const SkillCard: React.FC<{ skill: Skill, player: PlayerState, onBuy: () => void
     };
 
     return (
-        <div className={`bg-zinc-900/80 border p-6 rounded-xl relative overflow-hidden transition-all group shadow-lg ${isOwned ? 'border-zinc-700 opacity-70' : canAfford ? `border-zinc-800 hover:-translate-y-1 hover:${colors[color].split(' ')[0]}` : 'border-zinc-800 opacity-50 grayscale cursor-not-allowed'}`}>
+        <div className={`bg-zinc-900/80 border p-6 rounded-xl relative overflow-hidden transition-all group shadow-lg ${isOwned ? 'border-zinc-700 opacity-70' : canAfford ? `border-zinc-800 hover:-translate-y-1 hover:${colors[color].split(' ')[0]}` : 'border-zinc-800 opacity-80 cursor-not-allowed'}`}>
              {isOwned && <div className="absolute top-0 right-0 bg-zinc-800 text-zinc-400 text-[10px] font-bold px-2 py-1 uppercase">Installed</div>}
-             <h3 className={`font-bold text-lg flex items-center gap-2 ${isOwned ? 'text-zinc-500' : canAfford ? 'text-white' : 'text-zinc-600'}`}>{skill.name}</h3>
+             <h3 className={`font-bold text-lg flex items-center gap-2 ${isOwned ? 'text-zinc-500' : canAfford ? 'text-white' : 'text-zinc-500'}`}>{skill.name}</h3>
              <p className="text-zinc-500 text-xs mt-2 mb-4 leading-relaxed">{skill.description}</p>
-             <button onClick={onBuy} disabled={!canAfford || isOwned} className={`w-full py-2 rounded text-xs font-bold uppercase tracking-wider transition-all ${isOwned ? 'bg-zinc-800 text-zinc-600 cursor-default' : canAfford ? `${colors[color].split(' ').pop()} hover:brightness-110 text-white shadow-lg` : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'}`}>{isOwned ? 'Active' : canAfford ? `Install $${finalCost}` : 'Insufficient Funds'}</button>
+             <button onClick={onBuy} disabled={!canAfford || isOwned} className={`w-full py-2 rounded text-xs font-bold uppercase tracking-wider transition-all ${isOwned ? 'bg-zinc-800 text-zinc-600 cursor-default' : canAfford ? `${colors[color].split(' ').pop()} hover:brightness-110 text-white shadow-lg` : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'}`}>{isOwned ? 'Active' : `Install $${finalCost}`}</button>
         </div>
     );
 };

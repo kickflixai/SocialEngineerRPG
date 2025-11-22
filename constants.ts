@@ -1,3 +1,4 @@
+
 import { Skill, ShopItem, CountryStats, Achievement, HackAbility } from './types';
 
 export const INITIAL_MONEY = 1000;
@@ -665,7 +666,7 @@ export const SKILLS: Skill[] = [
     id: 'cold_reading',
     name: 'Cold Reading',
     description: 'AI Arbiter gives more detailed internal thoughts about the victim.',
-    cost: 6000,
+    cost: 4000,
     icon: 'Eye',
     category: 'social'
   },
@@ -681,7 +682,7 @@ export const SKILLS: Skill[] = [
     id: 'authority_voice',
     name: 'Authority Voice',
     description: 'Increases Trust gain when acting authoritative.',
-    cost: 10000,
+    cost: 8000,
     icon: 'Megaphone',
     category: 'social'
   },
@@ -713,7 +714,7 @@ export const SKILLS: Skill[] = [
     id: 'deepfake_audio',
     name: 'Deepfake Audio',
     description: 'Unlocks "Voice Note" scams (Automatic high trust opener).',
-    cost: 8000,
+    cost: 6000,
     icon: 'Mic',
     category: 'tech'
   },
@@ -760,8 +761,8 @@ export const SKILLS: Skill[] = [
   {
     id: 'botnet',
     name: 'Botnet Miner',
-    description: 'Passive income: Generates $100 every time you send a message.',
-    cost: 12000,
+    description: 'Passive income: Generates $5 every time you send a message.',
+    cost: 15000,
     icon: 'Cpu',
     category: 'ops'
   },
@@ -1004,20 +1005,24 @@ export const NEUTRAL_FLAVORS = [
     "Bio-Hacker", "Raw Vegan", "Professional Victim", "Internet Troll", "Weeb", 
     "Compulsive Gambler", "Mall Ninja", "Doomsday Prepper", "UFO Witness", "Ghost Hunter", 
     "Amateur of BDSM", "Virgin", "Obese", "Clinically Retarded", "Paraplegic", "Blind", "Deaf", "Mute",
-    "Lizard Person Believer", "Time Traveler", "Reincarnated Pharoah", "Vampire", "Werewolf",
-    "Zombie", "Alien", "Robot", "Cyborg", "Mutant", "Wizard", "Witch", "Warlock", "Sorcerer",
-    "Mage", "Druid", "Cleric", "Paladin", "Bard", "Rogue", "Ranger", "Monk", "Barbarian",
-    "Fighter", "Ninja", "Samurai", "Cowboy", "Pirate", "Viking", "Spartan", "Knight"
+    "Lizard Person Believer", "Time Traveler", "Reincarnated Pharoah", "NFT Artist",
+    "Crypto Scammer", "Ex-convict", "Down Syndrome", "Sexist", "4Chan Enthousiast", "IPad addict",
+    "PC Master Race Elitist", "CrossFitter", "Ancient Aliens Theorist", "Dropshipper",
+    "Alpha Male Podcaster", "Boomer", "Bath Salts Connoisseur", "Gas Station Knife Collector",
+    "Public Masturbator", "Serial Arsonist", "Goon Cave Dweller", "Simp Lord", "Urine Therapy Advocate",
+    "Cult Leader", "Prophet of Doom", "Human Pet", "Neckbeard", "Hoarder"
 ];
 
 export const MALE_FLAVORS = [
     "Alpha Male", "Crypto Bro", "Foot Fetishist", "Gamer Girl Bath Water Buyer", 
     "Clinically Obsessed with Musk", "OnlyFans Simp", "Finance Bro", "Incel", 
-    "Pick-up Artist", "Gym Rat", "Mansplainer", "Reply Guy", "Neckbeard"
+    "Pick-up Artist", "Gym Rat", "Mansplainer", "Reply Guy", "Neckbeard", "Finance Bro",
+    "Florida Man"
 ];
 
 export const FEMALE_FLAVORS = [
     "MLM 'Boss Babe'", "Hardcore K-Pop Stan", "Van Life Influencer", "Astrology Girlie",
     "Trad Wife", "Horse Girl", "Tennis Mom", "Karen", "Crystal Healer", "WitchToker",
-    "Disney Princess Wannabe", "Cat Lady", "Wine Mom"
+    "Disney Princess Wannabe", "Cat Lady", "Wine Mom", "E-Girl", "Astrology Girl", "Trad Wife",
+    "MLM Boss Babe", "Karen"
 ];

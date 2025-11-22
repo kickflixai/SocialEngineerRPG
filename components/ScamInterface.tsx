@@ -17,17 +17,19 @@ interface Props {
   onAbort: () => void;
   onOpenInventory: () => void;
   onConsumeItem: (item: ShopItem) => ShopItem;
+  onAction: (type: 'message_sent') => void; // Hook for App usage counting and Botnet
 }
 
 type MobileTab = 'comm' | 'intel' | 'sys';
 
-const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd, onAbort, onOpenInventory, onConsumeItem }) => {
+const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd, onAbort, onOpenInventory, onConsumeItem, onAction }) => {
   const [input, setInput] = useState('');
   const [processing, setProcessing] = useState(false);
   const [lastThought, setLastThought] = useState<string | null>(null);
   
   const [showAbortConfirm, setShowAbortConfirm] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
+  const [viewSuccessModal, setViewSuccessModal] = useState(false);
   
   // Mobile Tabs
   const [mobileTab, setMobileTab] = useState<MobileTab>('comm');
@@ -83,7 +85,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
          const fetchFirstReply = async () => {
              setProcessing(true);
              try {
-                 const replyData = await getVictimResponse(scam.history, scam.victim, scam.category, activeObjective, scam.trust);
+                 const replyData = await getVictimResponse(scam.history, scam.victim, scam.category, activeObjective, scam.trust, player.skills);
                  audioManager.playMessageReceived();
                  const newHistory = [...scam.history, { sender: 'victim', text: replyData.text, timestamp: Date.now() } as ChatMessage];
                  onUpdateScam({
@@ -95,7 +97,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
          };
          fetchFirstReply();
      }
-  }, [scam, onUpdateScam, activeObjective]);
+  }, [scam, onUpdateScam, activeObjective, player.skills]);
 
   // Intercept consumption to handle local state
   const handleUseItem = (item: ShopItem) => {
@@ -140,10 +142,19 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       const systemMsgText = `[${hack.name.toUpperCase()}] ${hack.systemMessage}`;
       const newHistory = [...scam.history, { sender: 'system', text: systemMsgText, timestamp: Date.now() } as ChatMessage];
       
+      // Handle Mechanical Effects (Unlock Intel)
+      const updatedRevealedFacts = [...scam.revealedFacts];
+      if (hack.id === 'background_check') { // Quick Dox
+          if (!updatedRevealedFacts.includes('secret')) {
+              updatedRevealedFacts.push('secret');
+          }
+      }
+
       onUpdateScam({
           ...scam,
           socialCharge: newCharge,
-          history: newHistory
+          history: newHistory,
+          revealedFacts: updatedRevealedFacts
       });
 
       setHackCooldown(hack.id);
@@ -154,13 +165,15 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
 
       setProcessing(true);
       try {
-          const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, activeObjective, scam.trust);
+          onAction('message_sent');
+          const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, activeObjective, scam.trust, player.skills);
           audioManager.playMessageReceived();
           
           if (replyData.policeTriggered) {
                onUpdateScam({
                   ...scam,
-                  history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() }]
+                  history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() }],
+                  revealedFacts: updatedRevealedFacts
               });
               onScamEnd('police', 'Target contacted authorities');
               return;
@@ -168,7 +181,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
           if (replyData.callTerminated) {
                onUpdateScam({
                   ...scam,
-                  history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() }]
+                  history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() }],
+                  revealedFacts: updatedRevealedFacts
               });
               onScamEnd('failed', 'Target disconnected call');
               return;
@@ -177,7 +191,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
           onUpdateScam({
               ...scam,
               socialCharge: newCharge,
-              history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() } as ChatMessage]
+              history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() } as ChatMessage],
+              revealedFacts: updatedRevealedFacts
           });
       } catch (e) {
           console.error(e);
@@ -192,6 +207,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
 
     audioManager.playMessageSent();
     setHints([]);
+    onAction('message_sent');
     const playerMsg: ChatMessage = { sender: 'player', text: msgToSend, timestamp: Date.now() };
     const newHistory = [...scam.history, playerMsg];
     
@@ -209,7 +225,8 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             scam.category, 
             activeObjective, 
             allCompleted,
-            newHistory
+            newHistory,
+            player.skills
         );
         
         setLastThought(analysis.internalThought);
@@ -232,6 +249,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         let updatedObjectives = [...scam.objectives];
         let isObjectiveComplete = analysis.objectiveComplete;
 
+        // Check for Scam Success logic
         if (analysis.scamStatus === 'success') {
             const objIndex = updatedObjectives.findIndex(o => o.id === activeObjective.id);
             if (objIndex !== -1) updatedObjectives[objIndex] = { ...updatedObjectives[objIndex], isCompleted: true };
@@ -258,7 +276,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         }
         
         const nextActiveObjective = updatedObjectives.find(o => !o.isCompleted) || updatedObjectives[updatedObjectives.length - 1];
-        const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, nextActiveObjective, newTrust);
+        const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, nextActiveObjective, newTrust, player.skills);
         audioManager.playMessageReceived();
 
         if (replyData.policeTriggered) {
@@ -311,6 +329,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       onUpdateScam({ ...scam, trust: Math.max(0, scam.trust - 10) });
       setLoadingHints(true);
       try {
+          onAction('message_sent');
           const suggestions = await generateScamHint(scam.history, activeObjective.description, scam.victim);
           setHints(suggestions);
       } catch (e) { console.error(e); } finally { setLoadingHints(false); }
@@ -318,6 +337,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
 
   const hasDoxxing = player.skills.includes('doxxing_suite');
   const hasScraper = player.skills.includes('social_scraper');
+  const secretRevealed = hasDoxxing || scam.revealedFacts.includes('secret');
 
   return (
     <div className="flex flex-col h-full bg-black overflow-hidden relative">
@@ -359,13 +379,6 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                  </div>
                  <h2 className="text-base md:text-lg font-bold text-white font-mono truncate w-full tracking-tight mb-0.5">{scam.victim.name}</h2>
                  <p className="text-zinc-500 text-[10px] font-mono uppercase tracking-widest mb-3">{scam.victim.age} Y/O // {scam.victim.occupation}</p>
-                 
-                 <div className="w-full bg-zinc-900/30 p-2 rounded border border-zinc-800/50 mt-2">
-                    <h4 className="text-zinc-400 text-[10px] font-bold uppercase mb-1 flex items-center gap-2 justify-center tracking-wider">
-                        <Fingerprint size={12} className="text-purple-400"/> Psych Profile
-                    </h4>
-                    <p className="text-zinc-300 text-[10px] leading-relaxed font-mono">{scam.victim.personality}</p>
-                </div>
             </div>
 
             <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-4 md:p-5 shadow-xl space-y-5 backdrop-blur-sm relative flex flex-col shrink-0">
@@ -504,21 +517,32 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                         </button>
                      </div>
 
-                     <input 
-                        ref={inputRef}
-                        type="text" 
-                        value={input} 
-                        // Only autoFocus on desktop to prevent mobile keyboard flicker on tab switch
-                        autoFocus={window.innerWidth > 768}
-                        onChange={(e) => {
-                            setInput(e.target.value);
-                        }} 
-                        onKeyDown={(e) => e.key === 'Enter' && handleSend()} 
-                        disabled={processing} 
-                        placeholder="Type payload..." 
-                        className="flex-1 bg-black border border-zinc-700 rounded-lg p-3 text-white placeholder-zinc-600 focus:border-green-500 focus:ring-1 focus:ring-green-500/20 outline-none transition-all font-mono text-xs"
-                     />
-                     <button onClick={() => handleSend()} disabled={processing || !input.trim()} className="bg-green-600 hover:bg-green-500 disabled:bg-zinc-900 disabled:text-zinc-700 disabled:border-zinc-800 text-black font-bold px-4 rounded-lg transition-all flex items-center justify-center"><Send size={18} /></button>
+                     {allCompleted ? (
+                         <button 
+                            onClick={() => setViewSuccessModal(true)}
+                            className="flex-1 bg-green-600 hover:bg-green-500 text-black font-bold rounded-lg p-3 flex items-center justify-center gap-2 animate-pulse"
+                         >
+                             <CheckCircle2 size={20} /> MISSION COMPLETE - SECURE FUNDS
+                         </button>
+                     ) : (
+                        <>
+                            <input 
+                                ref={inputRef}
+                                type="text" 
+                                value={input} 
+                                // Only autoFocus on desktop to prevent mobile keyboard flicker on tab switch
+                                autoFocus={window.innerWidth > 768}
+                                onChange={(e) => {
+                                    setInput(e.target.value);
+                                }} 
+                                onKeyDown={(e) => e.key === 'Enter' && handleSend()} 
+                                disabled={processing} 
+                                placeholder="Type payload..." 
+                                className="flex-1 bg-black border border-zinc-700 rounded-lg p-3 text-white placeholder-zinc-600 focus:border-green-500 focus:ring-1 focus:ring-green-500/20 outline-none transition-all font-mono text-xs"
+                            />
+                            <button onClick={() => handleSend()} disabled={processing || !input.trim()} className="bg-green-600 hover:bg-green-500 disabled:bg-zinc-900 disabled:text-zinc-700 disabled:border-zinc-800 text-black font-bold px-4 rounded-lg transition-all flex items-center justify-center"><Send size={18} /></button>
+                        </>
+                     )}
                  </div>
             </div>
            </div>
@@ -528,15 +552,27 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                
                {/* TARGET ANALYSIS */}
                <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-3 shrink-0 space-y-3">
-                    <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-2">Target Analysis</h3>
+                    <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-2 flex items-center justify-between">
+                        <span>Target Analysis</span>
+                        <div className="flex gap-1">
+                            {/* Move Psych Profile to top right properly if needed, currently below is fine */}
+                        </div>
+                    </h3>
                     
+                    <div className="bg-zinc-900/30 p-2 rounded border border-zinc-800/50 flex flex-col gap-1">
+                        <h4 className="text-zinc-400 text-[10px] font-bold uppercase flex items-center gap-2 tracking-wider">
+                            <Fingerprint size={12} className="text-purple-400"/> Psych Profile
+                        </h4>
+                        <p className="text-zinc-300 text-xs leading-relaxed font-mono">{scam.victim.personality}</p>
+                    </div>
+
                     <div className="bg-zinc-900/30 p-2 rounded border border-zinc-800/50 flex flex-col gap-1">
                         <h4 className="text-zinc-400 text-[10px] font-bold uppercase flex items-center gap-2 tracking-wider">
                             <Database size={12} className="text-orange-400"/> Intel
                         </h4>
                         <div className="flex justify-between items-center text-[10px]">
                             <span className="text-zinc-500">SECRET:</span>
-                            <span className={`font-mono ${hasDoxxing ? 'text-green-400' : 'text-red-900'}`}>{hasDoxxing ? scam.victim.hiddenFact : 'ENCRYPTED'}</span>
+                            <span className={`font-mono ${secretRevealed ? 'text-green-400' : 'text-red-900'}`}>{secretRevealed ? scam.victim.hiddenFact : 'ENCRYPTED'}</span>
                         </div>
                         <div className="flex justify-between items-center text-[10px]">
                             <span className="text-zinc-500">WEAKNESS:</span>
@@ -613,7 +649,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
                 </motion.div>
             )}
 
-             {scam.objectives.every(o => o.isCompleted) && (
+             {viewSuccessModal && (
                 <motion.div initial={{opacity: 0}} animate={{opacity: 1}} className="absolute inset-0 z-50 bg-green-950/90 flex items-center justify-center backdrop-blur-sm p-4">
                     <div className="text-center space-y-6 p-8 md:p-12 border-2 border-green-500 rounded-2xl bg-black shadow-[0_0_50px_rgba(34,197,94,0.5)] max-w-lg w-full">
                         <CheckCircle2 size={60} className="text-green-500 mx-auto animate-bounce"/>
