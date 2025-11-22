@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { PlayerState, GameView } from '../types';
-import { ShieldAlert, ShoppingBag, BrainCircuit, Package, Power, Zap, Crosshair, MapPin, Activity, Trophy, Award, Lock, User, Terminal, BarChart3, Hash, Clock, Globe, History, UserX, CheckCircle2, XCircle } from 'lucide-react';
+import { ShieldAlert, ShoppingBag, BrainCircuit, Package, Power, Zap, Crosshair, MapPin, Activity, Trophy, Award, Lock, History, UserX, BarChart3 } from 'lucide-react';
 import { ACHIEVEMENTS } from '../constants';
 import { motion } from 'framer-motion';
 
@@ -40,11 +40,11 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
   };
 
   return (
-    <div className="h-full w-full bg-black text-green-500 font-mono overflow-hidden flex flex-col relative p-2 md:p-6 gap-4 select-none">
+    <div className="h-full w-full bg-black text-green-500 font-mono flex flex-col relative p-2 md:p-6 gap-4 select-none overflow-y-auto custom-scrollbar overflow-x-hidden">
       {/* Global CRT & Scanline Effects */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-0 pointer-events-none bg-[length:100%_4px,3px_100%] opacity-20"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,20,0,0.1),#000)] z-0 pointer-events-none opacity-60"></div>
-      <div className="absolute inset-0 z-0 pointer-events-none bg-[linear-gradient(0deg,transparent_24%,rgba(0,255,0,.03)_25%,rgba(0,255,0,.03)_26%,transparent_27%,transparent_74%,rgba(0,255,0,.03)_75%,rgba(0,255,0,.03)_76%,transparent_77%,transparent),linear-gradient(90deg,transparent_24%,rgba(0,255,0,.03)_25%,rgba(0,255,0,.03)_26%,transparent_27%,transparent_74%,rgba(0,255,0,.03)_75%,rgba(0,255,0,.03)_76%,transparent_77%,transparent)] bg-[length:30px_30px]"></div>
+      <div className="fixed inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-0 pointer-events-none bg-[length:100%_4px,3px_100%] opacity-20"></div>
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,rgba(0,20,0,0.1),#000)] z-0 pointer-events-none opacity-60"></div>
+      <div className="fixed inset-0 z-0 pointer-events-none bg-[linear-gradient(0deg,transparent_24%,rgba(0,255,0,.03)_25%,rgba(0,255,0,.03)_26%,transparent_27%,transparent_74%,rgba(0,255,0,.03)_75%,rgba(0,255,0,.03)_76%,transparent_77%,transparent),linear-gradient(90deg,transparent_24%,rgba(0,255,0,.03)_25%,rgba(0,255,0,.03)_26%,transparent_27%,transparent_74%,rgba(0,255,0,.03)_75%,rgba(0,255,0,.03)_76%,transparent_77%,transparent)] bg-[length:30px_30px]"></div>
 
       <motion.div 
         variants={containerVariants}
@@ -53,51 +53,51 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
         className="flex-1 flex flex-col gap-4 z-10 min-h-0"
       >
         {/* --- TOP ROW: HUD (Expanded) --- */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 shrink-0 min-h-[180px] md:h-[25%]">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 shrink-0 md:min-h-[180px] md:h-[25%]">
             
             {/* PROFILE MODULE */}
-            <motion.div variants={itemVariants} className="md:col-span-5 bg-zinc-900/20 border border-zinc-800/60 relative group p-6 flex gap-6 items-center overflow-hidden backdrop-blur-sm">
+            <motion.div variants={itemVariants} className="md:col-span-5 bg-zinc-900/20 border border-zinc-800/60 relative group p-4 md:p-6 flex gap-4 md:gap-6 items-center overflow-hidden backdrop-blur-sm">
                 {renderCornerBrackets("border-green-500/30 group-hover:border-green-500/60 transition-colors")}
                 
-                <div className="relative w-32 h-32 shrink-0 rounded-xl overflow-hidden border-2 border-zinc-700 group-hover:border-green-500 transition-colors shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+                <div className="relative w-24 h-24 md:w-32 md:h-32 shrink-0 rounded-xl overflow-hidden border-2 border-zinc-700 group-hover:border-green-500 transition-colors shadow-[0_0_20px_rgba(0,0,0,0.5)]">
                      <img src={player.attributes.avatarUrl} alt="User" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
                      <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur px-2 py-1 border-t border-green-500/30 flex justify-center">
                         <span className="text-[9px] text-green-500 font-bold uppercase tracking-widest">ID: {player.attributes.name.split(' ')[0].substring(0, 8)}</span>
                      </div>
                 </div>
                 
-                <div className="flex-1 min-w-0 space-y-3">
+                <div className="flex-1 min-w-0 space-y-2 md:space-y-3">
                     <div>
                         <div className="flex justify-between items-center mb-1">
-                            <span className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-bold">OPERATIVE PROFILE</span>
+                            <span className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-bold">OPERATIVE</span>
                             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                         </div>
-                        <h2 className="text-2xl text-white font-bold truncate tracking-tight">{player.attributes.name}</h2>
+                        <h2 className="text-xl md:text-2xl text-white font-bold truncate tracking-tight">{player.attributes.name}</h2>
                         <p className="text-green-400 font-mono text-xs uppercase tracking-wider">{player.attributes.archetype}</p>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-2 text-[10px] text-zinc-400 font-mono mt-2 border-t border-zinc-800 pt-3">
-                        <div className="flex items-center gap-2">
-                            <Globe size={12} className="text-blue-500"/>
+                        <div className="flex items-center gap-2 truncate">
+                            <MapPin size={12} className="text-blue-500 shrink-0"/>
                             <span>{player.attributes.country}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Activity size={12} className="text-orange-500"/>
-                            <span>{player.scamsCompleted} OPS COMPLETE</span>
+                        <div className="flex items-center gap-2 truncate">
+                            <Activity size={12} className="text-orange-500 shrink-0"/>
+                            <span>{player.scamsCompleted} OPS</span>
                         </div>
                     </div>
                 </div>
             </motion.div>
 
             {/* HEAT MONITOR */}
-            <motion.div variants={itemVariants} className="md:col-span-3 bg-zinc-900/20 border border-zinc-800/60 relative group p-4 flex flex-col justify-between backdrop-blur-sm">
+            <motion.div variants={itemVariants} className="md:col-span-3 bg-zinc-900/20 border border-zinc-800/60 relative group p-4 flex flex-col justify-between backdrop-blur-sm gap-2 md:gap-0">
                 {renderCornerBrackets("border-red-500/30 group-hover:border-red-500/60 transition-colors")}
                 <div className="flex justify-between items-start">
                      <div>
                          <div className="text-[10px] text-red-900 font-bold uppercase tracking-[0.2em] mb-1 flex items-center gap-2">
                              <ShieldAlert size={12} className="text-red-600"/> GLOBAL THREAT
                          </div>
-                         <div className="text-4xl md:text-5xl text-red-500 font-bold tracking-tighter drop-shadow-[0_0_8px_rgba(220,38,38,0.5)]">
+                         <div className="text-3xl md:text-5xl text-red-500 font-bold tracking-tighter drop-shadow-[0_0_8px_rgba(220,38,38,0.5)]">
                              {Math.round(player.threatLevel)}%
                          </div>
                      </div>
@@ -126,12 +126,12 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
             </motion.div>
 
             {/* FINANCES & TOOLS */}
-            <motion.div variants={itemVariants} className="md:col-span-4 bg-zinc-900/20 border border-zinc-800/60 relative group p-4 flex flex-col justify-between backdrop-blur-sm">
+            <motion.div variants={itemVariants} className="md:col-span-4 bg-zinc-900/20 border border-zinc-800/60 relative group p-4 flex flex-col justify-between backdrop-blur-sm gap-2 md:gap-0">
                  {renderCornerBrackets("border-blue-500/30 group-hover:border-blue-500/60 transition-colors")}
                  <div className="flex justify-between items-start">
                      <div>
                          <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">AVAILABLE FUNDS</div>
-                         <div className="text-4xl md:text-5xl text-white font-bold tracking-tighter drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
+                         <div className="text-3xl md:text-5xl text-white font-bold tracking-tighter drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
                              ${player.money.toLocaleString()}
                          </div>
                      </div>
@@ -162,13 +162,13 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
         </div>
 
         {/* --- MIDDLE ROW: OPERATIONS (Main) --- */}
-        <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="flex-1 md:min-h-0 grid grid-cols-1 md:grid-cols-3 gap-4">
             
             {/* TARGET ACQUISITION */}
             <motion.button
                 variants={itemVariants}
                 onClick={() => onChangeView(GameView.SCAM_SELECTION)}
-                className="relative group bg-zinc-950 border border-zinc-800 hover:border-green-500 transition-all duration-500 flex flex-col overflow-hidden rounded-sm"
+                className="relative group bg-zinc-950 border border-zinc-800 hover:border-green-500 transition-all duration-500 flex flex-col overflow-hidden rounded-sm min-h-[200px]"
             >
                 {/* Animated Background Grid */}
                 <div className="absolute inset-0 bg-[linear-gradient(transparent_1px,rgba(0,20,0,0.3)_1px),linear-gradient(90deg,transparent_1px,rgba(0,20,0,0.3)_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_80%)] group-hover:bg-[size:20px_20px] transition-all duration-1000 opacity-50"></div>
@@ -177,9 +177,9 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
                 {renderCornerBrackets("border-green-500/0 group-hover:border-green-500/100 transition-all duration-500")}
                 
                 <div className="p-6 flex-1 flex flex-col items-center justify-center z-10">
-                    <div className="w-20 h-20 border border-zinc-800 group-hover:border-green-500 rounded-full flex items-center justify-center mb-6 bg-zinc-950 shadow-[0_0_30px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_30px_rgba(34,197,94,0.2)] transition-all duration-500 relative group-hover:scale-110">
+                    <div className="w-16 h-16 md:w-20 md:h-20 border border-zinc-800 group-hover:border-green-500 rounded-full flex items-center justify-center mb-6 bg-zinc-950 shadow-[0_0_30px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_30px_rgba(34,197,94,0.2)] transition-all duration-500 relative group-hover:scale-110">
                         <div className="absolute inset-0 rounded-full border border-dashed border-green-500/30 animate-spin-slow opacity-0 group-hover:opacity-100"></div>
-                        <Crosshair size={40} className="text-zinc-600 group-hover:text-green-500 transition-colors" />
+                        <Crosshair size={32} className="md:w-10 md:h-10 text-zinc-600 group-hover:text-green-500 transition-colors" />
                     </div>
                     <h3 className="text-2xl md:text-3xl font-bold text-white group-hover:text-green-400 font-mono tracking-tighter transition-colors">ACQUIRE TARGET</h3>
                     <p className="text-zinc-500 text-xs mt-2 max-w-[200px] text-center font-mono group-hover:text-green-800 transition-colors">
@@ -188,26 +188,22 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
                         &gt;&gt; INITIATE PROTOCOL
                     </p>
                 </div>
-                <div className="p-2 bg-zinc-950 border-t border-zinc-800 group-hover:border-green-500/50 flex justify-between items-center text-[10px] font-mono text-zinc-600 group-hover:text-green-500 transition-colors">
-                     <span className="flex items-center gap-1"><MapPin size={10}/> DATABASE ONLINE</span>
-                     <span className="animate-pulse">READY</span>
-                </div>
             </motion.button>
 
             {/* NEURAL UPGRADES */}
             <motion.button
                 variants={itemVariants}
                 onClick={() => onChangeView(GameView.SKILL_TREE)}
-                className="relative group bg-zinc-950 border border-zinc-800 hover:border-blue-500 transition-all duration-500 flex flex-col overflow-hidden rounded-sm"
+                className="relative group bg-zinc-950 border border-zinc-800 hover:border-blue-500 transition-all duration-500 flex flex-col overflow-hidden rounded-sm min-h-[200px]"
             >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.05)_0%,transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-blue-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 {renderCornerBrackets("border-blue-500/0 group-hover:border-blue-500/100 transition-all duration-500")}
                 
                 <div className="p-6 flex-1 flex flex-col items-center justify-center z-10">
-                    <div className="w-20 h-20 border border-zinc-800 group-hover:border-blue-500 rounded-full flex items-center justify-center mb-6 bg-zinc-950 shadow-[0_0_30px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_30px_rgba(59,130,246,0.2)] transition-all duration-500 relative group-hover:scale-110">
+                    <div className="w-16 h-16 md:w-20 md:h-20 border border-zinc-800 group-hover:border-blue-500 rounded-full flex items-center justify-center mb-6 bg-zinc-950 shadow-[0_0_30px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_30px_rgba(59,130,246,0.2)] transition-all duration-500 relative group-hover:scale-110">
                          <div className="absolute inset-0 rounded-full border border-dashed border-blue-500/30 animate-spin-slow opacity-0 group-hover:opacity-100" style={{animationDirection: 'reverse'}}></div>
-                        <BrainCircuit size={40} className="text-zinc-600 group-hover:text-blue-500 transition-colors" />
+                        <BrainCircuit size={32} className="md:w-10 md:h-10 text-zinc-600 group-hover:text-blue-500 transition-colors" />
                     </div>
                     <h3 className="text-2xl md:text-3xl font-bold text-white group-hover:text-blue-400 font-mono tracking-tighter transition-colors">NEURAL UPGRADES</h3>
                     <p className="text-zinc-500 text-xs mt-2 max-w-[200px] text-center font-mono group-hover:text-blue-800 transition-colors">
@@ -216,26 +212,22 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
                         &gt;&gt; UNLOCK NEW VECTORS
                     </p>
                 </div>
-                <div className="p-2 bg-zinc-950 border-t border-zinc-800 group-hover:border-blue-500/50 flex justify-between items-center text-[10px] font-mono text-zinc-600 group-hover:text-blue-500 transition-colors">
-                     <span className="flex items-center gap-1"><Zap size={10}/> SYNC COMPLETE</span>
-                     <span>{player.skills.length} ACTIVE NODES</span>
-                </div>
             </motion.button>
 
             {/* BLACK MARKET */}
             <motion.button
                 variants={itemVariants}
                 onClick={() => onChangeView(GameView.SHOP)}
-                className="relative group bg-zinc-950 border border-zinc-800 hover:border-purple-500 transition-all duration-500 flex flex-col overflow-hidden rounded-sm"
+                className="relative group bg-zinc-950 border border-zinc-800 hover:border-purple-500 transition-all duration-500 flex flex-col overflow-hidden rounded-sm min-h-[200px]"
             >
                  <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(168,85,247,0.05)_50%,transparent_75%)] bg-[length:10px_10px] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                  <div className="absolute inset-0 bg-gradient-to-t from-purple-900/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 {renderCornerBrackets("border-purple-500/0 group-hover:border-purple-500/100 transition-all duration-500")}
                 
                 <div className="p-6 flex-1 flex flex-col items-center justify-center z-10">
-                    <div className="w-20 h-20 border border-zinc-800 group-hover:border-purple-500 rounded-full flex items-center justify-center mb-6 bg-zinc-950 shadow-[0_0_30px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_30px_rgba(168,85,247,0.2)] transition-all duration-500 relative group-hover:scale-110">
+                    <div className="w-16 h-16 md:w-20 md:h-20 border border-zinc-800 group-hover:border-purple-500 rounded-full flex items-center justify-center mb-6 bg-zinc-950 shadow-[0_0_30px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_30px_rgba(168,85,247,0.2)] transition-all duration-500 relative group-hover:scale-110">
                         <div className="absolute inset-0 rounded-full border-2 border-dotted border-purple-500/30 animate-[spin_5s_linear_infinite] opacity-0 group-hover:opacity-100"></div>
-                        <ShoppingBag size={40} className="text-zinc-600 group-hover:text-purple-500 transition-colors" />
+                        <ShoppingBag size={32} className="md:w-10 md:h-10 text-zinc-600 group-hover:text-purple-500 transition-colors" />
                     </div>
                     <h3 className="text-2xl md:text-3xl font-bold text-white group-hover:text-purple-400 font-mono tracking-tighter transition-colors">BLACK MARKET</h3>
                     <p className="text-zinc-500 text-xs mt-2 max-w-[200px] text-center font-mono group-hover:text-purple-800 transition-colors">
@@ -244,19 +236,15 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
                         &gt;&gt; ILLICIT SERVICES
                     </p>
                 </div>
-                <div className="p-2 bg-zinc-950 border-t border-zinc-800 group-hover:border-purple-500/50 flex justify-between items-center text-[10px] font-mono text-zinc-600 group-hover:text-purple-500 transition-colors">
-                     <span className="flex items-center gap-1"><Lock size={10}/> ENCRYPTED TUNNEL</span>
-                     <span>V3.0</span>
-                </div>
             </motion.button>
 
         </div>
 
         {/* --- BOTTOM ROW: SYSTEM STATUS (Expanded) --- */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 shrink-0 min-h-[180px] md:h-[30%]">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 shrink-0 md:min-h-[180px] md:h-[30%] min-h-[400px]">
             
             {/* COL 1: ACTIVE PROTOCOLS */}
-            <motion.div variants={itemVariants} className="md:col-span-3 bg-zinc-900/20 border border-zinc-800/60 p-4 relative overflow-hidden backdrop-blur-sm flex flex-col">
+            <motion.div variants={itemVariants} className="md:col-span-3 bg-zinc-900/20 border border-zinc-800/60 p-4 relative overflow-hidden backdrop-blur-sm flex flex-col min-h-[150px]">
                 {renderCornerBrackets("border-zinc-600/50")}
                 <h4 className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-blue-900/30 pb-2">
                     <Activity size={12}/> Active Protocols
@@ -281,7 +269,7 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
             </motion.div>
 
             {/* COL 2: VICTIM DATABASE (History Log) */}
-            <motion.div variants={itemVariants} className="md:col-span-5 bg-zinc-900/20 border border-zinc-800/60 p-4 relative overflow-hidden backdrop-blur-sm flex flex-col">
+            <motion.div variants={itemVariants} className="md:col-span-5 bg-zinc-900/20 border border-zinc-800/60 p-4 relative overflow-hidden backdrop-blur-sm flex flex-col min-h-[150px]">
                  {renderCornerBrackets("border-green-500/30")}
                  <h4 className="text-[10px] text-green-500 font-bold uppercase tracking-widest mb-3 flex items-center gap-2 border-b border-green-900/30 pb-2">
                     <History size={12}/> Victim Database
@@ -320,7 +308,7 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
             </motion.div>
 
             {/* COL 3: ACHIEVEMENTS */}
-            <motion.div variants={itemVariants} className="md:col-span-4 bg-zinc-900/20 border border-zinc-800/60 p-4 relative overflow-hidden backdrop-blur-sm flex flex-col">
+            <motion.div variants={itemVariants} className="md:col-span-4 bg-zinc-900/20 border border-zinc-800/60 p-4 relative overflow-hidden backdrop-blur-sm flex flex-col min-h-[150px]">
                  {renderCornerBrackets("border-yellow-600/50")}
                  <div className="flex justify-between items-center mb-3 border-b border-yellow-900/20 pb-2">
                      <h4 className="text-[10px] text-yellow-500 font-bold uppercase tracking-widest flex items-center gap-2">

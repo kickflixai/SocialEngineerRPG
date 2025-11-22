@@ -66,9 +66,9 @@ const HackingTerminalModal: React.FC<Props> = ({ isOpen, onClose, abilities, soc
                     </div>
                     <div>
                         <h2 className="text-2xl font-bold font-mono text-white tracking-tight flex items-center gap-2">
-                            HACKING_CONSOLE <span className="text-blue-500 animate-pulse">_ACTIVE</span>
+                            HACKING_CONSOLE <span className="text-blue-500 animate-pulse hidden md:inline">_ACTIVE</span>
                         </h2>
-                        <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest">Select payload to deploy</p>
+                        <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest hidden md:block">Select payload to deploy</p>
                     </div>
                 </div>
                 

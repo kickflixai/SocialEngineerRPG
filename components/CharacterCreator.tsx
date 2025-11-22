@@ -47,7 +47,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete, isMuted, toggleAudio })
   };
 
   const StepIndicator = () => (
-    <div className="flex justify-between mb-6 md:mb-8 relative z-10 px-2">
+    <div className="flex justify-between mb-6 md:mb-8 relative z-10 px-2 shrink-0">
         <div className="absolute top-1/2 left-0 w-full h-0.5 bg-zinc-800 -z-10"></div>
         {[1, 2, 3, 4, 5].map(i => (
             <div 
@@ -61,7 +61,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete, isMuted, toggleAudio })
   );
 
   return (
-    <div className="w-full max-w-5xl bg-zinc-950/90 border border-zinc-800/50 backdrop-blur-xl rounded-2xl p-4 md:p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden flex flex-col h-full md:h-[80vh]">
+    <div className="w-full max-w-5xl bg-zinc-950/90 border border-zinc-800/50 backdrop-blur-xl rounded-2xl p-4 md:p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden flex flex-col h-auto min-h-[80vh] md:h-[80vh]">
       {/* Decorative Elements */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -z-10 pointer-events-none"></div>
@@ -78,7 +78,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete, isMuted, toggleAudio })
 
       <StepIndicator />
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar px-2">
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-2 flex flex-col">
       <AnimatePresence mode="wait">
         {step === 1 && (
             <motion.div 
@@ -86,7 +86,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete, isMuted, toggleAudio })
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
+                className="space-y-6 flex-1 flex flex-col"
             >
                 <h3 className="text-lg md:text-xl font-bold text-white border-b border-zinc-800 pb-2 mb-4">Basic Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -126,7 +126,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete, isMuted, toggleAudio })
                         ))}
                     </div>
                 </div>
-                <div className="flex justify-end mt-8 pb-8">
+                <div className="flex justify-end mt-auto pt-8 pb-4">
                     <button onClick={() => setStep(2)} disabled={!formData.name} className="w-full md:w-auto px-8 py-3 bg-white text-black font-bold rounded hover:bg-zinc-200 disabled:opacity-50">Select Origin &rarr;</button>
                 </div>
             </motion.div>
@@ -138,7 +138,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete, isMuted, toggleAudio })
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
+                className="space-y-6 flex-1 flex flex-col"
             >
                 <h3 className="text-lg md:text-xl font-bold text-white border-b border-zinc-800 pb-2 mb-4 flex items-center gap-2">
                     <Globe size={20}/> Select Origin
@@ -181,7 +181,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete, isMuted, toggleAudio })
                     })}
                 </div>
 
-                <div className="flex justify-between mt-8 pb-8">
+                <div className="flex justify-between mt-auto pt-8 pb-4">
                     <button onClick={() => setStep(1)} className="text-zinc-400 hover:text-white">Back</button>
                     <button onClick={() => setStep(3)} className="px-8 py-3 bg-white text-black font-bold rounded hover:bg-zinc-200">Next Step &rarr;</button>
                 </div>
@@ -194,7 +194,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete, isMuted, toggleAudio })
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
+                className="space-y-6 flex-1 flex flex-col"
             >
                 <h3 className="text-lg md:text-xl font-bold text-white border-b border-zinc-800 pb-2 mb-4">Visual Aesthetics</h3>
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -217,7 +217,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete, isMuted, toggleAudio })
                         </select>
                     </div>
                 </div>
-                <div className="flex justify-between mt-8 pb-8">
+                <div className="flex justify-between mt-auto pt-8 pb-4">
                     <button onClick={() => setStep(2)} className="text-zinc-400 hover:text-white">Back</button>
                     <button onClick={() => setStep(4)} className="px-8 py-3 bg-white text-black font-bold rounded hover:bg-zinc-200">Next Step &rarr;</button>
                 </div>
@@ -230,7 +230,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete, isMuted, toggleAudio })
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
+                className="space-y-6 flex-1 flex flex-col"
             >
                 <h3 className="text-lg md:text-xl font-bold text-white border-b border-zinc-800 pb-2 mb-4 flex items-center gap-2">
                     <Edit3 size={20}/> Character Backstory
@@ -268,7 +268,7 @@ const CharacterCreator: React.FC<Props> = ({ onComplete, isMuted, toggleAudio })
                     ))}
                 </div>
 
-                <div className="flex justify-between mt-8 pt-6 border-t border-zinc-800 pb-8">
+                <div className="flex justify-between mt-auto pt-6 border-t border-zinc-800 pb-8">
                     <button onClick={() => setStep(3)} className="text-zinc-400 hover:text-white">Back</button>
                     <button 
                         onClick={handleGenerate}

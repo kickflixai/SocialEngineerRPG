@@ -4,7 +4,7 @@ import { ScamState, PlayerState, ChatMessage, ShopItem, HackAbility } from '../t
 import { getVictimResponse, arbitrateChat, generateScamHint } from '../services/geminiService';
 import { audioManager } from '../services/audioService';
 import { HACK_ABILITIES } from '../constants';
-import { Send, Terminal, Wifi, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Circle, Package, ChevronDown, ChevronUp, Target, Lightbulb, ArrowRight, Zap, Fingerprint, Database, Code } from 'lucide-react';
+import { Send, Terminal, Wifi, Loader2, Power, ShieldAlert, CheckCircle2, AlertTriangle, Lock, Circle, Package, Target, Lightbulb, ArrowRight, Zap, Fingerprint, Database, Code, MessageSquare, MonitorPlay, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import InventoryModal from './InventoryModal';
 import HackingTerminalModal from './HackingTerminalModal';
@@ -19,15 +19,19 @@ interface Props {
   onConsumeItem: (item: ShopItem) => ShopItem;
 }
 
+type MobileTab = 'comm' | 'intel' | 'sys';
+
 const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd, onAbort, onOpenInventory, onConsumeItem }) => {
   const [input, setInput] = useState('');
   const [processing, setProcessing] = useState(false);
   const [lastThought, setLastThought] = useState<string | null>(null);
   
   const [showAbortConfirm, setShowAbortConfirm] = useState(false);
-  const [mobileStatsExpanded, setMobileStatsExpanded] = useState(false); 
   const [isExiting, setIsExiting] = useState(false);
   
+  // Mobile Tabs
+  const [mobileTab, setMobileTab] = useState<MobileTab>('comm');
+
   // Hacking Terminal
   const [showHackTerminal, setShowHackTerminal] = useState(false);
   const [hackCooldown, setHackCooldown] = useState<string | null>(null);
@@ -47,17 +51,19 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   const scrollToBottom = () => chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
   useEffect(() => {
-    scrollToBottom();
-  }, [scam.history, processing, hints]);
+    if (mobileTab === 'comm') {
+        scrollToBottom();
+    }
+  }, [scam.history, processing, hints, mobileTab]);
 
   // Auto-focus input when processing finishes
   useEffect(() => {
-      if (!processing) {
+      if (!processing && mobileTab === 'comm') {
           setTimeout(() => {
               inputRef.current?.focus();
           }, 50);
       }
-  }, [processing]);
+  }, [processing, mobileTab]);
 
   // Start Hacking Ambient Music
   useEffect(() => {
@@ -134,9 +140,6 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
       const systemMsgText = `[${hack.name.toUpperCase()}] ${hack.systemMessage}`;
       const newHistory = [...scam.history, { sender: 'system', text: systemMsgText, timestamp: Date.now() } as ChatMessage];
       
-      // NOTE: Mechanical changes (trust/suspicion) have been removed.
-      // The AI Arbiter will now judge the context of this system message in the next turn.
-      
       onUpdateScam({
           ...scam,
           socialCharge: newCharge,
@@ -145,14 +148,15 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
 
       setHackCooldown(hack.id);
       setTimeout(() => setHackCooldown(null), 3000);
+      
+      // Auto-switch to comms to see effect
+      setMobileTab('comm');
 
       setProcessing(true);
       try {
-          // Victim Reacts to System Message
           const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, activeObjective, scam.trust);
           audioManager.playMessageReceived();
           
-          // Check for police/hangup triggers
           if (replyData.policeTriggered) {
                onUpdateScam({
                   ...scam,
@@ -205,31 +209,18 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             scam.category, 
             activeObjective, 
             allCompleted,
-            newHistory // Pass the full history (including the new message) for context
+            newHistory
         );
         
         setLastThought(analysis.internalThought);
 
         let trustDelta = analysis.trustDelta;
-        
-        // Mechanically dampening trust gains to make the game harder
-        if (trustDelta > 0) {
-             trustDelta = Math.ceil(trustDelta * 0.5);
-        }
-
-        if (player.skills.includes('silver_tongue') && trustDelta < 0) {
-             trustDelta = Math.round(trustDelta * 0.8); 
-        }
-        if (player.skills.includes('empathy_mirror') && trustDelta > 0) {
-             trustDelta = Math.round(trustDelta * 1.25); 
-        }
+        if (trustDelta > 0) trustDelta = Math.ceil(trustDelta * 0.5);
+        if (player.skills.includes('silver_tongue') && trustDelta < 0) trustDelta = Math.round(trustDelta * 0.8); 
+        if (player.skills.includes('empathy_mirror') && trustDelta > 0) trustDelta = Math.round(trustDelta * 1.25); 
 
         let suspicionDelta = Math.max(0, analysis.suspicionDelta);
-
-        // Mechanically enforce trust loss if suspicion increases
-        if (suspicionDelta > 0) {
-             trustDelta -= suspicionDelta;
-        }
+        if (suspicionDelta > 0) trustDelta -= suspicionDelta;
 
         const newTrust = Math.max(0, Math.min(100, scam.trust + trustDelta));
         const newSuspicion = Math.min(100, scam.suspicion + suspicionDelta);
@@ -241,25 +232,16 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         let updatedObjectives = [...scam.objectives];
         let isObjectiveComplete = analysis.objectiveComplete;
 
-        // IMPORTANT: If success, do NOT return immediately. 
-        // We want the victim to reply confirming the success first.
         if (analysis.scamStatus === 'success') {
-            // Mark final objective as complete, but let the flow continue to get victim response
             const objIndex = updatedObjectives.findIndex(o => o.id === activeObjective.id);
-            if (objIndex !== -1) {
-                updatedObjectives[objIndex] = { ...updatedObjectives[objIndex], isCompleted: true };
-            }
+            if (objIndex !== -1) updatedObjectives[objIndex] = { ...updatedObjectives[objIndex], isCompleted: true };
             isObjectiveComplete = true;
         } else if (isObjectiveComplete) {
-            // Normal objective completion
             audioManager.playSuccess(); 
             const objIndex = updatedObjectives.findIndex(o => o.id === activeObjective.id);
-            if (objIndex !== -1) {
-                updatedObjectives[objIndex] = { ...updatedObjectives[objIndex], isCompleted: true };
-            }
+            if (objIndex !== -1) updatedObjectives[objIndex] = { ...updatedObjectives[objIndex], isCompleted: true };
         }
 
-        // Update state partially before getting victim response
         let updatedScam = {
             ...scam,
             history: newHistory,
@@ -270,14 +252,11 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
         };
         onUpdateScam(updatedScam);
 
-        // Check for Failures (Immediate)
         if (analysis.scamStatus === 'police_called' || newSuspicion >= 100) {
             onScamEnd('police', newSuspicion >= 100 ? 'Suspicion threshold breached' : 'Target alerted authorities');
             return;
         }
         
-        // --- VICTIM RESPONSE PHASE ---
-        // Even if success, we get one last message (e.g. "Okay I sent the money!")
         const nextActiveObjective = updatedObjectives.find(o => !o.isCompleted) || updatedObjectives[updatedObjectives.length - 1];
         const replyData = await getVictimResponse(newHistory, scam.victim, scam.category, nextActiveObjective, newTrust);
         audioManager.playMessageReceived();
@@ -299,7 +278,6 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
               return;
         }
 
-        // Double check objective completion from Victim's side (e.g. they provided the data in this text)
         if (replyData.objectiveComplete && !isObjectiveComplete) {
              audioManager.playSuccess();
              const objIndex = updatedObjectives.findIndex(o => o.id === nextActiveObjective.id);
@@ -310,7 +288,6 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
              }
         }
 
-        // Final State Update
         onUpdateScam({
             ...updatedScam,
             history: [...newHistory, { sender: 'victim', text: replyData.text, timestamp: Date.now() }]
@@ -343,261 +320,265 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
   const hasScraper = player.skills.includes('social_scraper');
 
   return (
-    <div className="flex flex-col md:grid md:grid-cols-3 h-full gap-4 md:gap-6 p-2 md:p-6 bg-black overflow-hidden relative">
-       {/* Mobile Header */}
-       <div className="md:hidden z-20 bg-zinc-950 border border-zinc-800 rounded-xl p-3 shrink-0 relative">
-          <div className="flex items-center justify-between" onClick={() => setMobileStatsExpanded(!mobileStatsExpanded)}>
-              <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full overflow-hidden border border-green-500/50">
-                       <img src={scam.victim.avatarUrl} alt="Target" className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                      <h2 className="text-sm font-bold text-white font-mono">{scam.victim.name}</h2>
-                      <div className="flex gap-1 mt-1">
-                          <div className="w-12 h-1 bg-zinc-800 rounded-full overflow-hidden"><div className="h-full bg-green-500" style={{width: `${scam.trust}%`}}></div></div>
-                          <div className="w-1 h-1 bg-zinc-800 rounded-full overflow-hidden"><div className="h-full bg-red-500" style={{width: `${scam.suspicion}%`}}></div></div>
-                      </div>
-                  </div>
-              </div>
-              {mobileStatsExpanded ? <ChevronUp size={16} className="text-zinc-500"/> : <ChevronDown size={16} className="text-zinc-500"/>}
-          </div>
-      </div>
-
-       {/* ... LEFT COL ... */}
-       <div className="hidden md:flex flex-col gap-4 h-full relative z-10 col-span-1 overflow-y-auto custom-scrollbar pr-1">
-           {/* Profile Card */}
-           <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-6 flex flex-col items-center text-center relative shadow-[0_0_20px_rgba(0,0,0,0.5)] shrink-0">
-             <div className="relative w-32 h-32 lg:w-48 lg:h-48 mb-3 mt-1 group">
-                <div className="absolute inset-0 rounded-full border border-dashed border-green-500/40 animate-spin-slow"></div>
-                <img src={scam.victim.avatarUrl} alt="Target" className="w-full h-full rounded-full object-cover border-4 border-zinc-800 opacity-90 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute -bottom-1 -right-1 bg-black text-green-500 text-[9px] font-bold px-2 py-0.5 rounded border border-green-900 flex items-center gap-1 shadow-[0_0_10px_rgba(34,197,94,0.2)]">
-                    <Wifi size={8} className="animate-pulse" /> LIVE FEED
-                </div>
-             </div>
-             <h2 className="text-lg font-bold text-white font-mono truncate w-full tracking-tight mb-0.5">{scam.victim.name}</h2>
-             <p className="text-zinc-500 text-[10px] font-mono uppercase tracking-widest mb-3">{scam.victim.age} Y/O // {scam.victim.occupation}</p>
-        </div>
-
-        <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-5 shadow-xl flex-1 space-y-5 backdrop-blur-sm relative flex flex-col min-h-0 shrink-0">
-            
-            {/* SEPARATE METERS */}
-            <div className="space-y-4 shrink-0">
-                {/* TRUST METER */}
-                <div>
-                    <div className="flex justify-between text-xs font-mono uppercase tracking-widest mb-1">
-                        <span className="text-green-500 font-bold flex items-center gap-2"><CheckCircle2 size={12}/> TRUST</span>
-                        <span className="text-white font-mono">{scam.trust}%</span>
-                    </div>
-                    <div className="h-2 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden shadow-inner relative">
-                         <div 
-                            className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-900 to-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)] transition-all duration-700 ease-out"
-                            style={{ width: `${scam.trust}%` }}
-                         ></div>
-                    </div>
-                </div>
-
-                {/* SUSPICION METER */}
-                <div>
-                    <div className="flex justify-between text-xs font-mono uppercase tracking-widest mb-1">
-                        <span className="text-red-500 font-bold flex items-center gap-2"><AlertTriangle size={12}/> SUSPICION</span>
-                        <span className="text-white font-mono">{scam.suspicion}%</span>
-                    </div>
-                    <div className="h-2 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden shadow-inner relative">
-                         <div 
-                            className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-900 to-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)] transition-all duration-700 ease-out"
-                            style={{ width: `${scam.suspicion}%` }}
-                         ></div>
-                    </div>
-                </div>
-            </div>
-            
-            {/* HACKING POWER METER */}
-             <div className="w-full bg-zinc-900/50 rounded-lg border border-blue-900/30 p-2">
-                 <div className="flex justify-between items-end mb-1">
-                      <span className="text-[10px] font-bold uppercase text-blue-400 tracking-widest flex items-center gap-1"><Zap size={10}/> HACKING POWER</span>
-                      <span className="text-white font-mono text-xs font-bold">{scam.socialCharge}%</span>
-                 </div>
-                 <div className="w-full h-2 bg-zinc-950 border border-zinc-800 rounded-full overflow-hidden mb-1">
-                     <div className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] transition-all duration-500" style={{width: `${scam.socialCharge}%`}}></div>
-                 </div>
-                 <p className="text-[8px] text-zinc-500 text-center">POWERED BY CREATIVE RESPONSES</p>
-             </div>
-
-             <div className="border-t border-zinc-800 pt-4 flex-1 flex flex-col min-h-0">
-                <h4 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
-                    <Target size={12} className="text-blue-500" /> Execution Steps
-                </h4>
-                <div className="space-y-2">
-                    {scam.objectives.map((obj, idx) => {
-                        const isActive = !obj.isCompleted && (idx === 0 || scam.objectives[idx - 1].isCompleted);
-                        const isLocked = !obj.isCompleted && !isActive;
-                        return (
-                            <div key={obj.id} className={`p-2 rounded border flex items-start gap-2 text-[10px] font-mono transition-all ${obj.isCompleted ? 'bg-green-900/20 border-green-500/30 text-green-400' : isActive ? 'bg-blue-900/20 border-blue-500/50 text-white shadow-[0_0_10px_rgba(59,130,246,0.1)]' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}`}>
-                                <div className="mt-0.5 shrink-0">{obj.isCompleted ? <CheckCircle2 size={12}/> : isLocked ? <Lock size={12}/> : <Circle size={12} className="animate-pulse text-blue-400"/>}</div>
-                                <div className="flex-1">
-                                    <p className={`font-bold mb-0.5 ${isActive ? 'text-blue-400' : ''}`}>STEP 0{obj.order}: {obj.isFinal ? 'PAYLOAD' : 'INTEL'}</p>
-                                    <p className={isLocked ? 'opacity-50' : ''}>{obj.description}</p>
-                                </div>
-                            </div>
-                        )
-                    })}
-                </div>
-            </div>
-        </div>
+    <div className="flex flex-col h-full bg-black overflow-hidden relative">
+       
+       {/* MOBILE TAB NAVIGATION (Top) */}
+       <div className="md:hidden flex shrink-0 border-b border-zinc-800 bg-zinc-950">
+           <button 
+                onClick={() => setMobileTab('comm')}
+                className={`flex-1 py-3 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${mobileTab === 'comm' ? 'bg-zinc-900 text-white border-b-2 border-green-500' : 'text-zinc-500 hover:bg-zinc-900/50'}`}
+           >
+               <MessageSquare size={14} /> COMM
+           </button>
+           <button 
+                onClick={() => setMobileTab('intel')}
+                className={`flex-1 py-3 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${mobileTab === 'intel' ? 'bg-zinc-900 text-white border-b-2 border-green-500' : 'text-zinc-500 hover:bg-zinc-900/50'}`}
+           >
+               <MonitorPlay size={14} /> INTEL
+           </button>
+           <button 
+                onClick={() => setMobileTab('sys')}
+                className={`flex-1 py-3 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${mobileTab === 'sys' ? 'bg-zinc-900 text-white border-b-2 border-green-500' : 'text-zinc-500 hover:bg-zinc-900/50'}`}
+           >
+               <Activity size={14} /> SYS
+           </button>
        </div>
 
-       {/* ... MIDDLE COL (CHAT) ... */}
-       <div className="flex-1 md:col-span-1 flex flex-col bg-zinc-950 border border-zinc-800/60 rounded-xl overflow-hidden relative shadow-2xl h-full z-10">
-         <div className="h-auto min-h-14 bg-black/60 backdrop-blur border-b border-zinc-800 flex flex-col px-3 md:px-6 py-2 md:py-3 shrink-0 justify-center">
-            <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2 md:gap-3">
-                    <div className="w-2 h-2 md:w-3 md:h-3 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.8)] animate-pulse"></div>
-                    <div className="text-xs md:text-sm font-mono font-bold text-white tracking-widest">SECURE_CHANNEL_V2</div>
-                </div>
-                 <div className="flex items-center gap-2 md:gap-3">
-                    <button onClick={() => setShowAbortConfirm(true)} className="text-[10px] font-bold font-mono flex items-center gap-2 px-2 py-1.5 rounded border border-red-900/50 bg-red-950/20 text-red-500 hover:bg-red-900/40 hover:border-red-500 transition-all"><Power size={12} /> <span className="hidden md:inline">DISCONNECT</span></button>
-                </div>
-            </div>
-            <div className="bg-blue-900/20 border border-blue-500/30 rounded px-2 py-1.5 md:px-3 md:py-2 flex items-center gap-2 md:gap-3 animate-pulse">
-                <Target size={12} className="text-blue-400 shrink-0" />
-                <div className="flex flex-col min-w-0">
-                    <span className="text-[9px] text-blue-300 font-mono font-bold tracking-wider uppercase whitespace-nowrap">CURRENT TASK:</span>
-                    <span className="text-[10px] text-white font-mono truncate">{activeObjective.description}</span>
-                </div>
-            </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-4 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900/20 to-black custom-scrollbar min-h-0 relative">
-             {/* Chat Messages */}
-             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
-             {scam.history.map((msg, i) => (
-                <motion.div key={i} initial={{ opacity: 0, x: msg.sender === 'player' ? 20 : -20 }} animate={{ opacity: 1, x: 0 }} className={`flex relative z-10 ${msg.sender === 'player' ? 'justify-end' : 'justify-start'}`}>
-                    {msg.sender === 'victim' && <div className="w-6 h-6 md:w-8 md:h-8 rounded-full overflow-hidden mr-2 md:mr-3 border border-zinc-600 shadow-lg flex-shrink-0 self-end mb-1"><img src={scam.victim.avatarUrl} alt="avatar" className="w-full h-full object-cover" /></div>}
-                    
-                    {msg.sender === 'system' ? (
-                         <div className="max-w-[90%] p-2 rounded border bg-yellow-900/20 border-yellow-500/30 text-yellow-200 font-mono text-xs tracking-tight flex items-center gap-2">
-                             <Zap size={12} className="text-yellow-500 animate-pulse shrink-0"/>
-                             {msg.text}
-                         </div>
-                    ) : (
-                        <div className={`max-w-[90%] p-3 rounded-xl text-xs md:text-sm leading-relaxed shadow-lg backdrop-blur-md border ${msg.sender === 'player' ? 'bg-green-900/10 border-green-500/30 text-green-50 rounded-br-none' : 'bg-zinc-800/60 border-zinc-600/30 text-zinc-200 rounded-bl-none'}`}><p>{msg.text}</p></div>
-                    )}
-                </motion.div>
-             ))}
-             <AnimatePresence>
-                {hints.length > 0 && (
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="flex flex-col gap-2 items-end mb-2 relative z-20">
-                        <span className="text-[9px] md:text-[10px] text-blue-400 font-mono uppercase tracking-wider bg-black/80 px-2 rounded">Suggested Response Vectors</span>
-                        <div className="flex flex-wrap gap-2 justify-end max-w-2xl">
-                            {hints.map((hint, idx) => <button key={idx} onClick={() => handleSend(hint)} className="text-[10px] md:text-xs bg-blue-900/20 hover:bg-blue-900/40 border border-blue-500/30 text-blue-200 px-2 py-1 md:px-3 md:py-2 rounded-lg text-left hover:border-blue-500 transition-colors">"{hint}"</button>)}
-                        </div>
-                    </motion.div>
-                )}
-                {processing && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex justify-start items-center gap-2 relative z-10">
-                         <div className="bg-zinc-900/50 border border-zinc-700/50 px-3 py-2 md:px-4 md:py-3 rounded-xl rounded-bl-none flex gap-1.5 items-center">
-                             <span className="text-[10px] md:text-xs text-zinc-500 font-mono animate-pulse">TYPING</span>
-                            <div className="w-1 h-1 bg-zinc-500 rounded-full animate-bounce"></div><div className="w-1 h-1 bg-zinc-500 rounded-full animate-bounce delay-75"></div><div className="w-1 h-1 bg-zinc-500 rounded-full animate-bounce delay-150"></div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-            <div ref={chatEndRef} className="h-1" />
-        </div>
-
-        {/* Input Area */}
-        <div className="p-2 md:p-3 bg-black/80 backdrop-blur border-t border-zinc-800 shrink-0 relative z-20">
-             <div className="flex gap-2">
-                 <div className="relative flex gap-2">
-                    <button onClick={requestHint} disabled={loadingHints || processing || scam.trust < 20} className={`p-3 rounded-lg border bg-black border-zinc-700 text-zinc-400 transition-all relative group ${scam.trust >= 20 ? 'hover:text-blue-400 hover:border-blue-500' : 'opacity-30 cursor-not-allowed'}`}>
-                         {loadingHints ? <Loader2 size={18} className="animate-spin"/> : <Lightbulb size={18}/>}
-                    </button>
-                    <button onClick={() => setInventoryOpen(true)} className="p-3 rounded-lg border bg-black border-zinc-700 text-zinc-400 hover:text-purple-400 hover:border-purple-500 transition-all relative group">
-                         <Package size={18}/>
-                         <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">{player.inventory.length}</span>
-                    </button>
+       <div className="flex-1 flex md:grid md:grid-cols-3 gap-4 md:gap-6 p-2 md:p-6 min-h-0 relative">
+       
+           {/* ... LEFT COL (INTEL / METERS) ... */}
+           <div className={`${mobileTab === 'intel' ? 'flex' : 'hidden'} md:flex flex-col gap-4 h-full relative z-10 col-span-1 overflow-y-auto custom-scrollbar pr-1`}>
+               {/* Profile Card */}
+               <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-4 md:p-6 flex flex-col items-center text-center relative shadow-[0_0_20px_rgba(0,0,0,0.5)] shrink-0">
+                 <div className="relative w-24 h-24 md:w-32 md:h-32 lg:w-48 lg:h-48 mb-3 mt-1 group">
+                    <div className="absolute inset-0 rounded-full border border-dashed border-green-500/40 animate-spin-slow"></div>
+                    <img src={scam.victim.avatarUrl} alt="Target" className="w-full h-full rounded-full object-cover border-4 border-zinc-800 opacity-90 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute -bottom-1 -right-1 bg-black text-green-500 text-[9px] font-bold px-2 py-0.5 rounded border border-green-900 flex items-center gap-1 shadow-[0_0_10px_rgba(34,197,94,0.2)]">
+                        <Wifi size={8} className="animate-pulse" /> LIVE
+                    </div>
                  </div>
-
-                 <input 
-                    ref={inputRef}
-                    type="text" 
-                    value={input} 
-                    autoFocus
-                    onChange={(e) => {
-                        setInput(e.target.value);
-                    }} 
-                    onKeyDown={(e) => e.key === 'Enter' && handleSend()} 
-                    disabled={processing} 
-                    placeholder="Type payload..." 
-                    className="flex-1 bg-black border border-zinc-700 rounded-lg p-3 text-white placeholder-zinc-600 focus:border-green-500 focus:ring-1 focus:ring-green-500/20 outline-none transition-all font-mono text-xs"
-                 />
-                 <button onClick={() => handleSend()} disabled={processing || !input.trim()} className="bg-green-600 hover:bg-green-500 disabled:bg-zinc-900 disabled:text-zinc-700 disabled:border-zinc-800 text-black font-bold px-4 rounded-lg transition-all flex items-center justify-center"><Send size={18} /></button>
-             </div>
-        </div>
-       </div>
-
-       {/* ... RIGHT COL (TARGET ANALYSIS & HACKING TERMINAL) ... */}
-       <div className="hidden md:flex flex-col gap-4 h-full relative z-10 col-span-1 overflow-y-auto custom-scrollbar pr-1">
-           
-           {/* TARGET ANALYSIS */}
-           <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-3 shrink-0 space-y-3">
-                <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-2">Target Analysis</h3>
-                
-                <div className="bg-zinc-900/30 p-2 rounded border border-zinc-800/50">
-                    <h4 className="text-zinc-400 text-[10px] font-bold uppercase mb-1 flex items-center gap-2 tracking-wider">
+                 <h2 className="text-base md:text-lg font-bold text-white font-mono truncate w-full tracking-tight mb-0.5">{scam.victim.name}</h2>
+                 <p className="text-zinc-500 text-[10px] font-mono uppercase tracking-widest mb-3">{scam.victim.age} Y/O // {scam.victim.occupation}</p>
+                 
+                 <div className="w-full bg-zinc-900/30 p-2 rounded border border-zinc-800/50 mt-2">
+                    <h4 className="text-zinc-400 text-[10px] font-bold uppercase mb-1 flex items-center gap-2 justify-center tracking-wider">
                         <Fingerprint size={12} className="text-purple-400"/> Psych Profile
                     </h4>
                     <p className="text-zinc-300 text-[10px] leading-relaxed font-mono">{scam.victim.personality}</p>
                 </div>
-                
-                <div className="bg-zinc-900/30 p-2 rounded border border-zinc-800/50 flex flex-col gap-1">
-                    <h4 className="text-zinc-400 text-[10px] font-bold uppercase flex items-center gap-2 tracking-wider">
-                        <Database size={12} className="text-orange-400"/> Intel
-                    </h4>
-                    <div className="flex justify-between items-center text-[10px]">
-                        <span className="text-zinc-500">SECRET:</span>
-                        <span className={`font-mono ${hasDoxxing ? 'text-green-400' : 'text-red-900'}`}>{hasDoxxing ? scam.victim.hiddenFact : 'ENCRYPTED'}</span>
+            </div>
+
+            <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-4 md:p-5 shadow-xl space-y-5 backdrop-blur-sm relative flex flex-col shrink-0">
+                {/* METERS */}
+                <div className="space-y-4 shrink-0">
+                    <div>
+                        <div className="flex justify-between text-xs font-mono uppercase tracking-widest mb-1">
+                            <span className="text-green-500 font-bold flex items-center gap-2"><CheckCircle2 size={12}/> TRUST</span>
+                            <span className="text-white font-mono">{scam.trust}%</span>
+                        </div>
+                        <div className="h-2 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden shadow-inner relative">
+                             <div 
+                                className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-900 to-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)] transition-all duration-700 ease-out"
+                                style={{ width: `${scam.trust}%` }}
+                             ></div>
+                        </div>
                     </div>
-                    <div className="flex justify-between items-center text-[10px]">
-                        <span className="text-zinc-500">WEAKNESS:</span>
-                        <span className={`font-mono ${hasScraper ? 'text-green-400' : 'text-red-900'}`}>{hasScraper ? scam.victim.weakness : 'ENCRYPTED'}</span>
+
+                    <div>
+                        <div className="flex justify-between text-xs font-mono uppercase tracking-widest mb-1">
+                            <span className="text-red-500 font-bold flex items-center gap-2"><AlertTriangle size={12}/> SUSPICION</span>
+                            <span className="text-white font-mono">{scam.suspicion}%</span>
+                        </div>
+                        <div className="h-2 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden shadow-inner relative">
+                             <div 
+                                className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-900 to-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)] transition-all duration-700 ease-out"
+                                style={{ width: `${scam.suspicion}%` }}
+                             ></div>
+                        </div>
                     </div>
                 </div>
+                
+                {/* HACKING POWER METER */}
+                 <div className="w-full bg-zinc-900/50 rounded-lg border border-blue-900/30 p-2">
+                     <div className="flex justify-between items-end mb-1">
+                          <span className="text-[10px] font-bold uppercase text-blue-400 tracking-widest flex items-center gap-1"><Zap size={10}/> HACKING POWER</span>
+                          <span className="text-white font-mono text-xs font-bold">{scam.socialCharge}%</span>
+                     </div>
+                     <div className="w-full h-2 bg-zinc-950 border border-zinc-800 rounded-full overflow-hidden mb-1">
+                         <div className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] transition-all duration-500" style={{width: `${scam.socialCharge}%`}}></div>
+                     </div>
+                 </div>
+
+                 <div className="border-t border-zinc-800 pt-4 flex-1 flex flex-col min-h-0">
+                    <h4 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
+                        <Target size={12} className="text-blue-500" /> Execution Steps
+                    </h4>
+                    <div className="space-y-2">
+                        {scam.objectives.map((obj, idx) => {
+                            const isActive = !obj.isCompleted && (idx === 0 || scam.objectives[idx - 1].isCompleted);
+                            const isLocked = !obj.isCompleted && !isActive;
+                            return (
+                                <div key={obj.id} className={`p-2 rounded border flex items-start gap-2 text-[10px] font-mono transition-all ${obj.isCompleted ? 'bg-green-900/20 border-green-500/30 text-green-400' : isActive ? 'bg-blue-900/20 border-blue-500/50 text-white shadow-[0_0_10px_rgba(59,130,246,0.1)]' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}`}>
+                                    <div className="mt-0.5 shrink-0">{obj.isCompleted ? <CheckCircle2 size={12}/> : isLocked ? <Lock size={12}/> : <Circle size={12} className="animate-pulse text-blue-400"/>}</div>
+                                    <div className="flex-1">
+                                        <p className={`font-bold mb-0.5 ${isActive ? 'text-blue-400' : ''}`}>STEP 0{obj.order}: {obj.isFinal ? 'PAYLOAD' : 'INTEL'}</p>
+                                        <p className={isLocked ? 'opacity-50' : ''}>{obj.description}</p>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            </div>
            </div>
 
-           {/* TERMINAL LOG (Expanded to fill available space) */}
-           <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl flex flex-col relative overflow-hidden shadow-xl flex-1 min-h-[12rem]">
-                <div className="p-2 border-b border-zinc-800 bg-black/40 flex justify-between items-center">
-                    <p className="text-green-600 uppercase font-bold text-[10px] flex items-center gap-2 tracking-widest"><Terminal size={12} className="text-green-500" /> SYS_LOG</p>
-                    <div className="flex items-center gap-2">
-                        <Wifi size={12} className={processing ? "animate-pulse text-green-500" : "text-zinc-600"}/>
+           {/* ... MIDDLE COL (CHAT) ... */}
+           <div className={`${mobileTab === 'comm' ? 'flex' : 'hidden'} md:flex flex-1 md:col-span-1 flex-col bg-zinc-950 border border-zinc-800/60 rounded-xl overflow-hidden relative shadow-2xl h-full z-10`}>
+             <div className="h-auto min-h-14 bg-black/60 backdrop-blur border-b border-zinc-800 flex flex-col px-3 md:px-6 py-2 md:py-3 shrink-0 justify-center">
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2 md:gap-3">
+                        <div className="w-2 h-2 md:w-3 md:h-3 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.8)] animate-pulse"></div>
+                        <div className="text-xs md:text-sm font-mono font-bold text-white tracking-widest">SECURE_CHANNEL_V2</div>
+                    </div>
+                     <div className="flex items-center gap-2 md:gap-3">
+                        <button onClick={() => setShowAbortConfirm(true)} className="text-[10px] font-bold font-mono flex items-center gap-2 px-2 py-1.5 rounded border border-red-900/50 bg-red-950/20 text-red-500 hover:bg-red-900/40 hover:border-red-500 transition-all"><Power size={12} /> <span className="hidden md:inline">DISCONNECT</span></button>
                     </div>
                 </div>
-                <div className="flex-1 p-2 font-mono text-[10px] overflow-y-auto custom-scrollbar flex flex-col">
-                     <div className="flex flex-col justify-start gap-2">
-                        <div className="text-zinc-500">&gt;&gt; CONNECTION ESTABLISHED</div>
-                         {lastThought && (
-                            <div className="text-green-400 typing-effect leading-tight">
-                                <span className="text-zinc-500 mr-2">&gt;&gt;</span>{lastThought}
+                <div className="bg-blue-900/20 border border-blue-500/30 rounded px-2 py-1.5 md:px-3 md:py-2 flex items-center gap-2 md:gap-3 animate-pulse">
+                    <Target size={12} className="text-blue-400 shrink-0" />
+                    <div className="flex flex-col min-w-0">
+                        <span className="text-[9px] text-blue-300 font-mono font-bold tracking-wider uppercase whitespace-nowrap">CURRENT TASK:</span>
+                        <span className="text-[10px] text-white font-mono truncate">{activeObjective.description}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-4 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900/20 to-black custom-scrollbar min-h-0 relative">
+                 {/* Chat Messages */}
+                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
+                 {scam.history.map((msg, i) => (
+                    <motion.div key={i} initial={{ opacity: 0, x: msg.sender === 'player' ? 20 : -20 }} animate={{ opacity: 1, x: 0 }} className={`flex relative z-10 ${msg.sender === 'player' ? 'justify-end' : 'justify-start'}`}>
+                        {msg.sender === 'victim' && <div className="w-6 h-6 md:w-8 md:h-8 rounded-full overflow-hidden mr-2 md:mr-3 border border-zinc-600 shadow-lg flex-shrink-0 self-end mb-1"><img src={scam.victim.avatarUrl} alt="avatar" className="w-full h-full object-cover" /></div>}
+                        
+                        {msg.sender === 'system' ? (
+                             <div className="max-w-[90%] p-2 rounded border bg-yellow-900/20 border-yellow-500/30 text-yellow-200 font-mono text-xs tracking-tight flex items-center gap-2">
+                                 <Zap size={12} className="text-yellow-500 animate-pulse shrink-0"/>
+                                 {msg.text}
+                             </div>
+                        ) : (
+                            <div className={`max-w-[90%] p-3 rounded-xl text-xs md:text-sm leading-relaxed shadow-lg backdrop-blur-md border ${msg.sender === 'player' ? 'bg-green-900/10 border-green-500/30 text-green-50 rounded-br-none' : 'bg-zinc-800/60 border-zinc-600/30 text-zinc-200 rounded-bl-none'}`}><p>{msg.text}</p></div>
+                        )}
+                    </motion.div>
+                 ))}
+                 <AnimatePresence>
+                    {hints.length > 0 && (
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="flex flex-col gap-2 items-end mb-2 relative z-20">
+                            <span className="text-[9px] md:text-[10px] text-blue-400 font-mono uppercase tracking-wider bg-black/80 px-2 rounded">Suggested Response Vectors</span>
+                            <div className="flex flex-wrap gap-2 justify-end max-w-2xl">
+                                {hints.map((hint, idx) => <button key={idx} onClick={() => handleSend(hint)} className="text-[10px] md:text-xs bg-blue-900/20 hover:bg-blue-900/40 border border-blue-500/30 text-blue-200 px-2 py-1 md:px-3 md:py-2 rounded-lg text-left hover:border-blue-500 transition-colors">"{hint}"</button>)}
+                            </div>
+                        </motion.div>
+                    )}
+                    {processing && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex justify-start items-center gap-2 relative z-10">
+                             <div className="bg-zinc-900/50 border border-zinc-700/50 px-3 py-2 md:px-4 md:py-3 rounded-xl rounded-bl-none flex gap-1.5 items-center">
+                                 <span className="text-[10px] md:text-xs text-zinc-500 font-mono animate-pulse">TYPING</span>
+                                <div className="w-1 h-1 bg-zinc-500 rounded-full animate-bounce"></div><div className="w-1 h-1 bg-zinc-500 rounded-full animate-bounce delay-75"></div><div className="w-1 h-1 bg-zinc-500 rounded-full animate-bounce delay-150"></div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                <div ref={chatEndRef} className="h-1" />
+            </div>
+
+            {/* Input Area */}
+            <div className="p-2 md:p-3 bg-black/80 backdrop-blur border-t border-zinc-800 shrink-0 relative z-20">
+                 <div className="flex gap-2">
+                     <div className="relative flex gap-2">
+                        <button onClick={requestHint} disabled={loadingHints || processing || scam.trust < 20} className={`p-3 rounded-lg border bg-black border-zinc-700 text-zinc-400 transition-all relative group ${scam.trust >= 20 ? 'hover:text-blue-400 hover:border-blue-500' : 'opacity-30 cursor-not-allowed'}`}>
+                             {loadingHints ? <Loader2 size={18} className="animate-spin"/> : <Lightbulb size={18}/>}
+                        </button>
+                        <button onClick={() => setInventoryOpen(true)} className="p-3 rounded-lg border bg-black border-zinc-700 text-zinc-400 hover:text-purple-400 hover:border-purple-500 transition-all relative group">
+                             <Package size={18}/>
+                             <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">{player.inventory.length}</span>
+                        </button>
+                     </div>
+
+                     <input 
+                        ref={inputRef}
+                        type="text" 
+                        value={input} 
+                        // Only autoFocus on desktop to prevent mobile keyboard flicker on tab switch
+                        autoFocus={window.innerWidth > 768}
+                        onChange={(e) => {
+                            setInput(e.target.value);
+                        }} 
+                        onKeyDown={(e) => e.key === 'Enter' && handleSend()} 
+                        disabled={processing} 
+                        placeholder="Type payload..." 
+                        className="flex-1 bg-black border border-zinc-700 rounded-lg p-3 text-white placeholder-zinc-600 focus:border-green-500 focus:ring-1 focus:ring-green-500/20 outline-none transition-all font-mono text-xs"
+                     />
+                     <button onClick={() => handleSend()} disabled={processing || !input.trim()} className="bg-green-600 hover:bg-green-500 disabled:bg-zinc-900 disabled:text-zinc-700 disabled:border-zinc-800 text-black font-bold px-4 rounded-lg transition-all flex items-center justify-center"><Send size={18} /></button>
+                 </div>
+            </div>
+           </div>
+
+           {/* ... RIGHT COL (SYSTEM / LOGS) ... */}
+           <div className={`${mobileTab === 'sys' ? 'flex' : 'hidden'} md:flex flex-col gap-4 h-full relative z-10 col-span-1 overflow-y-auto custom-scrollbar pr-1`}>
+               
+               {/* TARGET ANALYSIS */}
+               <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl p-3 shrink-0 space-y-3">
+                    <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-2">Target Analysis</h3>
+                    
+                    <div className="bg-zinc-900/30 p-2 rounded border border-zinc-800/50 flex flex-col gap-1">
+                        <h4 className="text-zinc-400 text-[10px] font-bold uppercase flex items-center gap-2 tracking-wider">
+                            <Database size={12} className="text-orange-400"/> Intel
+                        </h4>
+                        <div className="flex justify-between items-center text-[10px]">
+                            <span className="text-zinc-500">SECRET:</span>
+                            <span className={`font-mono ${hasDoxxing ? 'text-green-400' : 'text-red-900'}`}>{hasDoxxing ? scam.victim.hiddenFact : 'ENCRYPTED'}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px]">
+                            <span className="text-zinc-500">WEAKNESS:</span>
+                            <span className={`font-mono ${hasScraper ? 'text-green-400' : 'text-red-900'}`}>{hasScraper ? scam.victim.weakness : 'ENCRYPTED'}</span>
+                        </div>
+                    </div>
+               </div>
+
+               {/* TERMINAL LOG */}
+               <div className="bg-zinc-950 border border-zinc-800/60 rounded-xl flex flex-col relative overflow-hidden shadow-xl flex-1 min-h-[12rem]">
+                    <div className="p-2 border-b border-zinc-800 bg-black/40 flex justify-between items-center">
+                        <p className="text-green-600 uppercase font-bold text-[10px] flex items-center gap-2 tracking-widest"><Terminal size={12} className="text-green-500" /> SYS_LOG</p>
+                        <div className="flex items-center gap-2">
+                            <Wifi size={12} className={processing ? "animate-pulse text-green-500" : "text-zinc-600"}/>
+                        </div>
+                    </div>
+                    <div className="flex-1 p-2 font-mono text-[10px] overflow-y-auto custom-scrollbar flex flex-col">
+                         <div className="flex flex-col justify-start gap-2">
+                            <div className="text-zinc-500">&gt;&gt; CONNECTION ESTABLISHED</div>
+                             {lastThought && (
+                                <div className="text-green-400 typing-effect leading-tight">
+                                    <span className="text-zinc-500 mr-2">&gt;&gt;</span>{lastThought}
+                                </div>
+                            )}
+                         </div>
+                         {processing && (
+                            <div className="flex flex-col gap-1 text-green-500/50 justify-start mt-2">
+                                 <div className="animate-pulse">&gt;&gt; ANALYZING INPUT VECTOR...</div>
+                                 <div className="animate-pulse delay-75">&gt;&gt; CALCULATING PROBABILITY...</div>
                             </div>
                         )}
-                     </div>
-                     {processing && (
-                        <div className="flex flex-col gap-1 text-green-500/50 justify-start mt-2">
-                             <div className="animate-pulse">&gt;&gt; ANALYZING INPUT VECTOR...</div>
-                             <div className="animate-pulse delay-75">&gt;&gt; CALCULATING PROBABILITY...</div>
-                        </div>
-                    )}
-                </div>
-           </div>
+                    </div>
+               </div>
 
-           {/* HACKING TERMINAL BUTTON (Replaces Deck) */}
-           <button 
-                onClick={() => setShowHackTerminal(true)}
-                className="w-full py-4 bg-zinc-900 hover:bg-blue-900/20 border border-zinc-700 hover:border-blue-500 rounded-xl text-zinc-400 hover:text-blue-400 transition-all font-bold font-mono text-xs flex items-center justify-center gap-2 group shadow-lg shrink-0"
-           >
-               <Code size={16} /> INITIALIZE HACKING CONSOLE <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform"/>
-           </button>
+               {/* HACKING TERMINAL BUTTON */}
+               <button 
+                    onClick={() => setShowHackTerminal(true)}
+                    className="w-full py-4 bg-zinc-900 hover:bg-blue-900/20 border border-zinc-700 hover:border-blue-500 rounded-xl text-zinc-400 hover:text-blue-400 transition-all font-bold font-mono text-xs flex items-center justify-center gap-2 group shadow-lg shrink-0"
+               >
+                   <Code size={16} /> INITIALIZE HACKING CONSOLE <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform"/>
+               </button>
+           </div>
        </div>
 
        {/* Overlays */}

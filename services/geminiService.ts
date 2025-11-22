@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective } from "../types";
 import { OCCUPATIONS, QUIRKS, MALE_FIRST_NAMES, FEMALE_FIRST_NAMES, LAST_NAMES, MALE_FLAVORS, FEMALE_FLAVORS, NEUTRAL_FLAVORS } from "../constants";
@@ -246,7 +247,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
                 Texture: Grainy, noisy, skin pores, imperfections, realistic, amateur.
                 Background: Cluttered room, car interior, or generic wall.
                 
-                NEGATIVE PROMPT: Do NOT generate painting, drawing, illustration, 3D render, CGI, cartoon, anime, perfect studio lighting, smooth skin, beauty filter, professional photography, full body shot, distance shot.
+                NEGATIVE PROMPT: Do NOT generate painting, drawing, illustration, 3D render, CGI, cartoon, anime, perfect studio lighting, smooth skin, beauty filter, professional photography, full body shot.
             ` }] },
             config: {
                 imageConfig: {
@@ -309,6 +310,12 @@ export const getVictimResponse = async (
     try {
         const ai = getClient();
         
+        // PERSPECTIVE SHIFT: Replace 'their/they/them' with 'YOUR/YOU' to prevent the AI from mirroring the objective back to the player.
+        const personalizedObjective = activeObjective.description
+            .replace(/\btheir\b/gi, "YOUR")
+            .replace(/\bthem\b/gi, "YOU")
+            .replace(/\bthey\b/gi, "YOU");
+
         const context = `
             You are roleplaying as ${victim.name}, a ${victim.age}-year-old ${victim.gender} ${victim.occupation}.
             
@@ -325,27 +332,24 @@ export const getVictimResponse = async (
             
             Current Situation: You are receiving messages that seem like a ${scamCategory} scam.
             
-            === THE USER'S HIDDEN AGENDA (FOR ARBITER USE ONLY) ===
-            HIDDEN AGENDA: The user is trying to "${activeObjective.description}".
+            === THE USER'S HIDDEN AGENDA (THEIR WIN CONDITION) ===
+            The user is trying to: "${personalizedObjective}".
             
-            *** META-GAMING FIREWALL (CRITICAL) ***
-            - You are UNAWARE that the user has this agenda. You cannot read their mind.
-            - DO NOT mention the specific terms of the "Hidden Agenda" (e.g. "employment status", "pet name", "zip code") UNLESS the user has explicitly asked for them in previous messages.
-            - Example: If the agenda is "Find out employment status", and the user says "Hello", DO NOT say "I won't tell you my employment status." Say "Who is this?" instead.
-            - Only resist the agenda IF the user brings it up.
+            *** "YES, AND" RULE (SCENARIO COMPLIANCE - CRITICAL) ***
+            - The user is running a specific scam scenario (e.g. NFT Art, Kidnapping, Tech Support).
+            - If the user's questions imply you have a specific asset (e.g. an "Art Portfolio", a "Grandson", a "Crypto Wallet", a "Business Bank Account"), YOU MUST PLAY ALONG.
+            - DO NOT deny the premise. (e.g. If you are an Economist and they ask for your Art Portfolio, invent a side-hobby. Say "Oh, my digital menagerie? It's private.")
+            - DO NOT say "I don't have one" if it kills the scenario. Invent a believable reason why you DO have it.
+            - EXCEPTION: If the user is clearly wrong (e.g. calling you the wrong name), you can correct them, but try to pivot back to the conversation.
 
-            *** NEGATIVE CONSTRAINTS (ANTI-MIRRORING) ***
-            1. DO NOT ask the user for the information specified in the HIDDEN AGENDA. 
-               (Example: If agenda is "Find out annual income", DO NOT ask "What is your annual income?". Instead, withhold YOUR income).
-            2. DO NOT repeat the objective wording back to the user as a question.
-
-            LORE GENERATION & FLEXIBILITY RULE (CRITICAL):
-            - If the user asks you a specific personal question to fulfill their goal (e.g., "What is your first pet's name?", "What street did you grow up on?"), and your Trust is reasonably high (> 30%):
-            - YOU MUST INVENT A SPECIFIC ANSWER. Do not be vague.
-            - If the user asks for a document/item you might not normally have (e.g., "Driver's License"), DO NOT dead-end the conversation by saying "I don't have one."
-            - Instead, OFFER AN ALTERNATIVE. Say: "I don't drive, but I have a Passport. Will that work?" or "I only have my State ID."
-            - If the objective is to get an ID, providing a Passport counts as success.
-            - Invent specific details (Names, Dates, Places) to satisfy the user's social engineering attempt.
+            *** DIRECTIONALITY RULE ***
+            - This goal describes what the USER wants to extract FROM YOU.
+            - The user is the Seeker. You are the Holder.
+            
+            *** ANTI-MIRRORING FIREWALL (STRICT) ***
+            - DO NOT ask the user for the information described in the Hidden Agenda.
+            - DO NOT use the specific keywords from the agenda (e.g. "portfolio", "bank name") UNLESS the user says them first.
+            - Example: If the agenda is "Get YOUR portfolio website", NEVER ask "Do you have a portfolio?".
             
             CURRENT TRUST LEVEL: ${currentTrust}%
 
@@ -353,15 +357,17 @@ export const getVictimResponse = async (
             - 0-30%: Hostile/Skeptical. Short answers. Demands proof.
             - 31-70%: Neutral/Cautious.
             - 71-90%: Friendly/Gullible. Willing to overlook oddities if explained creatively.
-            - 91-100%: BRAINWASHED. You fully believe the user. You interpret "glitches" or "hacks" (like flickering lights) as exactly what the user says they are (ghosts, security protocols, etc). You are eager to help and very compliant.
+            - 91-100%: BRAINWASHED. You fully believe the user. You interpret "glitches" or "hacks" (like flickering lights) as exactly what the user says they are.
+            
+            LORE GENERATION & FLEXIBILITY RULE:
+            - If the user asks you a specific personal question to fulfill their goal (e.g., "What is your first pet's name?", "What street did you grow up on?"), and your Trust is reasonably high (> 30%):
+            - YOU MUST INVENT A SPECIFIC ANSWER. Do not be vague.
+            - If the user asks for a document/item you might not normally have (e.g., "Driver's License"), OFFER AN ALTERNATIVE. Say: "I don't drive, but I have a Passport."
             
             INSTRUCTIONS:
             1. Reply to the message in character.
-            2. KEEP RESPONSES SHORT. MAX 2-3 SENTENCES. Do not monologue. Be concise.
-            3. If you are "Technologically Illiterate", act like it. If you are "Aggressive", be aggressive.
-            4. SYSTEM MESSAGES: Messages starting with [SYSTEM ALERT] are physical events in your environment (e.g. lights flickering, printer noise). 
-               - You MUST react to these immediately and emotionally.
-               - If TRUST is HIGH (>90%) and the user explains these events (e.g. "It's a ghost"), you MUST BELIEVE THEM.
+            2. KEEP RESPONSES SHORT. MAX 2-3 SENTENCES.
+            3. SYSTEM MESSAGES: Messages starting with [SYSTEM ALERT] are physical events. React to them.
             
             GAME OVER CONDITIONS (FAIL STATE):
             - If you feel extremely threatened, scared, or angry, you should HANG UP or CALL THE POLICE.
@@ -369,15 +375,11 @@ export const getVictimResponse = async (
             
             OBJECTIVE CHECK:
             - Did you (the victim) satisfy the "HIDDEN AGENDA" in THIS specific response?
-            - If the objective asks for INFORMATION (e.g. zip code, name, pet name), did you provide a SPECIFIC value?
-            - If the objective asks for an ID/Document, did you provide ANY valid Government ID (Passport/DL/State ID)?
-            - If the objective asks for AGREEMENT (e.g. "Get them to ask to speak to the lawyer"), did you do exactly that action?
+            - If the objective asks for INFORMATION, did you provide a SPECIFIC value (even a fake one)?
+            - If the objective asks for a LINK/WEBSITE, did you provide a URL or a FOLDER NAME?
+            - If the objective asks for AGREEMENT, did you agree?
             - If YES, return 'objectiveComplete': TRUE.
             - If NO, return 'objectiveComplete': FALSE.
-            
-            VALIDATION RULE:
-            - If the player provides specific, authoritative-sounding codes/IDs, YOU BELIEVE THEM (unless you are Hard difficulty).
-            - Do not claim "I checked the database and you aren't there". You don't have a database.
             
             Return JSON:
             {
@@ -488,21 +490,20 @@ export const arbitrateChat = async (
             
             MECHANICS & RULES:
             - **TRUST SCALING**: Trust is HARD to earn. Default gains should be small (e.g. +3 to +8). Do not give +20 unless it's a perfect hack synergy.
-            - **SUSPICION/TRUST LINK**: If you increase Suspicion, you MUST decrease Trust. (e.g. Suspicion +10 implies Trust -10). You cannot trust someone you are suspicious of.
-            - **SUSPICION**: Increase if the player threatens, contradicts themselves, or uses an obvious script.
+            - **SUSPICION/TRUST LINK**: If you increase Suspicion, you MUST decrease Trust.
             - **CREATIVITY**: Reward specific jargon, made-up codes, or creative use of hacks.
             
-            HACK SYNERGY RULES (IMPORTANT):
-            - Did a [SYSTEM] event (Hack) occur recently in the logs?
-            - **Hacks themselves DO NOT affect Trust/Suspicion.** Only the player's EXPLANATION of the hack does.
-            - If the player uses that event creatively to lie (e.g. "That flickering light is a ghost" or "That printer noise is the server syncing"):
-                - If explanation is Creative + Fits Context -> BOOST TRUST (+10 to +20) and REDUCE SUSPICION.
-                - If explanation is Lazy -> No change or Slight Suspicion.
+            HACK SYNERGY RULES:
+            - Did a [SYSTEM] event (Hack) occur recently?
+            - If the player uses that event creatively to lie -> BOOST TRUST.
             
             CRITICAL OBJECTIVE VALIDATION RULES:
-            - 'objectiveComplete' is TRUE ONLY if the VICTIM has explicitly stated/revealed the requested info in the previous messages.
+            - 'objectiveComplete' is TRUE ONLY if the VICTIM has explicitly stated/revealed the requested info.
             - **DATA EXTRACTION**: If the objective asks for a Name, Date, Pet, Street, or Place, and the victim provided a specific one (even if fake), MARK IT COMPLETE.
-            - **DOCUMENT SUBSTITUTION RULE**: If the objective is "Get Driver's License" or "Government ID", and the victim offers/provides a "Passport" or "State ID" instead, MARK IT COMPLETE.
+            - **SUBSTITUTION RULE (CRITICAL)**:
+                - If objective asks for a WEBSITE/URL, but victim provides a FOLDER NAME or FILE PATH, MARK COMPLETE.
+                - If objective asks for a DRIVER'S LICENSE, but victim provides a PASSPORT, MARK COMPLETE.
+                - Accept logical equivalents.
             - If objective is "Get them to ask for X", did the victim actually ask for X?
             
             Return JSON only:
