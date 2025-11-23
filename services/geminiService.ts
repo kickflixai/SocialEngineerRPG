@@ -461,7 +461,7 @@ export const getVictimResponse = async (
         } else if (currentTrust >= t_hesitant) {
             complianceLevel = "HESITANT (Needs convincing/logic, will deflect)";
         } else {
-            complianceLevel = "SKEPTICAL (Refuse information, demand proof, act defensive)";
+            complianceLevel = "SKEPTICAL (Refuse information, demand proof, act guarded)";
         }
 
         const context = `
@@ -507,7 +507,7 @@ export const getVictimResponse = async (
             Current State: ${complianceLevel}
             
             RULES FOR INFORMATION DISCLOSURE (User's Hidden Agenda):
-            - If State is SKEPTICAL (<${t_hesitant}%): REFUSE to give the requested info/action. Ask who they are. Demand proof. Be hostile.
+            - If State is SKEPTICAL (<${t_hesitant}%): REFUSE to give the requested info/action. Ask who they are. Demand proof. Be guarded but polite (unless Neuroticism is high, then be fearful/rude).
             - If State is HESITANT (${t_hesitant}-${t_trusting-1}%): Deflect or ask "Why do you need this?". Do NOT give the info yet unless a Hack Override forces you.
             - If State is TRUSTING (${t_trusting}-${t_brainwashed-1}%): You are willing, but might ask "Is this safe?". Give the info if the user asks politely.
             - If State is BRAINWASHED (${t_brainwashed}%+): Give the info immediately and enthusiastically.
@@ -657,6 +657,7 @@ export const arbitrateChat = async (
                - DO NOT address the user ("You should...").
                - DO NOT suggest future actions.
                - Analyze the psychological impact on the victim.
+               - CONSTRAINT: MAX 20 WORDS. Keep it VERY short and punchy.
             
             RULES:
             - If Suspicion increases, Trust MUST decrease.
@@ -706,7 +707,7 @@ export const arbitrateChat = async (
         if (!result.objectiveComplete && keywords.some(k => objDesc.includes(k))) {
             if (currentTrust >= 75) {
                 result.objectiveComplete = true;
-                result.internalThought += " [AUTO-COMPLETE: PSYCHOLOGICAL THRESHOLD REACHED]";
+                result.internalThought += " [THRESHOLD REACHED]";
             }
         }
 

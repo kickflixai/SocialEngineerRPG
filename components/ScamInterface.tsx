@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ScamState, PlayerState, ChatMessage, ShopItem, HackAbility } from '../types';
 import { getVictimResponse, arbitrateChat, generateScamHint } from '../services/geminiService';
@@ -233,13 +232,14 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
 
         let trustDelta = analysis.trustDelta;
 
-        // AGE-BASED TRUST SCALING: Elderly targets gain trust significantly faster
+        // DIFFICULTY-BASED TRUST SCALING
         if (trustDelta > 0) {
-            const isElderly = scam.victim.age >= 60;
-            // Elderly: No dampener (100% of Arbiter's trust award)
-            // Others: 50% dampener (Harder gameplay)
-            const ageMultiplier = isElderly ? 1.0 : 0.5;
-            trustDelta = Math.ceil(trustDelta * ageMultiplier);
+            const difficulty = scam.victim.difficulty;
+            // Easy (Elderly): 1.2x Speed (Faster)
+            // Medium: 1.0x Speed (Normal)
+            // Hard: 0.6x Speed (Harder)
+            const difficultyMultiplier = difficulty === 'easy' ? 1.2 : difficulty === 'medium' ? 1.0 : 0.6;
+            trustDelta = Math.ceil(trustDelta * difficultyMultiplier);
         }
 
         if (player.skills.includes('silver_tongue') && trustDelta < 0) trustDelta = Math.round(trustDelta * 0.8); 
