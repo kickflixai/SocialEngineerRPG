@@ -36,7 +36,7 @@ export interface CountryStats {
   startingMoney: number;
   startingThreat: number;
   startingItems: string[];
-  startingSkills: string[];
+  startingSkills: string[]; // Still list of IDs, converted to levels on init
   modifiers: {
     trustStartBonus?: number; 
     threatMultiplier?: number;
@@ -77,20 +77,20 @@ export interface PlayerState {
   threatLevel: number; // 0-100
   scamsCompleted: number;
   inventory: string[];
-  skills: string[];
+  skills: Record<string, number>; // MAP ID -> Level (e.g., { 'social_1': 5, 'tech_2': 1 })
   achievements: string[];
   history: ScamHistoryItem[];
   stats: AiStats;
 }
 
 export interface VictimTraits {
-  openness: number;      // 0-100: Conservative vs Liberal/Creative
-  conscientiousness: number; // 0-100: Careless vs Organized
-  extraversion: number;  // 0-100: Solitary vs Outgoing
-  agreeableness: number; // 0-100: Critical vs Friendly
-  neuroticism: number;   // 0-100: Confident vs Anxious
-  impulsivity: number;   // 0-100: Deliberate vs Rash (Replaces Skepticism)
-  techLiteracy: number;  // 0-100: Luddite vs Hacker
+  openness: number;      
+  conscientiousness: number; 
+  extraversion: number;  
+  agreeableness: number; 
+  neuroticism: number;   
+  impulsivity: number;   
+  techLiteracy: number;  
 }
 
 export interface Victim {
@@ -107,7 +107,7 @@ export interface Victim {
   hiddenFact: string; 
   weakness: string;
   resistanceStyle: string; 
-  traits: VictimTraits; // New personality matrix
+  traits: VictimTraits; 
 }
 
 export interface ChatMessage {
@@ -132,7 +132,7 @@ export interface ScamState {
   
   // MECHANICS
   trust: number; // 0-100
-  suspicion: number; // 0-100 (Monotonic increase)
+  suspicion: number; // 0-100 
   socialCharge: number; // 0-100 (Mana for hacks)
   
   status: 'active' | 'success' | 'failed' | 'police_called';
@@ -141,9 +141,9 @@ export interface ScamState {
 }
 
 export interface ArbiterResponse {
-  trustDelta: number; // +/- X
-  suspicionDelta: number; // + X (Always positive or 0)
-  creativityScore: number; // 0 to 10 
+  trustDelta: number; 
+  suspicionDelta: number; 
+  creativityScore: number; 
   objectiveComplete: boolean; 
   internalThought: string;
   scamStatus: 'continue' | 'success' | 'failed' | 'police_called';
@@ -158,13 +158,20 @@ export interface HackAbility {
   systemMessage: string; 
 }
 
-export interface Skill {
+// NEW LINEAR SKILL DEFINITION
+export interface SkillDefinition {
   id: string;
   name: string;
-  description: string;
-  cost: number;
+  description: string; // Template string, use {value} for dynamic numbers
+  baseCost: number;
+  costMultiplier: number; // Cost increases per level
+  maxLevel: number; // 1 for Perks, 5 for Stats
+  tier: number; // 1-5
+  branch: 'social' | 'tech' | 'ops';
+  requiredSkillId?: string;
   icon: string;
-  category: 'social' | 'tech' | 'ops';
+  effectValue: number; // Base value per level (e.g., 5 for 5%)
+  effectType: string; // For logic handling
 }
 
 export interface ShopItem {
