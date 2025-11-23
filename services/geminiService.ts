@@ -588,21 +588,37 @@ export const arbitrateChat = async (
         const recentHistory = history.slice(-5);
         const historyText = recentHistory.map(m => `[${m.sender.toUpperCase()}]: ${m.text}`).join('\n');
 
-        // ELDERLY DIFFICULTY MODIFIER
-        const isElderly = victim.age >= 60;
-        let elderlyInstructions = "";
+        // DIFFICULTY SCALING PROTOCOLS
+        const isElderly = victim.age >= 60 || victim.difficulty === 'easy';
+        let difficultyInstructions = "";
+
         if (isElderly) {
-            elderlyInstructions = `
-            *** ELDERLY TARGET MODIFIER (CRITICAL) ***
-            - Target is ${victim.age} years old.
-            - DIFFICULTY: EASY.
-            - They are LONELY and NAIVE.
-            - SCORING RULES:
-              1. Polite/Formal language ("Dear", "Mr.", "Sir") -> MAJOR TRUST BOOST (+15 to +25).
-              2. Appeals to authority -> MAJOR TRUST BOOST.
-              3. Emotional appeals -> MAJOR TRUST BOOST.
-              4. IGNORE minor inconsistencies or lack of technical proof.
-              5. Do NOT apply standard skepticism. Unless the user is aggressive/rude, Trust should generally go UP.
+            difficultyInstructions = `
+            *** DIFFICULTY: EASY / ELDERLY ***
+            - LENIENCY: MAX. Be very generous.
+            - SUSPICION: Only raise suspicion for overt insults, threats, or completely nonsense inputs.
+            - TRUST: Reward politeness, appeals to authority, and emotional framing heavily (+10 to +20).
+            - LOGIC: Ignore minor inconsistencies.
+            `;
+        } else if (victim.difficulty === 'medium') {
+            difficultyInstructions = `
+            *** DIFFICULTY: MEDIUM (BALANCED) ***
+            - LENIENCY: MODERATE. Do NOT let the user get away with lazy lies.
+            - SUSPICION TRIGGERS:
+              1. Vague answers to specific questions -> +5 to +10 Suspicion.
+              2. Deflecting or changing the subject abruptly -> +5 Suspicion.
+              3. Contradictions -> +10 Suspicion.
+            - TRUST: Earned by providing logical, relevant answers that address the victim's concerns. Standard gains (+5 to +10).
+            `;
+        } else {
+            difficultyInstructions = `
+            *** DIFFICULTY: HARD (STRICT) ***
+            - LENIENCY: LOW. Scrutinize the user's logic.
+            - SUSPICION TRIGGERS:
+              1. Any minor inconsistency or lack of detail -> +10 to +15 Suspicion.
+              2. Unprofessional tone or typos -> +5 Suspicion.
+              3. Failure to provide proof when asked -> +10 Suspicion.
+            - TRUST: Hard to earn. +2 to +5 for good answers. Requires specific social engineering tactics.
             `;
         }
 
@@ -637,45 +653,28 @@ export const arbitrateChat = async (
             - Cold Reading: ${hasColdReading} (If TRUE: Internal Thought must be deeper/psychological)
             - Authority Voice: ${hasAuthVoice}
             
-            ${elderlyInstructions}
-
-            *** GLOBAL LENIENCY & SCORING PROTOCOLS ***
-            1. LENIENCY: Be generous with interpretation.
-               - If a response is "logical enough" but not perfect, do NOT increase Suspicion.
-               - Suspicion should ONLY rise for: Overt contradictions, aggressive insults (unless Kidnapping), or completely nonsensical inputs.
-               - Minor typos or slightly vague answers are safe.
-            2. TRUST SCALING (CONTROLLED):
-               - Standard "Good" move: +4 to +8 Trust.
-               - "Great" move (clever/funny): +10 to +15 Trust.
-               - Do NOT award huge jumps (e.g., +25) unless it's a specific Elderly/Hack modifier.
-            3. SUSPICION SCALING:
-               - Only apply Suspicion if the user actively alarms the target.
-               - Default Suspicion change for neutral/okay messages is 0.
-
-            TASK:
-            1. Trust Change.
-            2. Suspicion Change (>= 0).
-            3. Creativity Score (0-10).
-            4. Internal Thought: Analytical commentary on the player's *last move*.
-               - STRICTLY 3rd person (e.g. "The player's appeal to authority worked...").
-               - DO NOT address the user ("You should...").
-               - DO NOT suggest future actions.
-               - Analyze the psychological impact on the victim.
-               - CONSTRAINT: MAX 20 WORDS. Keep it VERY short and punchy.
-            
-            RULES:
-            - If Suspicion increases, Trust MUST decrease.
-            - HACK DETECTED? If a [SYSTEM] message appears in the recent log:
-              - IMPORTANT: Hacks do NOT directly increase Trust. They generate *Proof*, not *Rapport*.
-              - Trust Delta should be minimal (+0 to +5) unless the player's *explanation* is exceptionally charming.
-              - The primary effect of a hack is to CONVINCE the victim of a fact (Reality Override).
-              - If the hack supports the objective, the victim should yield the data/action, even if Trust is not 100%.
-            - OBJECTIVE VALIDATION:
-              - MARK COMPLETE ONLY if victim explicitly gave the info/agreed.
-              - Accept Substitutes (Passport instead of DL).
-            
+            ${difficultyInstructions}
             ${scenarioRules}
 
+            *** GENERAL SCORING RULES ***
+            1. Trust Change: Based on the Difficulty Protocol above.
+            2. Suspicion Change: Based on the Difficulty Protocol above.
+               - If Suspicion increases, Trust MUST decrease by at least the same amount.
+            3. HACK DETECTION:
+               - If a [SYSTEM] message was just used, determine if the player's follow-up (if any) leverages it well.
+               - Hacks provide PROOF (Reality Override). They should lower Suspicion if used correctly.
+            4. OBJECTIVE VALIDATION:
+               - MARK COMPLETE ONLY if victim explicitly gave the info/agreed.
+               - Accept Substitutes (Passport instead of DL).
+
+            TASK:
+            1. Trust Delta (Integer).
+            2. Suspicion Delta (Integer >= 0).
+            3. Creativity Score (0-10).
+            4. Internal Thought: Analytical commentary on the player's *last move*.
+               - STRICTLY 3rd person.
+               - CONSTRAINT: MAX 20 WORDS. Short and punchy.
+            
             Return JSON only:
             {
                 "trustDelta": number,
