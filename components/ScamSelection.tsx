@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Shield, Radio, Globe, User, Briefcase, ChevronRight, Lock, AlertTriangle, ScanLine } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Shield, Globe, User, Briefcase, ChevronRight, Lock, AlertTriangle, ScanLine } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
@@ -59,6 +59,67 @@ const LOADING_LINES = [
     "TARGET_LOCKED."
 ];
 
+// Matrix Rain Component
+const MatrixRain = () => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const nums = '0123456789';
+        const alphabet = katakana + latin + nums;
+
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+        const drops: number[] = [];
+
+        for(let x = 0; x < columns; x++) {
+            drops[x] = 1;
+        }
+
+        const draw = () => {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#0F0';
+            ctx.font = fontSize + 'px monospace';
+
+            for(let i = 0; i < drops.length; i++) {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if(drops[i] * fontSize > canvas.height && Math.random() > 0.975)
+                    drops[i] = 0;
+
+                drops[i]++;
+            }
+        };
+
+        const interval = setInterval(draw, 30);
+
+        const handleResize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
+
+    return <canvas ref={canvasRef} className="absolute inset-0 z-0 opacity-40" />;
+};
+
 const ScamSelection: React.FC<Props> = ({ onSelectDifficulty, loading, scamsCompleted }) => {
     const [scanText, setScanText] = useState<string[]>([]);
 
@@ -66,15 +127,13 @@ const ScamSelection: React.FC<Props> = ({ onSelectDifficulty, loading, scamsComp
         if (loading) {
             let i = 0;
             setScanText([]);
-            // Pick random start lines but always end with Target Locked
             const shuffled = [...LOADING_LINES].sort(() => 0.5 - Math.random());
-            // Ensure we have enough lines
             
             const interval = setInterval(() => {
                 const line = i < shuffled.length ? shuffled[i] : "STILL_SEARCHING...";
-                setScanText(prev => [...prev.slice(-8), line]); // Keep last 8 lines
+                setScanText(prev => [...prev.slice(-12), line]); 
                 i++;
-            }, 150); // Faster updates for more "hacker" feel
+            }, 100); 
             return () => clearInterval(interval);
         }
     }, [loading]);
@@ -83,45 +142,32 @@ const ScamSelection: React.FC<Props> = ({ onSelectDifficulty, loading, scamsComp
         <button 
             onClick={onClick}
             disabled={!unlocked}
-            className={`relative group overflow-hidden border flex flex-col items-center text-center transition-all duration-300 w-full h-full min-h-[300px] rounded-2xl ${unlocked ? `bg-zinc-900/40 hover:bg-zinc-900/80 ${borderClass} cursor-pointer hover:scale-[1.02] shadow-2xl` : 'bg-black border-zinc-900 opacity-40 cursor-not-allowed'}`}
+            className={`relative group overflow-hidden border-2 flex flex-col items-center text-center transition-all duration-300 w-full h-full min-h-[300px] ${unlocked ? `bg-black ${borderClass} cursor-pointer hover:bg-zinc-900` : 'bg-black border-zinc-900 opacity-30 cursor-not-allowed'}`}
         >
-            {/* Background Grid Effect */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none opacity-20"></div>
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:10px_10px] pointer-events-none"></div>
 
-            {/* Header Status */}
-            <div className="w-full p-4 border-b border-white/5 flex justify-between items-center bg-black/20 backdrop-blur-sm">
-                <span className={`text-[10px] font-mono font-bold uppercase tracking-[0.2em] ${unlocked ? 'text-zinc-500' : 'text-zinc-700'}`}>
+            <div className="w-full p-4 border-b border-zinc-900 flex justify-between items-center bg-zinc-950">
+                <span className={`text-xs font-mono font-bold uppercase tracking-[0.2em] ${unlocked ? 'text-zinc-500' : 'text-zinc-800'}`}>
                     SECTOR_{level.toUpperCase()}
                 </span>
-                {!unlocked ? <Lock size={14} className="text-zinc-700"/> : <div className={`w-2 h-2 rounded-full ${colorClass.replace('text-', 'bg-')} animate-pulse`}></div>}
+                {!unlocked && <Lock size={14} className="text-zinc-800"/>}
             </div>
 
-            <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-8 w-full">
-                <div className={`p-6 rounded-full border-2 mb-6 transition-transform group-hover:scale-110 group-hover:rotate-3 ${unlocked ? `${colorClass} ${borderClass} bg-black/50` : 'text-zinc-700 border-zinc-800'}`}>
-                    <Icon size={48} strokeWidth={1.5} />
-                </div>
+            <div className="flex-1 flex flex-col justify-center items-center p-6 w-full gap-6">
+                <Icon size={64} strokeWidth={1} className={unlocked ? colorClass : 'text-zinc-800'} />
                 
-                <h3 className={`text-4xl md:text-5xl font-black font-mono mb-2 tracking-tighter ${unlocked ? 'text-white' : 'text-zinc-700'}`}>
-                    {label}
-                </h3>
-                
-                <div className={`text-sm md:text-base font-mono mb-6 px-4 py-1.5 rounded-full ${unlocked ? 'bg-zinc-950 border border-zinc-800 text-zinc-300' : 'text-zinc-800'}`}>
-                    Yield: <span className={`font-bold ${unlocked ? colorClass : ''}`}>{range}</span>
-                </div>
-
-                {/* Security Bars */}
-                <div className="flex flex-col gap-1 items-center w-24 mb-6">
-                    <span className="text-[9px] uppercase text-zinc-600 font-bold tracking-widest">Risk Level</span>
-                    <div className="flex gap-1 w-full h-1.5">
-                        {[1,2,3].map(i => (
-                            <div key={i} className={`flex-1 rounded-full ${level === 'easy' ? (i===1 ? 'bg-green-500' : 'bg-zinc-800') : level === 'medium' ? (i<=2 ? 'bg-yellow-500' : 'bg-zinc-800') : 'bg-red-500'}`}></div>
-                        ))}
+                <div>
+                    <h3 className={`text-4xl font-black font-mono tracking-tighter ${unlocked ? 'text-white' : 'text-zinc-800'}`}>
+                        {label}
+                    </h3>
+                    <div className={`text-sm font-mono mt-2 ${unlocked ? 'text-zinc-400' : 'text-zinc-800'}`}>
+                        Est. Yield: <span className={unlocked ? colorClass : ''}>{range}</span>
                     </div>
                 </div>
 
                 {unlocked && (
-                    <div className={`w-full py-3 mt-auto rounded-lg font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all ${unlocked ? `bg-white/5 hover:bg-white/10 ${colorClass}` : ''}`}>
-                        INITIATE HACK <ChevronRight size={14}/>
+                    <div className={`mt-auto px-6 py-2 border border-${colorClass.split('-')[1]}-900 bg-${colorClass.split('-')[1]}-900/10 text-${colorClass.split('-')[1]}-500 font-bold uppercase text-xs tracking-widest flex items-center gap-2 group-hover:bg-${colorClass.split('-')[1]}-500 group-hover:text-black transition-colors`}>
+                        INITIATE <ChevronRight size={14}/>
                     </div>
                 )}
             </div>
@@ -129,35 +175,33 @@ const ScamSelection: React.FC<Props> = ({ onSelectDifficulty, loading, scamsComp
     );
 
     return (
-        <div className="h-full w-full relative flex flex-col bg-black">
+        <div className="h-full w-full relative flex flex-col bg-black font-mono">
             <AnimatePresence>
                 {loading && (
                     <motion.div 
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center font-mono p-4"
+                        className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center font-mono overflow-hidden"
                     >
-                        <div className="w-full max-w-2xl border border-green-500/30 bg-black p-8 md:p-12 relative overflow-hidden shadow-[0_0_100px_rgba(34,197,94,0.1)] rounded-3xl">
-                            <div className="relative z-10 flex flex-col items-center">
-                                <ScanLine className="animate-spin-slow text-green-500 mb-8 opacity-80" size={80} strokeWidth={1} />
-                                <h2 className="text-3xl md:text-5xl font-black tracking-tighter text-white mb-8 animate-pulse text-center">ACQUIRING_TARGET</h2>
+                        <MatrixRain />
+                        
+                        <div className="relative z-10 w-full max-w-3xl p-8 flex flex-col items-center">
+                            <div className="border border-green-500 bg-black/90 p-8 w-full shadow-[0_0_50px_rgba(34,197,94,0.2)]">
+                                <div className="flex items-center justify-center gap-4 mb-8">
+                                    <ScanLine className="animate-spin-slow text-green-500" size={48} />
+                                    <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-white animate-pulse">ACQUIRING_TARGET</h2>
+                                </div>
                                 
-                                <div className="w-full font-mono text-xs md:text-sm h-48 overflow-hidden relative border-y border-green-900/30 py-4 bg-green-950/5">
-                                    <div className="flex flex-col justify-end h-full gap-1.5 items-center">
+                                <div className="h-64 overflow-hidden border-t border-b border-green-900/50 bg-green-950/10 p-4 font-mono text-xs md:text-sm text-green-400 relative">
+                                    <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-black/90 to-transparent z-10"></div>
+                                    <div className="flex flex-col justify-end h-full gap-1">
                                         {scanText.map((line, i) => (
-                                            <motion.div 
-                                                key={i} 
-                                                initial={{opacity: 0, y: 10}} 
-                                                animate={{opacity: 1, y: 0}} 
-                                                className="text-green-400/80 w-full text-center"
-                                            >
-                                                {line}
-                                            </motion.div>
+                                            <div key={i} className="opacity-80">{line}</div>
                                         ))}
                                     </div>
                                 </div>
                                 
-                                <div className="mt-8 flex gap-4 text-green-700 text-[10px] font-mono uppercase tracking-widest w-full justify-center">
-                                    <span className="flex items-center gap-2"><div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> ENCRYPTION: BYPASSED</span>
+                                <div className="mt-4 text-center text-green-700 text-[10px] font-bold uppercase tracking-[0.3em]">
+                                    Encryption Bypassed // Access Granted
                                 </div>
                             </div>
                         </div>
@@ -165,29 +209,21 @@ const ScamSelection: React.FC<Props> = ({ onSelectDifficulty, loading, scamsComp
                 )}
             </AnimatePresence>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 relative">
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none opacity-50"></div>
-
-                <div className="max-w-7xl mx-auto relative z-10 h-full flex flex-col">
-                    <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between border-b border-zinc-800 pb-6 gap-4">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 relative z-10">
+                <div className="max-w-7xl mx-auto h-full flex flex-col">
+                    <div className="mb-8 flex items-end justify-between border-b border-green-900/30 pb-6">
                         <div className="flex items-center gap-6">
-                            <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800 text-green-500 shadow-lg shadow-green-900/10">
-                                <Globe size={40} strokeWidth={1.5} />
+                            <div className="p-4 bg-black border border-green-900 text-green-600">
+                                <Globe size={40} strokeWidth={1} />
                             </div>
                             <div>
-                                <h1 className="text-4xl md:text-5xl font-black text-white font-mono tracking-tighter text-glow">TARGET_DIRECTORY</h1>
-                                <p className="text-zinc-500 text-sm font-mono uppercase tracking-widest mt-1">Select vulnerability sector to exploit</p>
-                            </div>
-                        </div>
-                        <div className="text-right hidden md:block">
-                            <div className="text-xs text-zinc-500 uppercase tracking-widest font-bold">Network Status</div>
-                            <div className="text-green-500 font-bold font-mono text-lg flex items-center justify-end gap-2">
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> ONLINE
+                                <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter">TARGET_DIRECTORY</h1>
+                                <p className="text-green-800 text-sm font-bold uppercase tracking-widest mt-1">Select Vulnerability Sector</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 items-stretch">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 items-stretch pb-8">
                         <DifficultyCard 
                             level="easy"
                             label="THE ELDERLY"
@@ -195,7 +231,7 @@ const ScamSelection: React.FC<Props> = ({ onSelectDifficulty, loading, scamsComp
                             unlocked={true}
                             icon={User}
                             colorClass="text-green-500"
-                            borderClass="border-green-500 shadow-green-500/20"
+                            borderClass="border-green-600"
                             onClick={() => onSelectDifficulty('easy')}
                         />
                         <DifficultyCard 
@@ -205,7 +241,7 @@ const ScamSelection: React.FC<Props> = ({ onSelectDifficulty, loading, scamsComp
                             unlocked={scamsCompleted >= 2}
                             icon={Briefcase}
                             colorClass="text-yellow-500"
-                            borderClass="border-yellow-500 shadow-yellow-500/20"
+                            borderClass="border-yellow-600"
                             onClick={() => onSelectDifficulty('medium')}
                         />
                         <DifficultyCard 
@@ -215,16 +251,15 @@ const ScamSelection: React.FC<Props> = ({ onSelectDifficulty, loading, scamsComp
                             unlocked={scamsCompleted >= 5}
                             icon={Shield}
                             colorClass="text-red-500"
-                            borderClass="border-red-500 shadow-red-500/20"
+                            borderClass="border-red-600"
                             onClick={() => onSelectDifficulty('hard')}
                         />
                     </div>
                     
-                    {/* Locked warning */}
                     {(scamsCompleted < 2 || scamsCompleted < 5) && (
-                        <div className="mt-8 p-4 bg-zinc-900/50 border border-zinc-800 rounded-xl flex items-center justify-center gap-3 text-zinc-500 text-sm font-mono">
-                            <AlertTriangle size={16} />
-                            <span>HIGHER TIERS LOCKED: COMPLETE MORE OPERATIONS TO INCREASE REPUTATION</span>
+                        <div className="p-4 border border-zinc-800 bg-black text-zinc-600 text-center text-xs font-mono uppercase tracking-widest">
+                            <AlertTriangle size={14} className="inline mr-2 -mt-1"/>
+                            Additional Targets Locked // Complete Operations to Increase Reputation
                         </div>
                     )}
                 </div>
