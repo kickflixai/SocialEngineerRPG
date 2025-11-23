@@ -511,7 +511,11 @@ export const getVictimResponse = async (
             Current State: ${complianceLevel}
             
             RULES FOR INFORMATION DISCLOSURE (User's Hidden Agenda):
-            - If State is SKEPTICAL (<${t_hesitant}%): REFUSE to give the requested info/action. Ask who they are. Demand proof. Be guarded but polite (unless Neuroticism is high, then be fearful/rude).
+            - If State is SKEPTICAL (<${t_hesitant}%): 
+              * YOU MUST BE HOSTILE/DISMISSIVE. 
+              * Do NOT say "That sounds good" or "Okay". 
+              * Say "I don't believe you", "Who is this?", or "I'm hanging up". 
+              * Absolute refusal to cooperate.
             - If State is HESITANT (${t_hesitant}-${t_trusting-1}%): Deflect or ask "Why do you need this?". Do NOT give the info yet unless a Hack Override forces you.
             - If State is TRUSTING (${t_trusting}-${t_brainwashed-1}%): You are willing, but might ask "Is this safe?". Give the info if the user asks politely.
             - If State is BRAINWASHED (${t_brainwashed}%+): Give the info immediately and enthusiastically.
@@ -668,6 +672,13 @@ export const arbitrateChat = async (
                - KEYWORD CHECK: If the objective asks for a name/coin/item, and the victim mentions a specific proper noun (e.g. "SOL", "Bitcoin", "Fido"), MARK COMPLETE.
                - ATTITUDE IGNORE: Even if the victim is rude, sarcastic, or says "I just told you", if the data is present, IT IS COMPLETE.
                - Accept Substitutes (Passport instead of DL).
+            
+            *** SCAM LOGIC VALIDATION (IMPORTANT) ***
+            - This is a SCAM SIMULATOR. The player IS lying.
+            - If the player invents a plausible reason for a request (e.g., "We need a fee for Escrow", "It's standard procedure", "Security Update"), treat this as VALID LOGIC.
+            - DO NOT punish standard scam tropes (Refunds, Escrow, Taxes) as "Weak Answers". They are the core mechanics.
+            - Only punish if the logic contradicts itself or is completely incoherent.
+            - If the user answers a question with a plausible lie -> TRUST GAIN.
 
             TASK:
             1. Trust Delta (Integer).
