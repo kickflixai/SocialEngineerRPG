@@ -8,12 +8,13 @@
 }
 
 body {
-  background-color: #09090b; /* zinc-950 */
+  background-color: #000000;
   color: #e4e4e7; /* zinc-200 */
   overflow: hidden;
+  font-family: 'Inter', sans-serif;
 }
 
-/* CRT Scanline Effect Overlay */
+/* --- CRT & VIGNETTE OVERLAY --- */
 body::after {
   content: " ";
   display: block;
@@ -22,30 +23,32 @@ body::after {
   left: 0;
   bottom: 0;
   right: 0;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-  z-index: 2000;
-  background-size: 100% 2px, 3px 100%;
+  background: 
+    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 9999;
+  background-size: 100% 3px, 3px 100%;
   pointer-events: none;
 }
 
-/* Custom Scrollbar */
+/* --- SCROLLBARS --- */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #09090b; /* zinc-950 */
+  background: #09090b; 
 }
 ::-webkit-scrollbar-thumb {
-  background: #27272a; /* zinc-800 */
-  border-radius: 4px;
+  background: #27272a; 
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46; /* zinc-700 */
+  background: #3f3f46; 
 }
 
-/* Utilities */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
@@ -55,12 +58,16 @@ body::after {
   border-radius: 10px;
 }
 
-/* Text Glow Utility */
+/* --- TEXT EFFECTS --- */
 .text-glow {
+    text-shadow: 0 0 10px currentColor;
+}
+
+.text-glow-sm {
     text-shadow: 0 0 5px currentColor;
 }
 
-/* CRT Screen Flicker Animation */
+/* --- ANIMATIONS --- */
 @keyframes flicker {
   0% { opacity: 0.95; }
   5% { opacity: 0.9; }
@@ -74,4 +81,27 @@ body::after {
 
 .crt-flicker {
     animation: flicker 0.15s infinite;
+}
+
+@keyframes scan-vertical {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+}
+
+/* Typing Effect Cursor */
+.typing-effect::after {
+  content: '▋';
+  display: inline-block;
+  vertical-align: bottom;
+  animation: blink 1s step-start infinite;
+  color: #22c55e;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* --- UTILITIES --- */
+.perspective-1000 {
+    perspective: 1000px;
 }
