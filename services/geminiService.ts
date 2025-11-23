@@ -231,7 +231,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         
         INSTRUCTIONS:
         1. Personality: Write 1-2 sentences describing them. YOU MUST EXPLICITLY MENTION OR REFERENCE THEIR FLAVOR ("${randFlavor}") in this description.
-        2. QUIRK HANDLING: If the quirk is "None" or null, DO NOT mention it. If it is a real quirk, you may briefly mention it.
+        2. QUIRK HANDLING: If the quirk is "None" or null, DO NOT mention it in the description. If it is a real quirk, you may briefly mention it.
         3. Explain how these traits manifest in their daily life or behavior.
         4. Hidden Fact: Max 12 words. Something embarrassing or illegal related to their flavor/quirk if possible.
         5. Weakness: Max 6 words. What psychological lever works best?
@@ -486,9 +486,9 @@ export const getVictimResponse = async (
             The user wants: "${personalizedObjective}".
             
             *** "YES, AND" RULE WITH TRUST GATING ***
-            - You possess the assets implied by the scenario (Child, Wallet, Portfolio).
+            - You possess the assets implied by the scenario (Child, Wallet, Portfolio), even if you have to invent a detail about them.
             - HOWEVER: If the user guesses specific details about your asset (e.g., "You bought Neurotropics"), CHECK YOUR TRUST LEVEL.
-            - If Trust < 20%: DO NOT CONFIRM. Act confused, deny it, or ask how they know. Be suspicious of their knowledge.
+            - If Trust < 20%: DO NOT CONFIRM blindly. Act confused, deny it, or ask how they know. Be suspicious of their knowledge.
             - If Trust >= 20% OR a Hack/Proof was provided: You confirm the detail is correct.
             
             *** KNOWLEDGE FIREWALL (CRITICAL) ***
@@ -634,6 +634,19 @@ export const arbitrateChat = async (
             - Authority Voice: ${hasAuthVoice}
             
             ${elderlyInstructions}
+
+            *** GLOBAL LENIENCY & SCORING PROTOCOLS ***
+            1. LENIENCY: Be generous with interpretation.
+               - If a response is "logical enough" but not perfect, do NOT increase Suspicion.
+               - Suspicion should ONLY rise for: Overt contradictions, aggressive insults (unless Kidnapping), or completely nonsensical inputs.
+               - Minor typos or slightly vague answers are safe.
+            2. TRUST SCALING (CONTROLLED):
+               - Standard "Good" move: +4 to +8 Trust.
+               - "Great" move (clever/funny): +10 to +15 Trust.
+               - Do NOT award huge jumps (e.g., +25) unless it's a specific Elderly/Hack modifier.
+            3. SUSPICION SCALING:
+               - Only apply Suspicion if the user actively alarms the target.
+               - Default Suspicion change for neutral/okay messages is 0.
 
             TASK:
             1. Trust Change.
