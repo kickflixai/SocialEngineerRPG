@@ -1027,19 +1027,19 @@ export const NEUTRAL_FLAVORS = [
     "PC Master Race Elitist", "CrossFitter", "Ancient Aliens Theorist", "Dropshipper",
     "Alpha Male Podcaster", "Boomer", "Bath Salts Connoisseur", "Gas Station Knife Collector",
     "Public Masturbator", "Serial Arsonist", "Goon Cave Dweller", "Simp Lord", "Urine Therapy Advocate",
-    "Cult Leader", "Prophet of Doom", "Human Pet", "Neckbeard", "Hoarder"
+    "Cult Leader", "Prophet of Doom", "Human Pet", "Neckbeard", "Hoarder", "Stoner", "Currently in jail"
 ];
 
 export const MALE_FLAVORS = [
     "Alpha Male", "Crypto Bro", "Foot Fetishist", "Gamer Girl Bath Water Buyer", 
     "Clinically Obsessed with Musk", "OnlyFans Simp", "Finance Bro", "Incel", 
     "Pick-up Artist", "Gym Rat", "Mansplainer", "Reply Guy", "Neckbeard", "Finance Bro",
-    "Florida Man"
+    "Florida Man", "Simp"
 ];
 
 export const FEMALE_FLAVORS = [
     "MLM 'Boss Babe'", "Hardcore K-Pop Stan", "Van Life Influencer", "Astrology Girlie",
     "Trad Wife", "Horse Girl", "Tennis Mom", "Karen", "Crystal Healer", "WitchToker",
     "Disney Princess Wannabe", "Cat Lady", "Wine Mom", "E-Girl", "Astrology Girl", "Trad Wife",
-    "MLM Boss Babe", "Karen"
+    "MLM Boss Babe", "Karen", "Reddit Feminist", "Swiftie", "Crazy Cat Lady", "Horse girl"
 ];
