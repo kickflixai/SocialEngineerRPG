@@ -15,7 +15,7 @@ import ScamResult from './components/ScamResult';
 import Shop from './components/Shop';
 import SkillTree from './components/SkillTree';
 import ScamSelection from './components/ScamSelection';
-import { Siren, Skull, ArrowLeft, Zap, Volume2, VolumeX } from 'lucide-react';
+import { Siren, ArrowLeft, Volume2, VolumeX, Terminal, Activity } from 'lucide-react';
 
 const STORAGE_KEY = 'SCAM_SIM_SAVE_V1';
 
@@ -540,41 +540,36 @@ const App: React.FC = () => {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(18,18,18,0)_2px,transparent_2px),linear-gradient(90deg,rgba(18,18,18,0)_2px,transparent_2px)] bg-[size:40px_40px] opacity-20 pointer-events-none"></div>
         
         {view !== GameView.LANDING && view !== GameView.CHARACTER_CREATION && (
-            <header className="h-16 md:h-20 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-4 md:px-8 z-50 shrink-0">
-                <div className="flex items-center gap-2 md:gap-4">
-                    <div className="w-8 h-8 md:w-10 md:h-10 bg-green-500/10 rounded flex items-center justify-center border border-green-500/30">
-                        <Skull size={20} className="text-green-500 md:w-6 md:h-6"/>
+            <header className="h-14 border-b border-zinc-800 bg-black flex items-center justify-between px-4 md:px-6 z-50 shrink-0 shadow-lg relative">
+                <div className="flex items-center gap-4">
+                    <div className="text-green-600 animate-pulse">
+                        <Terminal size={18} />
                     </div>
-                    <div>
-                        <h1 className="font-mono font-bold text-white text-sm md:text-lg tracking-tighter">SCAM_SIM<span className="text-green-500">_V2</span></h1>
+                    <div className="flex flex-col">
+                         <span className="font-mono text-xs font-bold text-white tracking-[0.2em] leading-none">SCAM_SIMULATOR</span>
+                         <span className="font-mono text-[9px] text-green-500 tracking-wider">SYSTEM_ONLINE_V2.0</span>
                     </div>
                 </div>
                 
-                <div className="flex items-center gap-2 md:gap-6">
-                    <div className="hidden lg:flex flex-col items-end text-[10px] font-mono text-zinc-500 border-r border-zinc-800 pr-6 relative group cursor-help">
-                        <div className="flex items-center gap-2">
-                            <Zap size={10} className="text-blue-500"/> COST: ${player.stats?.totalCost.toFixed(4) || "0.0000"}
-                        </div>
-                        <div className="text-blue-400/60">TXT: {player.stats?.textRequests} | IMG: {player.stats?.imageRequests}</div>
-                    </div>
+                <div className="flex items-center gap-6">
+                     <div className="hidden md:flex items-center gap-2 text-[10px] font-mono text-zinc-500">
+                        <Activity size={12} /> NET_STATUS: STABLE
+                     </div>
 
-                    <button onClick={toggleAudio} className="p-2 rounded bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-white transition-colors">
+                    <button onClick={toggleAudio} className="text-zinc-500 hover:text-white transition-colors">
                         {isMuted ? <VolumeX size={16}/> : <Volume2 size={16}/>}
                     </button>
-                    <div className="text-right">
-                        <p className="text-[10px] text-zinc-500 font-bold uppercase hidden md:block">Available Funds</p>
-                        <p className="text-sm md:text-xl font-mono text-white font-bold">${player.money.toLocaleString()}</p>
-                    </div>
+                    
                     {view !== GameView.DASHBOARD && view !== GameView.VICTIM_DOSSIER && view !== GameView.ACTIVE_SCAM && (
-                        <button onClick={() => { audioManager.playClick(); setView(GameView.DASHBOARD); }} className="px-3 py-2 md:px-4 md:py-2 bg-zinc-900 border border-zinc-700 hover:border-white rounded text-xs md:text-sm text-zinc-300 hover:text-white flex items-center gap-2 transition-colors">
-                            <ArrowLeft size={14}/> <span className="hidden md:inline">Dashboard</span>
+                        <button onClick={() => { audioManager.playClick(); setView(GameView.DASHBOARD); }} className="px-3 py-1.5 border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 hover:border-white rounded-sm text-[10px] font-mono text-white flex items-center gap-2 transition-all uppercase tracking-wider">
+                            <ArrowLeft size={10}/> Dashboard
                         </button>
                     )}
                 </div>
             </header>
         )}
 
-        <main className="flex-1 overflow-hidden relative z-40">
+        <main className="flex-1 overflow-y-auto custom-scrollbar relative z-40">
             {view === GameView.LANDING && (
                 <LandingScreen onNewGame={handleNewGame} onResume={handleResumeGame} saveSummary={saveSummary} isMuted={isMuted} toggleAudio={toggleAudio} />
             )}

@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { PlayerState, GameView } from '../types';
-import { ShieldAlert, ShoppingBag, BrainCircuit, Package, Power, Activity, Crosshair, Globe, History, Trophy, Award, TrendingUp, Skull, Zap, Lock, Terminal } from 'lucide-react';
+import { ShieldAlert, ShoppingBag, BrainCircuit, Package, Power, Activity, Crosshair, Trophy, Zap, Terminal, Globe, Wifi } from 'lucide-react';
 import { ALL_SKILLS, ACHIEVEMENTS } from '../constants';
 import { motion } from 'framer-motion';
 
@@ -11,24 +12,27 @@ interface Props {
   onReset: () => void;
 }
 
-const TerminalCard = ({ children, title, className = "", icon: Icon }: any) => (
-    <div className={`bg-black border border-green-900/50 flex flex-col relative overflow-hidden ${className}`}>
-        {/* Terminal Header */}
-        <div className="bg-zinc-950 border-b border-green-900/30 p-2 flex justify-between items-center shrink-0">
+const TerminalCard = ({ children, title, className = "", icon: Icon, rightContent }: any) => (
+    <div className={`bg-black/80 border border-green-900/30 flex flex-col relative overflow-hidden group hover:border-green-500/50 transition-colors ${className}`}>
+        {/* Corner Brackets */}
+        <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-green-700/50"></div>
+        <div className="absolute top-0 right-0 w-2 h-2 border-r border-t border-green-700/50"></div>
+        <div className="absolute bottom-0 left-0 w-2 h-2 border-l border-b border-green-700/50"></div>
+        <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-green-700/50"></div>
+
+        {/* Header */}
+        <div className="bg-green-950/10 border-b border-green-900/20 p-2 flex justify-between items-center shrink-0">
             <div className="flex items-center gap-2 text-green-600">
-                {Icon && <Icon size={14} />}
-                <span className="text-[10px] font-mono font-bold uppercase tracking-widest">{title}</span>
+                {Icon && <Icon size={12} />}
+                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em]">{title}</span>
             </div>
-            <div className="flex gap-1">
-                <div className="w-2 h-2 bg-green-900/50 rounded-full"></div>
-                <div className="w-2 h-2 bg-green-900/50 rounded-full"></div>
-            </div>
+            {rightContent}
         </div>
-        {/* Content */}
-        <div className="flex-1 min-h-0 relative p-3 md:p-4">
+        
+        {/* Content with Flex-1 to fill space properly */}
+        <div className="flex-1 min-h-0 relative p-0 flex flex-col">
             {children}
-            {/* CRT Scanline overlay for just this card */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%)] bg-[length:100%_4px] pointer-events-none opacity-20"></div>
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.01)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
         </div>
     </div>
 );
@@ -36,101 +40,122 @@ const TerminalCard = ({ children, title, className = "", icon: Icon }: any) => (
 const ActionButton = ({ title, sub, icon: Icon, onClick, color = "green" }: any) => (
     <button 
         onClick={onClick}
-        className={`group relative w-full h-full border border-${color}-900/30 bg-black hover:bg-${color}-900/10 transition-all duration-200 flex flex-col items-center justify-center gap-3 p-4 overflow-hidden`}
+        className={`group relative w-full h-full border border-zinc-800 bg-zinc-950/50 hover:bg-black transition-all duration-300 flex flex-col items-start justify-between p-6 overflow-hidden hover:border-${color}-500/50`}
     >
-        <div className={`absolute inset-0 bg-${color}-500/5 opacity-0 group-hover:opacity-100 transition-opacity`}></div>
-        {/* Corner Accents */}
-        <div className={`absolute top-0 left-0 w-2 h-2 border-l-2 border-t-2 border-${color}-600`}></div>
-        <div className={`absolute top-0 right-0 w-2 h-2 border-r-2 border-t-2 border-${color}-600`}></div>
-        <div className={`absolute bottom-0 left-0 w-2 h-2 border-l-2 border-b-2 border-${color}-600`}></div>
-        <div className={`absolute bottom-0 right-0 w-2 h-2 border-r-2 border-b-2 border-${color}-600`}></div>
+        <div className={`absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500`}>
+             <Icon size={64} strokeWidth={1} className={`text-${color}-500`} />
+        </div>
 
-        <Icon size={48} strokeWidth={1} className={`text-${color}-500 group-hover:scale-110 transition-transform duration-300`} />
-        
-        <div className="text-center relative z-10">
-            <h3 className={`text-xl md:text-2xl font-black font-mono uppercase tracking-tighter text-white group-hover:text-${color}-400`}>{title}</h3>
-            <p className={`text-[10px] md:text-xs font-mono uppercase tracking-widest text-${color}-700`}>{sub}</p>
+        <div className="relative z-10 mt-auto">
+            <div className={`flex items-center gap-2 text-${color}-500 mb-2 opacity-50 group-hover:opacity-100`}>
+                <div className={`w-1 h-1 bg-${color}-500`}></div>
+                <div className={`h-[1px] w-12 bg-${color}-500`}></div>
+            </div>
+            <h3 className={`text-xl md:text-2xl font-bold font-mono uppercase tracking-widest text-white group-hover:text-${color}-400 group-hover:text-glow`}>{title}</h3>
+            <p className={`text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 group-hover:text-${color}-600 mt-1`}>{sub}</p>
         </div>
     </button>
 );
 
 const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onReset }) => {
   const activeSkills = Object.entries(player.skills).filter(([_, level]) => level > 0);
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const t = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
 
   return (
-    <div className="h-screen w-full bg-black text-green-500 font-mono p-4 overflow-hidden flex flex-col gap-4">
-        
-        {/* --- ROW 1: STATUS & CONTROLS (Approx 20% Height) --- */}
-        <div className="h-[20%] min-h-[140px] grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
+    <div className="w-full min-h-full bg-black text-green-500 font-mono p-4 md:p-6 lg:p-8 flex flex-col gap-6 relative">
+        {/* Ambient Glow */}
+        <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,197,94,0.05),transparent_70%)] pointer-events-none"></div>
+
+        {/* --- ROW 1: STATUS & DATA (25% Height approx) --- */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 min-h-[160px]">
             
-            {/* 1.1: PROFILE */}
-            <TerminalCard title="USER_IDENTITY" icon={Terminal} className="col-span-1">
-                <div className="flex gap-4 h-full items-center">
-                    <div className="relative h-20 w-20 md:h-24 md:w-24 shrink-0 border-2 border-green-700 p-0.5">
-                        <img src={player.attributes.avatarUrl} alt="Avatar" className="w-full h-full object-cover grayscale contrast-125" />
-                        <div className="absolute top-0 left-0 w-full h-full bg-green-500/10"></div>
+            {/* 1.1: PROFILE (Col 4) */}
+            <TerminalCard title="PERSONNEL_RECORD" icon={Terminal} className="md:col-span-4" 
+                rightContent={<div className="flex gap-1"><div className="w-1.5 h-1.5 bg-green-500 animate-pulse"></div></div>}>
+                <div className="flex h-full p-4 gap-6 items-center relative z-10">
+                    <div className="relative h-28 w-28 shrink-0 border border-green-800 p-1">
+                        <img src={player.attributes.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                        <div className="absolute -bottom-1 -right-1 bg-green-900 text-[9px] text-green-300 px-1 border border-green-700">IMG_01</div>
                     </div>
-                    <div className="min-w-0 flex-1 flex flex-col justify-center">
-                        <h2 className="text-xl md:text-2xl font-bold text-white truncate">{player.attributes.name}</h2>
-                        <div className="text-xs text-green-600 uppercase tracking-widest mb-2">{player.attributes.archetype}</div>
-                        <div className="grid grid-cols-2 gap-2 text-[10px] text-green-800">
-                             <div className="bg-green-900/10 px-2 py-1 border border-green-900/30">
-                                REP LVL: <span className="text-green-400 font-bold">{Math.floor(player.scamsCompleted / 3) + 1}</span>
-                             </div>
-                             <div className="bg-green-900/10 px-2 py-1 border border-green-900/30">
-                                OPS: <span className="text-green-400 font-bold">{player.scamsCompleted}</span>
-                             </div>
+                    <div className="flex flex-col gap-1 min-w-0 flex-1">
+                        <div className="text-[10px] text-zinc-500 uppercase tracking-widest">Alias</div>
+                        <div className="text-xl font-bold text-white tracking-wider truncate">{player.attributes.name}</div>
+                        
+                        <div className="h-[1px] w-full bg-green-900/50 my-2"></div>
+                        
+                        <div className="grid grid-cols-2 gap-y-2 gap-x-4">
+                            <div>
+                                <div className="text-[9px] text-zinc-600 uppercase">Class</div>
+                                <div className="text-xs text-green-400 font-bold uppercase truncate">{player.attributes.archetype}</div>
+                            </div>
+                            <div>
+                                <div className="text-[9px] text-zinc-600 uppercase">Origin</div>
+                                <div className="text-xs text-green-400 font-bold uppercase truncate">{player.attributes.country}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </TerminalCard>
 
-            {/* 1.2: ECONOMY & THREAT */}
-            <TerminalCard title="SYSTEM_METRICS" icon={Activity} className="col-span-1">
-                 <div className="flex h-full items-center gap-4">
-                     <div className="flex-1 text-center border-r border-green-900/30 pr-4">
-                        <div className="text-[10px] uppercase text-green-700 mb-1">Available Funds</div>
-                        <div className="text-2xl md:text-4xl font-bold text-white tracking-tighter shadow-green-500/50 drop-shadow-sm">
+            {/* 1.2: METRICS (Col 5) */}
+            <TerminalCard title="FINANCIAL_DATA" icon={Activity} className="md:col-span-5">
+                 <div className="grid grid-cols-2 h-full relative z-10">
+                     <div className="p-4 border-r border-green-900/30 flex flex-col justify-center">
+                        <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Liquid Assets</div>
+                        <div className="text-3xl lg:text-4xl font-bold text-white tracking-tighter shadow-green-500/50 drop-shadow-sm truncate">
                             ${player.money.toLocaleString()}
                         </div>
+                        <div className="text-[9px] text-green-700 mt-2 flex items-center gap-1">
+                            <Wifi size={10} /> ENCRYPTED_WALLET
+                        </div>
                      </div>
-                     <div className="flex-1 text-center pl-4">
-                        <div className="text-[10px] uppercase text-red-700 mb-1 flex items-center justify-center gap-1"><ShieldAlert size={10}/> Global Threat</div>
-                        <div className="text-2xl md:text-4xl font-bold text-red-500 tracking-tighter">
+                     <div className="p-4 flex flex-col justify-center relative overflow-hidden">
+                        <div className="absolute inset-0 bg-red-900/5"></div>
+                        <div className="text-[10px] text-red-500 uppercase tracking-widest mb-1 flex items-center gap-2">
+                             <ShieldAlert size={12}/> Threat Level
+                        </div>
+                        <div className="text-3xl lg:text-4xl font-bold text-red-500 tracking-tighter relative z-10">
                             {Math.round(player.threatLevel)}%
                         </div>
-                        <div className="w-full bg-red-950 h-1 mt-2">
-                            <div className="h-full bg-red-600" style={{width: `${player.threatLevel}%`}}></div>
+                        <div className="w-full bg-red-950 h-1.5 mt-3 relative overflow-hidden">
+                            <div className="h-full bg-red-600 transition-all duration-500" style={{width: `${player.threatLevel}%`}}></div>
                         </div>
                      </div>
                  </div>
             </TerminalCard>
 
-            {/* 1.3: UTILITY */}
-            <TerminalCard title="CONTROLS" icon={Power} className="col-span-1">
-                <div className="flex flex-col justify-center h-full gap-3">
-                    <button onClick={onOpenInventory} className="flex-1 border border-zinc-800 hover:border-green-500 hover:bg-green-900/10 bg-black text-zinc-400 hover:text-green-400 transition-all flex items-center justify-center gap-3 uppercase font-bold text-xs tracking-widest">
-                        <Package size={16} /> Inventory ({player.inventory.length})
+            {/* 1.3: CONTROLS (Col 3) */}
+            <TerminalCard title="SYSTEM_CMDS" icon={Power} className="md:col-span-3">
+                <div className="flex flex-col h-full p-2 gap-2 justify-center">
+                    <button onClick={onOpenInventory} className="flex-1 bg-zinc-900/50 border border-zinc-800 hover:border-green-500 hover:bg-green-900/10 text-zinc-400 hover:text-white transition-all flex items-center justify-center gap-3 uppercase font-bold text-xs tracking-widest group">
+                        <Package size={16} className="text-zinc-600 group-hover:text-green-500"/> 
+                        <span>Inventory</span>
+                        <span className="bg-zinc-800 text-white px-1.5 py-0.5 text-[9px]">{player.inventory.length}</span>
                     </button>
-                    <button onClick={onReset} className="h-10 border border-red-900/30 hover:border-red-500 hover:bg-red-950/30 bg-black text-red-800 hover:text-red-500 transition-all flex items-center justify-center gap-3 uppercase font-bold text-[10px] tracking-widest">
-                        <Skull size={14} /> Wipe System Data
+                    <button onClick={onReset} className="h-10 bg-red-950/10 border border-red-900/30 hover:bg-red-950/30 hover:border-red-600/50 text-red-800 hover:text-red-500 transition-all flex items-center justify-center gap-2 uppercase font-bold text-[10px] tracking-widest">
+                        Initialize Wipe
                     </button>
                 </div>
             </TerminalCard>
         </div>
 
-        {/* --- ROW 2: MAIN ACTIONS (Approx 35% Height) --- */}
-        <div className="h-[35%] min-h-[200px] grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
-             <div className="col-span-1 h-full">
+        {/* --- ROW 2: ACTIONS (25% Height approx) --- */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 min-h-[220px]">
+             <div className="col-span-1 h-full shadow-[0_0_50px_rgba(34,197,94,0.05)]">
                 <ActionButton 
                     title="Acquire Target" 
-                    sub="Scan Global Networks" 
+                    sub="Global Network Scan" 
                     icon={Crosshair} 
                     color="green" 
                     onClick={() => onChangeView(GameView.SCAM_SELECTION)} 
                 />
              </div>
-             <div className="col-span-1 h-full">
+             <div className="col-span-1 h-full shadow-[0_0_50px_rgba(59,130,246,0.05)]">
                 <ActionButton 
                     title="Neural Upgrades" 
                     sub="Enhance Capabilities" 
@@ -139,10 +164,10 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
                     onClick={() => onChangeView(GameView.SKILL_TREE)} 
                 />
              </div>
-             <div className="col-span-1 h-full">
+             <div className="col-span-1 h-full shadow-[0_0_50px_rgba(168,85,247,0.05)]">
                 <ActionButton 
                     title="Black Market" 
-                    sub="Illicit Goods" 
+                    sub="Illegal Hardware" 
                     icon={ShoppingBag} 
                     color="purple" 
                     onClick={() => onChangeView(GameView.SHOP)} 
@@ -150,78 +175,94 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
              </div>
         </div>
 
-        {/* --- ROW 3: DATA LOGS (Remaining Height) --- */}
-        <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* --- ROW 3: LISTS (Flex-grow to fill rest) --- */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-[300px]">
             
-            {/* 3.1: ACTIVE AUGMENTS */}
-            <TerminalCard title="ACTIVE_SUBROUTINES" icon={Zap} className="col-span-1">
-                <div className="absolute inset-0 top-10 p-3 overflow-y-auto custom-scrollbar space-y-2">
-                    {activeSkills.length === 0 && (
-                        <div className="h-full flex items-center justify-center text-green-900 text-xs text-center uppercase">
-                            No Neural Augmentations<br/>Installed
+            {/* 3.1: AUGMENTS */}
+            <TerminalCard title="ACTIVE_AUGMENTS" icon={Zap} className="col-span-1">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-0">
+                    {activeSkills.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center opacity-30 gap-2 p-8">
+                            <BrainCircuit size={32} />
+                            <div className="text-[10px] uppercase text-center">No Neural Mods Installed</div>
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-green-900/20">
+                            {activeSkills.map(([id, level]) => {
+                                const skillDef = ALL_SKILLS.find(s => s.id === id);
+                                return (
+                                    <div key={id} className="p-3 hover:bg-green-900/5 flex justify-between items-center group transition-colors">
+                                        <span className="text-xs text-green-400 font-bold uppercase tracking-wide group-hover:text-green-300">{skillDef?.name}</span>
+                                        <div className="flex gap-0.5">
+                                            {[...Array(5)].map((_, i) => (
+                                                <div key={i} className={`w-1 h-2 ${i < level ? 'bg-green-500' : 'bg-green-900/20'}`}></div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )
+                            })}
                         </div>
                     )}
-                    {activeSkills.map(([id, level]) => {
-                        const skillDef = ALL_SKILLS.find(s => s.id === id);
-                        return (
-                            <div key={id} className="flex justify-between items-center bg-green-900/5 border border-green-900/20 p-2">
-                                <span className="text-xs text-green-400 font-bold truncate">{skillDef?.name}</span>
-                                <span className="text-[10px] text-black bg-green-600 px-1 font-bold">V{level}</span>
-                            </div>
-                        )
-                    })}
                 </div>
             </TerminalCard>
 
-            {/* 3.2: OPERATION LOG */}
-            <TerminalCard title="OPERATION_LOG" icon={History} className="col-span-1">
-                <div className="absolute inset-0 top-10 p-3 overflow-y-auto custom-scrollbar space-y-2">
-                    {player.history.length === 0 && (
-                        <div className="h-full flex items-center justify-center text-green-900 text-xs text-center uppercase">
-                            Database Empty
+            {/* 3.2: LOGS */}
+            <TerminalCard title="OPERATION_LOGS" icon={Terminal} className="col-span-1">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-0">
+                    {player.history.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center opacity-30 gap-2 p-8">
+                            <Globe size={32} />
+                            <div className="text-[10px] uppercase text-center">Database Empty</div>
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-zinc-800">
+                            {player.history.map(item => (
+                                <div key={item.id} className="p-3 hover:bg-zinc-900/50 flex gap-3 items-center group transition-colors cursor-default">
+                                    <div className="w-8 h-8 shrink-0 bg-black border border-zinc-800 overflow-hidden">
+                                        <img src={item.victimAvatar} className="w-full h-full object-cover grayscale group-hover:grayscale-0 opacity-70 group-hover:opacity-100" alt="V" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex justify-between items-center mb-0.5">
+                                            <span className="text-[10px] font-bold text-zinc-300 uppercase truncate max-w-[60%]">{item.victimName}</span>
+                                            <span className={`text-[10px] font-bold ${item.outcome === 'success' ? 'text-green-500' : 'text-red-500'}`}>
+                                                {item.outcome === 'success' ? `+$${item.payout}` : 'FAIL'}
+                                            </span>
+                                        </div>
+                                        <div className="text-[9px] text-zinc-600 uppercase tracking-wider">{item.method}</div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     )}
-                    {player.history.map(item => (
-                        <div key={item.id} className="flex gap-3 bg-zinc-900/30 p-2 border border-zinc-800 hover:border-green-700 transition-colors group">
-                            <div className="w-10 h-10 shrink-0 bg-black border border-zinc-800">
-                                {item.victimAvatar ? (
-                                    <img src={item.victimAvatar} className="w-full h-full object-cover grayscale group-hover:grayscale-0" alt="V" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-zinc-700">?</div>
-                                )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <div className="flex justify-between items-start">
-                                    <span className="text-xs font-bold text-zinc-300 truncate">{item.victimName}</span>
-                                    <span className={`text-[10px] font-bold ${item.outcome === 'success' ? 'text-green-500' : 'text-red-500'}`}>
-                                        {item.outcome === 'success' ? `+$${item.payout}` : 'FAILED'}
-                                    </span>
-                                </div>
-                                <div className="text-[10px] text-zinc-600 truncate uppercase mt-0.5">{item.method}</div>
-                            </div>
-                        </div>
-                    ))}
                 </div>
             </TerminalCard>
 
             {/* 3.3: ACHIEVEMENTS */}
-            <TerminalCard title="TROPHY_CASE" icon={Trophy} className="col-span-1">
-                <div className="absolute inset-0 top-10 p-3 overflow-y-auto custom-scrollbar space-y-2">
-                     {ACHIEVEMENTS.map(ach => {
-                        const isUnlocked = player.achievements.includes(ach.id);
-                        return (
-                            <div key={ach.id} className={`flex items-center gap-3 p-2 border ${isUnlocked ? 'border-yellow-900/30 bg-yellow-900/5' : 'border-zinc-900 bg-black opacity-40'}`}>
-                                <Award size={16} className={isUnlocked ? 'text-yellow-500' : 'text-zinc-800'} />
-                                <div>
-                                    <div className={`text-[10px] font-bold uppercase ${isUnlocked ? 'text-yellow-200' : 'text-zinc-700'}`}>{ach.title}</div>
-                                    <div className="text-[9px] text-zinc-600 leading-none">{ach.description}</div>
+            <TerminalCard title="AWARDS_DB" icon={Trophy} className="col-span-1">
+                 <div className="flex-1 overflow-y-auto custom-scrollbar p-0">
+                     <div className="divide-y divide-zinc-800">
+                        {ACHIEVEMENTS.map(ach => {
+                            const isUnlocked = player.achievements.includes(ach.id);
+                            return (
+                                <div key={ach.id} className={`p-3 flex items-start gap-3 transition-colors ${isUnlocked ? 'bg-green-950/10 hover:bg-green-950/20' : 'opacity-40 hover:opacity-50'}`}>
+                                    <div className={`mt-0.5 w-4 h-4 shrink-0 border flex items-center justify-center ${isUnlocked ? 'border-yellow-600 text-yellow-500' : 'border-zinc-700 text-zinc-700'}`}>
+                                        <Trophy size={10} />
+                                    </div>
+                                    <div>
+                                        <div className={`text-[10px] font-bold uppercase tracking-wider ${isUnlocked ? 'text-yellow-500' : 'text-zinc-600'}`}>{ach.title}</div>
+                                        <div className="text-[9px] text-zinc-500 leading-tight mt-0.5 font-mono">{ach.description}</div>
+                                    </div>
                                 </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })}
+                     </div>
                 </div>
             </TerminalCard>
+        </div>
 
+        {/* Footer Timestamp */}
+        <div className="absolute bottom-2 right-4 text-[9px] font-mono text-zinc-700 uppercase tracking-widest hidden lg:block">
+            SERVER_TIME: {time.toISOString().split('T')[1].split('.')[0]} UTC
         </div>
     </div>
   );
