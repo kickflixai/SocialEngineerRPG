@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { ShopItem, PlayerState } from '../types';
-import { SHOP_ITEMS, COUNTRY_DATA } from '../constants';
-import { ShoppingCart, Lock, Shield, Zap, Smartphone, Briefcase, Trash2, WifiOff, BadgeCheck, Mic2 } from 'lucide-react';
+import { SHOP_ITEMS } from '../constants';
+import { ShoppingBag, Lock, WifiOff, BadgeCheck, Mic2, Smartphone, Briefcase, Trash2, ShoppingCart } from 'lucide-react';
 
 interface Props {
     player: PlayerState;
@@ -25,25 +24,29 @@ const Shop: React.FC<Props> = ({ player, onBuy }) => {
     }
 
     return (
-        <div className="h-full w-full bg-zinc-950 overflow-hidden relative flex flex-col">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.1),transparent_50%)] pointer-events-none"></div>
+        <div className="h-full w-full bg-black relative flex flex-col font-mono overflow-hidden">
+            {/* Background Grid */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(168,85,247,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(168,85,247,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
             
-            <div className="p-6 md:p-8 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-sm z-10 flex justify-between items-center">
+            {/* Header */}
+            <div className="p-6 md:p-8 border-b border-purple-900/30 bg-black z-10 flex justify-between items-center shrink-0 relative">
+                <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-900/50 to-transparent"></div>
                 <div className="flex items-center gap-4">
-                    <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                    <div className="p-3 bg-purple-500/10 border border-purple-500/30">
                         <ShoppingBag size={24} className="text-purple-500" />
                     </div>
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold font-mono text-white tracking-tighter">BLACK_MARKET</h1>
-                        <p className="text-zinc-500 text-xs font-mono uppercase tracking-widest">Illicit Tools & Services</p>
+                        <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tighter">BLACK_MARKET <span className="text-purple-500 text-sm align-super">v3.0</span></h1>
+                        <p className="text-purple-900/80 text-xs font-bold uppercase tracking-[0.3em]">Illicit Goods & Services</p>
                     </div>
                 </div>
                 <div className="text-right hidden md:block">
-                    <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Available Crypto</div>
-                    <div className="text-xl font-mono text-white font-bold">${player.money.toLocaleString()}</div>
+                    <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Encrypted Wallet</div>
+                    <div className="text-xl font-mono text-purple-400 font-bold drop-shadow-[0_0_5px_rgba(168,85,247,0.5)]">${player.money.toLocaleString()}</div>
                 </div>
             </div>
 
+            {/* Content */}
             <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8 relative z-0">
                  <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-8">
                     {SHOP_ITEMS.map(item => {
@@ -54,40 +57,53 @@ const Shop: React.FC<Props> = ({ player, onBuy }) => {
                         const canAfford = player.money >= finalCost;
                         
                         return (
-                            <div key={item.id} className={`group relative bg-zinc-900/40 border transition-all duration-300 flex flex-col overflow-hidden ${canAfford ? 'border-zinc-800 hover:border-purple-500/50 hover:bg-zinc-900/60 hover:shadow-[0_0_30px_rgba(168,85,247,0.1)]' : 'border-zinc-800/50 opacity-50 grayscale'}`}>
-                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+                            <button 
+                                key={item.id} 
+                                onClick={() => canAfford && onBuy(item)}
+                                disabled={!canAfford}
+                                className={`group relative flex flex-col text-left transition-all duration-300 overflow-hidden h-full min-h-[220px] border ${canAfford ? 'border-zinc-800 bg-black hover:border-purple-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)]' : 'border-zinc-900 bg-black/50 opacity-50 cursor-not-allowed'}`}
+                            >
+                                {/* Corner Brackets */}
+                                {canAfford && (
+                                    <>
+                                        <div className="absolute top-0 left-0 w-2 h-2 border-l border-t border-purple-500/0 group-hover:border-purple-500 transition-colors"></div>
+                                        <div className="absolute top-0 right-0 w-2 h-2 border-r border-t border-purple-500/0 group-hover:border-purple-500 transition-colors"></div>
+                                        <div className="absolute bottom-0 left-0 w-2 h-2 border-l border-b border-purple-500/0 group-hover:border-purple-500 transition-colors"></div>
+                                        <div className="absolute bottom-0 right-0 w-2 h-2 border-r border-b border-purple-500/0 group-hover:border-purple-500 transition-colors"></div>
+                                    </>
+                                )}
+
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-all group-hover:scale-110">
                                     {getIcon(item.icon)}
                                 </div>
                                 
-                                <div className="p-6 flex-1">
+                                <div className="p-5 flex-1 flex flex-col">
                                     <div className="flex justify-between items-start mb-4">
-                                        <div className={`p-3 rounded-lg border ${canAfford ? 'bg-purple-900/20 border-purple-500/30 text-purple-400' : 'bg-zinc-800 border-zinc-700 text-zinc-500'}`}>
+                                        <div className={`p-2 border ${canAfford ? 'bg-purple-900/10 border-purple-500/30 text-purple-400' : 'bg-zinc-900 border-zinc-800 text-zinc-600'}`}>
                                             {getIcon(item.icon)}
-                                        </div>
-                                        <div className="text-right">
-                                            <div className={`font-mono font-bold text-lg ${canAfford ? 'text-white' : 'text-zinc-500'}`}>${finalCost}</div>
-                                            {discount < 1 && <div className="text-[10px] text-green-500 line-through">${Math.floor(item.cost * costMultiplier)}</div>}
                                         </div>
                                     </div>
                                     
-                                    <h3 className={`font-bold text-lg font-mono mb-2 ${canAfford ? 'text-white group-hover:text-purple-300' : 'text-zinc-500'}`}>{item.name}</h3>
-                                    <p className="text-xs text-zinc-400 leading-relaxed min-h-[3em]">{item.description}</p>
+                                    <h3 className={`font-bold text-sm font-mono mb-2 uppercase tracking-wide ${canAfford ? 'text-white group-hover:text-purple-300' : 'text-zinc-600'}`}>{item.name}</h3>
+                                    <p className="text-[10px] text-zinc-500 leading-relaxed mb-4 flex-1">{item.description}</p>
                                     
-                                    <div className="mt-4 flex flex-wrap gap-2">
-                                        <span className="px-2 py-0.5 rounded bg-zinc-950 border border-zinc-800 text-[10px] text-zinc-500 uppercase font-mono tracking-wider">
-                                            {item.usageContext === 'dashboard' ? 'INSTANT' : 'ACTIVE HACK'}
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <span className={`px-1.5 py-0.5 border text-[9px] uppercase tracking-wider ${item.usageContext === 'dashboard' ? 'border-blue-900/30 text-blue-500 bg-blue-900/10' : 'border-red-900/30 text-red-500 bg-red-900/10'}`}>
+                                            {item.usageContext === 'dashboard' ? 'PASSIVE' : 'ACTIVE_HACK'}
                                         </span>
                                     </div>
                                 </div>
 
-                                <button 
-                                    onClick={() => onBuy(item)} 
-                                    disabled={!canAfford} 
-                                    className={`w-full py-3 text-xs font-bold uppercase tracking-widest transition-all ${canAfford ? 'bg-zinc-900 hover:bg-purple-600 text-purple-400 hover:text-white border-t border-zinc-800 hover:border-purple-500' : 'bg-zinc-950 text-zinc-600 cursor-not-allowed border-t border-zinc-900'}`}
-                                >
-                                    {canAfford ? 'Purchase Unit' : 'Insufficient Funds'}
-                                </button>
-                            </div>
+                                <div className={`p-3 border-t flex justify-between items-center ${canAfford ? 'bg-zinc-900/30 border-zinc-800 group-hover:bg-purple-900/10 group-hover:border-purple-500/30' : 'bg-zinc-950 border-zinc-900'}`}>
+                                    <div className="flex flex-col">
+                                        <span className={`font-mono font-bold ${canAfford ? 'text-white' : 'text-zinc-600'}`}>${finalCost}</span>
+                                        {discount < 1 && <span className="text-[9px] text-zinc-600 line-through">${Math.floor(item.cost * costMultiplier)}</span>}
+                                    </div>
+                                    <span className={`text-[10px] font-bold uppercase tracking-wider ${canAfford ? 'text-purple-500 group-hover:text-white' : 'text-zinc-700'}`}>
+                                        {canAfford ? 'BUY UNIT >' : 'LOCKED'}
+                                    </span>
+                                </div>
+                            </button>
                         );
                     })}
                 </div>
@@ -96,5 +112,4 @@ const Shop: React.FC<Props> = ({ player, onBuy }) => {
     );
 };
 
-import { ShoppingBag } from 'lucide-react';
 export default Shop;

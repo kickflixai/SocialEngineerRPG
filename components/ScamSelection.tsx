@@ -129,11 +129,12 @@ const ScamSelection: React.FC<Props> = ({ onSelectDifficulty, loading, scamsComp
             setScanText([]);
             const shuffled = [...LOADING_LINES].sort(() => 0.5 - Math.random());
             
+            // --- UPDATED: Slowed down to 250ms per line ---
             const interval = setInterval(() => {
                 const line = i < shuffled.length ? shuffled[i] : "STILL_SEARCHING...";
                 setScanText(prev => [...prev.slice(-12), line]); 
                 i++;
-            }, 100); 
+            }, 250); 
             return () => clearInterval(interval);
         }
     }, [loading]);
