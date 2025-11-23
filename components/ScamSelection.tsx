@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, Globe, User, Briefcase, ChevronRight, Lock, AlertTriangle, ScanLine } from 'lucide-react';
+import { Shield, Globe, User, Briefcase, ChevronRight, Lock, AlertTriangle, ScanLine, Terminal, Activity, Wifi, MapPin, Server, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
@@ -117,11 +117,12 @@ const MatrixRain = () => {
         };
     }, []);
 
-    return <canvas ref={canvasRef} className="absolute inset-0 z-0 opacity-40" />;
+    return <canvas ref={canvasRef} className="absolute inset-0 z-0 opacity-20" />;
 };
 
 const ScamSelection: React.FC<Props> = ({ onSelectDifficulty, loading, scamsCompleted }) => {
     const [scanText, setScanText] = useState<string[]>([]);
+    const [hoveredSector, setHoveredSector] = useState<'easy' | 'medium' | 'hard' | null>(null);
 
     useEffect(() => {
         if (loading) {
@@ -129,7 +130,6 @@ const ScamSelection: React.FC<Props> = ({ onSelectDifficulty, loading, scamsComp
             setScanText([]);
             const shuffled = [...LOADING_LINES].sort(() => 0.5 - Math.random());
             
-            // --- UPDATED: Slowed down to 250ms per line ---
             const interval = setInterval(() => {
                 const line = i < shuffled.length ? shuffled[i] : "STILL_SEARCHING...";
                 setScanText(prev => [...prev.slice(-12), line]); 
@@ -139,44 +139,17 @@ const ScamSelection: React.FC<Props> = ({ onSelectDifficulty, loading, scamsComp
         }
     }, [loading]);
 
-    const DifficultyCard = ({ level, label, range, unlocked, icon: Icon, colorClass, borderClass, onClick }: any) => (
-        <button 
-            onClick={onClick}
-            disabled={!unlocked}
-            className={`relative group overflow-hidden border-2 flex flex-col items-center text-center transition-all duration-300 w-full h-full min-h-[300px] ${unlocked ? `bg-black ${borderClass} cursor-pointer hover:bg-zinc-900` : 'bg-black border-zinc-900 opacity-30 cursor-not-allowed'}`}
-        >
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:10px_10px] pointer-events-none"></div>
-
-            <div className="w-full p-4 border-b border-zinc-900 flex justify-between items-center bg-zinc-950">
-                <span className={`text-xs font-mono font-bold uppercase tracking-[0.2em] ${unlocked ? 'text-zinc-500' : 'text-zinc-800'}`}>
-                    SECTOR_{level.toUpperCase()}
-                </span>
-                {!unlocked && <Lock size={14} className="text-zinc-800"/>}
-            </div>
-
-            <div className="flex-1 flex flex-col justify-center items-center p-6 w-full gap-6">
-                <Icon size={64} strokeWidth={1} className={unlocked ? colorClass : 'text-zinc-800'} />
-                
-                <div>
-                    <h3 className={`text-4xl font-black font-mono tracking-tighter ${unlocked ? 'text-white' : 'text-zinc-800'}`}>
-                        {label}
-                    </h3>
-                    <div className={`text-sm font-mono mt-2 ${unlocked ? 'text-zinc-400' : 'text-zinc-800'}`}>
-                        Est. Yield: <span className={unlocked ? colorClass : ''}>{range}</span>
-                    </div>
-                </div>
-
-                {unlocked && (
-                    <div className={`mt-auto px-6 py-2 border border-${colorClass.split('-')[1]}-900 bg-${colorClass.split('-')[1]}-900/10 text-${colorClass.split('-')[1]}-500 font-bold uppercase text-xs tracking-widest flex items-center gap-2 group-hover:bg-${colorClass.split('-')[1]}-500 group-hover:text-black transition-colors`}>
-                        INITIATE <ChevronRight size={14}/>
-                    </div>
-                )}
-            </div>
-        </button>
-    );
+    const sectors = [
+        { id: 'easy', label: 'THE ELDERLY', risk: 'LOW', yield: '$800 - $1.2k', req: 0, icon: User, desc: 'High trust vectors. Low technical barriers. Ideal for initial funding operations.' },
+        { id: 'medium', label: 'SMALL BUSINESS', risk: 'MED', yield: '$2.5k - $3.5k', req: 2, icon: Briefcase, desc: 'Moderate security protocols. Vulnerable to invoice fraud and tax compliance schemes.' },
+        { id: 'hard', label: 'EXECUTIVE', risk: 'HIGH', yield: '$6k - $12k', req: 5, icon: Shield, desc: 'Advanced security teams. High-value targets requiring precise social engineering.' },
+    ];
 
     return (
-        <div className="h-full w-full relative flex flex-col bg-black font-mono">
+        <div className="h-full w-full relative flex flex-col bg-black font-mono overflow-hidden">
+             {/* Background Grid */}
+             <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
+
             <AnimatePresence>
                 {loading && (
                     <motion.div 
@@ -210,59 +183,156 @@ const ScamSelection: React.FC<Props> = ({ onSelectDifficulty, loading, scamsComp
                 )}
             </AnimatePresence>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 relative z-10">
-                <div className="max-w-7xl mx-auto h-full flex flex-col">
-                    <div className="mb-8 flex items-end justify-between border-b border-green-900/30 pb-6">
-                        <div className="flex items-center gap-6">
-                            <div className="p-4 bg-black border border-green-900 text-green-600">
-                                <Globe size={40} strokeWidth={1} />
-                            </div>
-                            <div>
-                                <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter">TARGET_DIRECTORY</h1>
-                                <p className="text-green-800 text-sm font-bold uppercase tracking-widest mt-1">Select Vulnerability Sector</p>
-                            </div>
+            {/* MAIN INTERFACE */}
+            <div className="flex-1 p-4 md:p-8 relative z-10 flex flex-col">
+                <div className="flex justify-between items-end border-b border-green-900/50 pb-4 mb-6">
+                    <div>
+                        <div className="flex items-center gap-2 text-green-500 mb-1">
+                            <Globe size={16} className="animate-pulse"/>
+                            <span className="text-xs font-bold tracking-[0.3em]">GLOBAL_NET_ACCESS</span>
                         </div>
+                        <h1 className="text-4xl font-black text-white tracking-tighter">TARGET_DIRECTORY</h1>
+                    </div>
+                    <div className="text-right hidden md:block">
+                        <div className="text-[10px] text-zinc-500 uppercase">System Status</div>
+                        <div className="text-green-500 font-bold">ONLINE // UNSECURED</div>
+                    </div>
+                </div>
+
+                <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0">
+                    
+                    {/* LEFT PANEL: DATABASE LIST */}
+                    <div className="w-full md:w-2/3 border border-zinc-800 bg-black/50 flex flex-col">
+                         {/* Table Header */}
+                         <div className="flex bg-zinc-900/50 border-b border-zinc-800 p-3 text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+                             <div className="w-16">ID</div>
+                             <div className="flex-1">SECTOR NAME</div>
+                             <div className="w-24 text-center">RISK</div>
+                             <div className="w-32 text-right">EST. YIELD</div>
+                             <div className="w-24 text-center">STATUS</div>
+                         </div>
+                         
+                         {/* Rows */}
+                         <div className="flex-1 overflow-y-auto custom-scrollbar">
+                             {sectors.map((sector, idx) => {
+                                 const isUnlocked = scamsCompleted >= sector.req;
+                                 const isHovered = hoveredSector === sector.id as any;
+                                 
+                                 return (
+                                     <button
+                                        key={sector.id}
+                                        onClick={() => isUnlocked && onSelectDifficulty(sector.id as any)}
+                                        onMouseEnter={() => setHoveredSector(sector.id as any)}
+                                        onMouseLeave={() => setHoveredSector(null)}
+                                        className={`w-full flex items-center p-4 border-b border-zinc-800 transition-all text-left group relative overflow-hidden ${
+                                            isUnlocked 
+                                            ? 'hover:bg-green-900/20 cursor-pointer' 
+                                            : 'opacity-50 cursor-not-allowed bg-zinc-950/50'
+                                        }`}
+                                     >
+                                         {isHovered && isUnlocked && <div className="absolute inset-0 bg-green-500/5 pointer-events-none"></div>}
+                                         {isHovered && isUnlocked && <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-500"></div>}
+
+                                         <div className="w-16 font-mono text-zinc-600 text-xs">0{idx + 1}</div>
+                                         <div className="flex-1 font-mono font-bold text-sm md:text-base text-white group-hover:text-green-400 transition-colors flex items-center gap-3">
+                                             <sector.icon size={16} className={isUnlocked ? 'text-zinc-500 group-hover:text-green-500' : 'text-zinc-700'} />
+                                             {sector.label}
+                                         </div>
+                                         <div className={`w-24 text-center text-xs font-bold ${
+                                             sector.risk === 'LOW' ? 'text-green-500' : sector.risk === 'MED' ? 'text-yellow-500' : 'text-red-500'
+                                         }`}>
+                                             {sector.risk}
+                                         </div>
+                                         <div className="w-32 text-right text-xs font-mono text-zinc-400 group-hover:text-white">
+                                             {isUnlocked ? sector.yield : '????'}
+                                         </div>
+                                         <div className="w-24 text-center flex justify-center">
+                                             {isUnlocked ? (
+                                                 <ChevronRight size={16} className={`transition-transform ${isHovered ? 'translate-x-1 text-green-500' : 'text-zinc-600'}`} />
+                                             ) : (
+                                                 <Lock size={14} className="text-zinc-700" />
+                                             )}
+                                         </div>
+                                     </button>
+                                 );
+                             })}
+                             
+                             {/* Fake Rows for aesthetic */}
+                             {[...Array(5)].map((_, i) => (
+                                 <div key={i} className="w-full flex p-4 border-b border-zinc-900 opacity-20 pointer-events-none">
+                                     <div className="w-16 text-zinc-700 text-xs">0{i + 4}</div>
+                                     <div className="flex-1 text-zinc-700 font-mono text-sm">CORRUPTED_SECTOR_{i+84}</div>
+                                     <div className="w-24 text-center text-zinc-700 text-xs">ERR</div>
+                                     <div className="w-32 text-right text-zinc-700 text-xs">---</div>
+                                     <div className="w-24"></div>
+                                 </div>
+                             ))}
+                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 items-stretch pb-8">
-                        <DifficultyCard 
-                            level="easy"
-                            label="THE ELDERLY"
-                            range="$800 - $1.2k"
-                            unlocked={true}
-                            icon={User}
-                            colorClass="text-green-500"
-                            borderClass="border-green-600"
-                            onClick={() => onSelectDifficulty('easy')}
-                        />
-                        <DifficultyCard 
-                            level="medium"
-                            label="SMALL BIZ"
-                            range="$2.5k - $3.5k"
-                            unlocked={scamsCompleted >= 2}
-                            icon={Briefcase}
-                            colorClass="text-yellow-500"
-                            borderClass="border-yellow-600"
-                            onClick={() => onSelectDifficulty('medium')}
-                        />
-                        <DifficultyCard 
-                            level="hard"
-                            label="THE EXEC"
-                            range="$6k - $12k"
-                            unlocked={scamsCompleted >= 5}
-                            icon={Shield}
-                            colorClass="text-red-500"
-                            borderClass="border-red-600"
-                            onClick={() => onSelectDifficulty('hard')}
-                        />
-                    </div>
-                    
-                    {(scamsCompleted < 2 || scamsCompleted < 5) && (
-                        <div className="p-4 border border-zinc-800 bg-black text-zinc-600 text-center text-xs font-mono uppercase tracking-widest">
-                            <AlertTriangle size={14} className="inline mr-2 -mt-1"/>
-                            Additional Targets Locked // Complete Operations to Increase Reputation
+                    {/* RIGHT PANEL: PREVIEW */}
+                    <div className="hidden md:flex w-1/3 bg-zinc-950 border border-green-900/30 flex-col relative overflow-hidden">
+                        {/* Scanline */}
+                        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,0,0.02)_1px,transparent_1px)] bg-[size:100%_4px] pointer-events-none"></div>
+                        <div className="absolute top-0 left-0 w-full h-1 bg-green-500/20 animate-scan pointer-events-none"></div>
+
+                        {hoveredSector ? (
+                            <div className="flex-1 p-6 flex flex-col">
+                                <div className="border border-green-500/30 bg-green-900/10 p-4 mb-6 flex flex-col items-center justify-center min-h-[160px] relative">
+                                    <div className="absolute top-2 left-2 w-2 h-2 border-l border-t border-green-500"></div>
+                                    <div className="absolute top-2 right-2 w-2 h-2 border-r border-t border-green-500"></div>
+                                    <div className="absolute bottom-2 left-2 w-2 h-2 border-l border-bottom border-green-500"></div>
+                                    <div className="absolute bottom-2 right-2 w-2 h-2 border-r border-bottom border-green-500"></div>
+                                    
+                                    {(() => {
+                                        const SecIcon = sectors.find(s => s.id === hoveredSector)?.icon || User;
+                                        return <SecIcon size={64} strokeWidth={1} className="text-green-500 mb-4 animate-pulse" />;
+                                    })()}
+                                    <div className="text-green-400 font-mono text-sm uppercase tracking-widest">Target Acquired</div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Sector Analysis</div>
+                                        <h3 className="text-xl font-bold text-white font-mono">{sectors.find(s => s.id === hoveredSector)?.label}</h3>
+                                    </div>
+                                    
+                                    <div className="h-[1px] w-full bg-green-900/50"></div>
+
+                                    <div>
+                                        <div className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1">Intelligence Summary</div>
+                                        <p className="text-xs text-green-400/80 font-mono leading-relaxed">
+                                            {sectors.find(s => s.id === hoveredSector)?.desc}
+                                        </p>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4 mt-4">
+                                        <div className="bg-zinc-900 p-2 border border-zinc-800">
+                                            <div className="text-[9px] text-zinc-500 uppercase">Est. Revenue</div>
+                                            <div className="text-sm font-bold text-white">{sectors.find(s => s.id === hoveredSector)?.yield}</div>
+                                        </div>
+                                        <div className="bg-zinc-900 p-2 border border-zinc-800">
+                                            <div className="text-[9px] text-zinc-500 uppercase">Trace Risk</div>
+                                            <div className={`text-sm font-bold ${sectors.find(s => s.id === hoveredSector)?.risk === 'LOW' ? 'text-green-500' : 'text-red-500'}`}>
+                                                {sectors.find(s => s.id === hoveredSector)?.risk}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center text-zinc-600 p-6 text-center">
+                                <Search size={48} className="mb-4 opacity-20" />
+                                <p className="text-xs font-mono uppercase tracking-widest">Awaiting Selection...</p>
+                                <p className="text-[10px] mt-2 max-w-[200px]">Hover over a sector to view vulnerability assessment.</p>
+                            </div>
+                        )}
+
+                        <div className="p-2 border-t border-zinc-800 bg-black text-[10px] text-zinc-600 font-mono flex justify-between">
+                             <span>MEM_USAGE: 42%</span>
+                             <span>SECURE_CONNECTION</span>
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
         </div>
