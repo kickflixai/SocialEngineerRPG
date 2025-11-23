@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { GameView, PlayerState, ScamState, PlayerAttributes, SkillDefinition, ScamObjective, ShopItem, ScamHistoryItem } from './types';
-import { INITIAL_MONEY, INITIAL_THREAT, MAX_THREAT, SKILL_TREE_SOCIAL, SKILL_TREE_TECH, SKILL_TREE_OPS, SHOP_ITEMS, COUNTRY_DATA, SCAM_SCENARIOS, AI_COSTS } from './constants';
+import { INITIAL_MONEY, INITIAL_THREAT, MAX_THREAT, SHOP_ITEMS, COUNTRY_DATA, SCAM_SCENARIOS, AI_COSTS } from './constants';
 import { generateVictim, generateOpener, generateScamSummary } from './services/geminiService';
 import { audioManager } from './services/audioService';
 
@@ -12,7 +12,9 @@ import VictimDossier from './components/VictimDossier';
 import LandingScreen from './components/LandingScreen'; 
 import InventoryModal from './components/InventoryModal';
 import ScamResult from './components/ScamResult';
-import { Siren, Skull, ArrowLeft, Cpu, AlertOctagon, Terminal, Shield, Volume2, VolumeX, Zap, Lock, Unlock } from 'lucide-react';
+import Shop from './components/Shop';
+import SkillTree from './components/SkillTree';
+import { Siren, Skull, ArrowLeft, Zap, Volume2, VolumeX } from 'lucide-react';
 
 const STORAGE_KEY = 'SCAM_SIM_SAVE_V1';
 
@@ -625,136 +627,16 @@ const App: React.FC = () => {
             )}
 
              {view === GameView.SHOP && (
-                <div className="p-6 md:p-12 max-w-7xl mx-auto h-full overflow-y-auto custom-scrollbar">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {SHOP_ITEMS.map(item => {
-                            const costMultiplier = player.attributes.country === 'China' ? 1.2 : 1.0;
-                            // Cleaner Crew Discount
-                            const cleanerLevel = player.skills['ops_3'] || 0;
-                            const discount = 1 - (cleanerLevel * 0.05);
-                            const finalCost = Math.floor(item.cost * costMultiplier * discount);
-                            const canAfford = player.money >= finalCost;
-                            
-                            return (
-                                <div key={item.id} className={`bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl flex flex-col justify-between ${canAfford ? 'hover:border-purple-500/50' : 'opacity-50'}`}>
-                                    <div>
-                                        <h3 className="font-bold text-lg text-white">{item.name}</h3>
-                                        <p className="text-purple-500 font-mono font-bold">${finalCost}</p>
-                                        <p className="text-zinc-400 text-sm mt-2">{item.description}</p>
-                                    </div>
-                                    <button onClick={() => buyItem(item)} disabled={!canAfford} className="mt-4 w-full py-2 bg-purple-600 rounded font-bold disabled:bg-zinc-800 disabled:text-zinc-600">Purchase</button>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
+                <Shop player={player} onBuy={buyItem} />
             )}
 
              {view === GameView.SKILL_TREE && (
-                 <div className="p-4 md:p-8 max-w-7xl mx-auto h-full overflow-y-auto custom-scrollbar">
-                    <div className="flex items-center gap-4 mb-8">
-                        <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20"><AlertOctagon size={24} className="text-blue-500" /></div>
-                        <div><h2 className="text-3xl font-bold text-white font-mono">NEURAL ENHANCEMENTS</h2></div>
-                    </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <SkillBranch title="Social Engineering" color="blue" skills={SKILL_TREE_SOCIAL} player={player} onBuy={buySkill} icon={<Terminal size={16}/>} />
-                        <SkillBranch title="Technical Intel" color="green" skills={SKILL_TREE_TECH} player={player} onBuy={buySkill} icon={<Cpu size={16}/>} />
-                        <SkillBranch title="Operations" color="orange" skills={SKILL_TREE_OPS} player={player} onBuy={buySkill} icon={<Shield size={16}/>} />
-                    </div>
-                 </div>
+                <SkillTree player={player} onBuy={buySkill} />
             )}
         </main>
         <InventoryModal isOpen={showInventory} onClose={() => setShowInventory(false)} inventory={player.inventory} onUseItem={handleConsumeItem} context={view === GameView.ACTIVE_SCAM ? 'scam' : 'dashboard'} />
     </div>
   );
-};
-
-// Helper Component for a Skill Branch
-const SkillBranch: React.FC<{ title: string, color: string, skills: SkillDefinition[], player: PlayerState, onBuy: (s: SkillDefinition) => void, icon: React.ReactNode }> = ({ title, color, skills, player, onBuy, icon }) => {
-    const colors: any = {
-        blue: 'text-blue-400 border-blue-500/30 bg-blue-500',
-        green: 'text-green-400 border-green-500/30 bg-green-500',
-        orange: 'text-orange-400 border-orange-500/30 bg-orange-500'
-    };
-
-    return (
-        <div className="space-y-4">
-            <h3 className={`font-mono text-sm uppercase tracking-widest border-b pb-4 mb-2 flex items-center gap-2 ${colors[color].split(' ')[0]} ${colors[color].split(' ')[1]}`}>
-                {icon} {title}
-            </h3>
-            <div className="space-y-4 relative">
-                {/* Vertical Line connecting nodes */}
-                <div className="absolute left-6 top-4 bottom-4 w-0.5 bg-zinc-800 -z-10"></div>
-                
-                {skills.map((skill, index) => {
-                    const currentLevel = player.skills[skill.id] || 0;
-                    const isMaxed = currentLevel >= skill.maxLevel;
-                    
-                    // Check Requirements
-                    let isLocked = false;
-                    if (skill.requiredSkillId) {
-                        const reqSkill = skills.find(s => s.id === skill.requiredSkillId);
-                        const reqLevel = player.skills[skill.requiredSkillId] || 0;
-                        if (reqSkill && reqLevel < reqSkill.maxLevel) {
-                            isLocked = true;
-                        }
-                    }
-
-                    // Cost Calculation
-                    const countryStats = COUNTRY_DATA[player.attributes.country];
-                    const costMultiplier = player.attributes.country === 'China' ? 1.2 : 1.0;
-                    const nextLevel = currentLevel + 1;
-                    const levelCostMultiplier = 1 + ((nextLevel - 1) * 0.5);
-                    const cost = Math.floor(skill.baseCost * levelCostMultiplier * costMultiplier);
-                    const canAfford = player.money >= cost;
-
-                    return (
-                        <div key={skill.id} className={`relative bg-zinc-900/80 border p-4 rounded-xl transition-all ${isLocked ? 'border-zinc-800 opacity-50' : 'border-zinc-700'}`}>
-                            {isLocked && <div className="absolute inset-0 z-20 bg-black/50 flex items-center justify-center rounded-xl"><Lock size={16} className="text-zinc-500"/></div>}
-                            
-                            <div className="flex justify-between items-start mb-2">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${currentLevel > 0 ? colors[color].replace('text-', 'bg-').split(' ')[2] + ' text-black border-transparent' : 'bg-zinc-950 border-zinc-800 text-zinc-600'}`}>
-                                        {/* Simple icon placeholder logic or pass icon component */}
-                                        <span className="font-bold text-xs">{skill.tier}</span>
-                                    </div>
-                                    <div>
-                                        <h4 className={`font-bold text-sm ${currentLevel > 0 ? 'text-white' : 'text-zinc-500'}`}>{skill.name}</h4>
-                                        <div className="flex gap-1 mt-1">
-                                            {Array.from({length: skill.maxLevel}).map((_, i) => (
-                                                <div key={i} className={`w-2 h-2 rounded-sm ${i < currentLevel ? colors[color].replace('text-', 'bg-').split(' ')[2] : 'bg-zinc-800'}`}></div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                                {currentLevel > 0 && <span className="text-[10px] font-mono text-green-500 bg-green-900/20 px-2 py-0.5 rounded">LVL {currentLevel}</span>}
-                            </div>
-                            
-                            <p className="text-zinc-500 text-xs mb-3 min-h-[2.5em]">
-                                {skill.description.replace('{value}', (skill.effectValue * (currentLevel || 1)).toString())}
-                            </p>
-
-                            {!isMaxed && !isLocked && (
-                                <button 
-                                    onClick={() => onBuy(skill)}
-                                    disabled={!canAfford}
-                                    className={`w-full py-1.5 rounded text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 ${canAfford ? 'bg-zinc-800 hover:bg-zinc-700 text-white' : 'bg-zinc-900 text-zinc-600 cursor-not-allowed'}`}
-                                >
-                                    {canAfford ? <Unlock size={10}/> : <Lock size={10}/>}
-                                    Upgrade ${cost}
-                                </button>
-                            )}
-                            {isMaxed && (
-                                <div className="w-full py-1.5 bg-green-900/20 text-green-500 text-[10px] font-bold text-center rounded uppercase border border-green-500/20">
-                                    MAXED OUT
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
 };
 
 export default App;
