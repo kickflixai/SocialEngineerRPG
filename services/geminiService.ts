@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective, VictimTraits } from "../types";
 import { OCCUPATIONS, QUIRKS, MALE_FIRST_NAMES, FEMALE_FIRST_NAMES, LAST_NAMES, MALE_FLAVORS, FEMALE_FLAVORS, NEUTRAL_FLAVORS } from "../constants";
@@ -449,6 +450,12 @@ export const getVictimResponse = async (
                 hackRealityOverride = "SYSTEM OVERRIDE: Your physical environment just malfunctioned (lights flickering, printer going crazy). You are scared and confused. Mention this.";
             } else if (txt.includes("SYSTEM CLOCK OVERRIDE") || txt.includes("TEMPORAL JUMP")) {
                 hackRealityOverride = "SYSTEM OVERRIDE: A significant amount of time (24 hours) has just passed instantly. Any tasks you were delaying (going to bank, waiting for mail, waiting for call) are now happening OR have just happened. You are no longer waiting.";
+            } else if (txt.includes("VIDEO DRIVER CRASH") || txt.includes("BSOD") || txt.includes("FAKE CRASH")) {
+                hackRealityOverride = "SYSTEM OVERRIDE: Your computer screen just flashed BLUE with a critical error message (BSOD). You are panicked. You see strange error codes on the screen. You CANNOT interact with your PC normally.";
+            } else if (txt.includes("POPUP LOOP") || txt.includes("AD STORM") || txt.includes("BROWSER INJECTION")) {
+                hackRealityOverride = "SYSTEM OVERRIDE: Your screen is covered in 20+ annoying popup windows. You cannot close them fast enough. It's chaos.";
+            } else if (txt.includes("MEME PROTOCOL") || txt.includes("RICKROLL")) {
+                hackRealityOverride = "SYSTEM OVERRIDE: Your computer just started playing loud music ('Never Gonna Give You Up') and you can't stop it. You are confused and annoyed.";
             }
         }
 
@@ -482,22 +489,19 @@ export const getVictimResponse = async (
             Current Situation: Receiving messages related to ${scamCategory}.
             ${scenarioProtocol}
             
-            === THE USER'S HIDDEN AGENDA (DO NOT REVEAL) ===
-            The user wants: "${personalizedObjective}".
+            === USER'S GOAL (OUT OF CHARACTER INFO) ===
+            The user is trying to: "${personalizedObjective}".
+            
+            *** KNOWLEDGE & CONTEXT FIREWALL ***
+            1. YOU ARE THE TARGET. You do not share the user's goal.
+            2. If the goal is "Get YOU to read the Error Code", you DO NOT ask the user for the error code. You wait for them to ask YOU.
+            3. You do not mention specific keywords from the Goal (like "Error Code", "Wallet App") unless the User mentions them first or a System Event triggers them.
             
             *** "YES, AND" RULE WITH TRUST GATING ***
             - You possess the assets implied by the scenario (Child, Wallet, Portfolio), even if you have to invent a detail about them.
             - HOWEVER: If the user guesses specific details about your asset (e.g., "You bought Neurotropics"), CHECK YOUR TRUST LEVEL.
             - If Trust < 20%: DO NOT CONFIRM blindly. Act confused, deny it, or ask how they know. Be suspicious of their knowledge.
             - If Trust >= 20% OR a Hack/Proof was provided: You confirm the detail is correct.
-            
-            *** KNOWLEDGE FIREWALL (CRITICAL) ***
-            - You DO NOT know the User's Agenda.
-            - You DO NOT know the objective keywords (e.g. "Background Check", "Wallet App") UNLESS the user has mentioned them first.
-            - React only to what is in the chat history.
-            
-            *** ANTI-MIRRORING FIREWALL ***
-            - DO NOT ask the user for the objective info.
             
             *** REALITY OVERRIDE (CRITICAL) ***
             ${hackRealityOverride}
