@@ -303,7 +303,7 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
 
         // PRIMARY PROMPT: Detailed, candid, gritty
         const primaryPrompt = `
-            Real close-up face selfie photo of ${data.name}, ${data.age} year old ${ageDesc} ${data.gender}, ${data.flavor}.
+            RAW candid close-up face selfie photo of ${data.name}, ${data.age} year old ${ageDesc} ${data.gender}, ${data.flavor}.
             Context: Social media profile picture, face shot, low quality webcam or phone camera.
             Lighting: Bad indoor lighting, flash, or natural candid light.
             Texture: Grainy, noisy, skin pores, imperfections, realistic, amateur.
@@ -663,8 +663,10 @@ export const arbitrateChat = async (
             3. HACK DETECTION:
                - If a [SYSTEM] message was just used, determine if the player's follow-up (if any) leverages it well.
                - Hacks provide PROOF (Reality Override). They should lower Suspicion if used correctly.
-            4. OBJECTIVE VALIDATION:
-               - MARK COMPLETE ONLY if victim explicitly gave the info/agreed.
+            4. OBJECTIVE VALIDATION (CRITICAL):
+               - MARK COMPLETE if the victim provides the requested information, confirms a specific detail, or agrees to the action.
+               - KEYWORD CHECK: If the objective asks for a name/coin/item, and the victim mentions a specific proper noun (e.g. "SOL", "Bitcoin", "Fido"), MARK COMPLETE.
+               - ATTITUDE IGNORE: Even if the victim is rude, sarcastic, or says "I just told you", if the data is present, IT IS COMPLETE.
                - Accept Substitutes (Passport instead of DL).
 
             TASK:
