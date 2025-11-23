@@ -670,7 +670,8 @@ export const arbitrateChat = async (
             4. OBJECTIVE VALIDATION (CRITICAL):
                - MARK COMPLETE if the victim provides the requested information, confirms a specific detail, or agrees to the action.
                - KEYWORD CHECK: If the objective asks for a name/coin/item, and the victim mentions a specific proper noun (e.g. "SOL", "Bitcoin", "Fido"), MARK COMPLETE.
-               - ATTITUDE IGNORE: Even if the victim is rude, sarcastic, or says "I just told you", if the data is present, IT IS COMPLETE.
+               - SUBJECTIVE/DESCRIPTIVE TASKS: If the objective asks to "describe" something (art style, clothing, job, memory), and the victim provides ANY detailed description (even if abstract, weird, or sarcastic), MARK COMPLETE.
+               - ATTITUDE IGNORE: Even if the victim is rude, sarcastic, or says "I just told you", if the data/description is present, IT IS COMPLETE.
                - Accept Substitutes (Passport instead of DL).
             
             *** SCAM LOGIC VALIDATION (IMPORTANT) ***
