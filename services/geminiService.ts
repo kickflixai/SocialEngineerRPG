@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective, VictimTraits } from "../types";
 import { OCCUPATIONS, QUIRKS, MALE_FIRST_NAMES, FEMALE_FIRST_NAMES, LAST_NAMES, MALE_FLAVORS, FEMALE_FLAVORS, NEUTRAL_FLAVORS } from "../constants";
@@ -23,6 +22,33 @@ const parseJSON = (text: string) => {
         console.error("Failed to parse JSON", text);
         return null;
     }
+};
+
+// Helper to compress images for local storage optimization
+const compressImage = async (base64Str: string, maxWidth = 256, quality = 0.6): Promise<string> => {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.src = base64Str;
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            // Calculate new dimensions keeping aspect ratio
+            const scale = maxWidth / img.width;
+            canvas.width = maxWidth;
+            canvas.height = img.height * scale;
+            
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            } else {
+                resolve(base64Str); // Fallback if context fails
+            }
+        };
+        img.onerror = () => {
+            console.warn("Image compression failed to load source, returning original.");
+            resolve(base64Str);
+        };
+    });
 };
 
 // RETRY HELPER: Handles Rate Limiting (429) and Server Errors (5xx) with Exponential Backoff
@@ -99,7 +125,8 @@ export const generatePlayerAvatar = async (attrs: PlayerAttributes): Promise<str
         const parts = imageResponse.candidates?.[0]?.content?.parts || [];
         for (const part of parts) {
             if (part.inlineData) {
-                return `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${part.inlineData.data}`;
+                const rawBase64 = `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${part.inlineData.data}`;
+                return await compressImage(rawBase64);
             }
         }
         return "https://picsum.photos/400/400";
@@ -203,9 +230,11 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         - Tech Literacy: ${traits.techLiteracy}%
         
         INSTRUCTIONS:
-        1. Personality: Write 1-2 sentences describing them. YOU MUST EXPLICITLY MENTION OR REFERENCE THEIR FLAVOR ("${randFlavor}") AND QUIRK ("${combinedQuirks}") in this description. Explain how these traits manifest in their daily life or behavior.
-        2. Hidden Fact: Max 12 words. Something embarrassing or illegal related to their flavor/quirk if possible.
-        3. Weakness: Max 6 words. What psychological lever works best?
+        1. Personality: Write 1-2 sentences describing them. YOU MUST EXPLICITLY MENTION OR REFERENCE THEIR FLAVOR ("${randFlavor}") in this description.
+        2. QUIRK HANDLING: If the quirk is "None" or null, DO NOT mention it. If it is a real quirk, you may briefly mention it.
+        3. Explain how these traits manifest in their daily life or behavior.
+        4. Hidden Fact: Max 12 words. Something embarrassing or illegal related to their flavor/quirk if possible.
+        5. Weakness: Max 6 words. What psychological lever works best?
         
         Return valid JSON:
         {
@@ -260,7 +289,8 @@ export const generateVictim = async (difficulty: 'easy' | 'medium' | 'hard'): Pr
         const parts = imageResponse.candidates?.[0]?.content?.parts || [];
         for (const part of parts) {
             if (part.inlineData) {
-                return `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${part.inlineData.data}`;
+                const rawBase64 = `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${part.inlineData.data}`;
+                return await compressImage(rawBase64); // Compress victim image
             }
         }
         throw new Error("No image data returned");
@@ -362,16 +392,17 @@ export const getVictimResponse = async (
         const isElderly = victim.age >= 60;
         
         // Dynamic Trust Thresholds based on Age (Elderly = easier)
-        let t_hesitant = isElderly ? 15 : 40;
-        let t_trusting = isElderly ? 40 : 70;
-        let t_brainwashed = isElderly ? 65 : 90;
+        let t_hesitant = isElderly ? 10 : 40; // Reduced for elderly
+        let t_trusting = isElderly ? 30 : 70; // Reduced for elderly
+        let t_brainwashed = isElderly ? 60 : 90; // Reduced for elderly
 
         let ageProtocol = "";
         if (isElderly) {
             ageProtocol = `
             *** ELDERLY PROTOCOL ACTIVE (Age: ${victim.age}) ***
-            - NAIVETY BONUS: You are significantly more trusting than average.
-            - SCAM BLINDNESS: You are unaware that scams exist on the internet. You assume people are generally honest.
+            - NAIVETY BONUS: You are gullible. You want to trust people.
+            - You have NO SKEPTICISM about the user's identity unless they are rude.
+            - You are unaware that scams exist on the internet. You assume this is a legitimate interaction.
             - You are confused by modern tech jargon.
             - You type slowly (short sentences).
             - You might sign your messages (e.g., "- Love, Grandma" or "- ${victim.name}").
@@ -454,9 +485,11 @@ export const getVictimResponse = async (
             === THE USER'S HIDDEN AGENDA (DO NOT REVEAL) ===
             The user wants: "${personalizedObjective}".
             
-            *** "YES, AND" RULE (SCENARIO COMPLIANCE) ***
-            - If the user implies you have an asset (Child, Wallet, Portfolio), YOU HAVE IT.
-            - Invent details if needed to keep the story going.
+            *** "YES, AND" RULE WITH TRUST GATING ***
+            - You possess the assets implied by the scenario (Child, Wallet, Portfolio).
+            - HOWEVER: If the user guesses specific details about your asset (e.g., "You bought Neurotropics"), CHECK YOUR TRUST LEVEL.
+            - If Trust < 20%: DO NOT CONFIRM. Act confused, deny it, or ask how they know. Be suspicious of their knowledge.
+            - If Trust >= 20% OR a Hack/Proof was provided: You confirm the detail is correct.
             
             *** KNOWLEDGE FIREWALL (CRITICAL) ***
             - You DO NOT know the User's Agenda.
@@ -551,6 +584,24 @@ export const arbitrateChat = async (
         const recentHistory = history.slice(-5);
         const historyText = recentHistory.map(m => `[${m.sender.toUpperCase()}]: ${m.text}`).join('\n');
 
+        // ELDERLY DIFFICULTY MODIFIER
+        const isElderly = victim.age >= 60;
+        let elderlyInstructions = "";
+        if (isElderly) {
+            elderlyInstructions = `
+            *** ELDERLY TARGET MODIFIER (CRITICAL) ***
+            - Target is ${victim.age} years old.
+            - DIFFICULTY: EASY.
+            - They are LONELY and NAIVE.
+            - SCORING RULES:
+              1. Polite/Formal language ("Dear", "Mr.", "Sir") -> MAJOR TRUST BOOST (+15 to +25).
+              2. Appeals to authority -> MAJOR TRUST BOOST.
+              3. Emotional appeals -> MAJOR TRUST BOOST.
+              4. IGNORE minor inconsistencies or lack of technical proof.
+              5. Do NOT apply standard skepticism. Unless the user is aggressive/rude, Trust should generally go UP.
+            `;
+        }
+
         let scenarioRules = "";
         if (scamCategory === "Kidnapping Hoax") {
             scenarioRules = `
@@ -565,7 +616,7 @@ export const arbitrateChat = async (
         const prompt = `
             Act as the 'Game Master' engine for a social engineering simulation.
             
-            Target: ${victim.name} (${victim.archetype}).
+            Target: ${victim.name} (${victim.archetype}), Age: ${victim.age}.
             Traits: Impulsivity ${victim.traits.impulsivity}/100, Tech Literacy ${victim.traits.techLiteracy}/100.
             Flavor: ${victim.flavor}.
             Scam Strategy: ${scamCategory}.
@@ -582,8 +633,10 @@ export const arbitrateChat = async (
             - Cold Reading: ${hasColdReading} (If TRUE: Internal Thought must be deeper/psychological)
             - Authority Voice: ${hasAuthVoice}
             
+            ${elderlyInstructions}
+
             TASK:
-            1. Trust Change (Hard to earn).
+            1. Trust Change.
             2. Suspicion Change (>= 0).
             3. Creativity Score (0-10).
             4. Internal Thought: Analytical commentary on the player's *last move*.
