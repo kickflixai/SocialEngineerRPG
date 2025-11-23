@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { PlayerState, GameView } from '../types';
 import { ShieldAlert, ShoppingBag, BrainCircuit, Package, Power, Activity, Crosshair, MapPin, Globe, Wifi, Trophy, Terminal, BarChart3, Lock, Award, History, TrendingUp, Skull } from 'lucide-react';
@@ -12,6 +11,55 @@ interface Props {
   onReset: () => void;
 }
 
+// Moved outside to prevent re-creation on every render
+const StatBlock = ({ label, value, icon: Icon, color, subValue }: any) => (
+    <div className="bg-zinc-900/40 border border-zinc-800 p-4 flex flex-col relative group overflow-hidden rounded-lg hover:border-zinc-600 transition-colors">
+        <div className={`absolute top-2 right-2 p-1.5 rounded bg-zinc-950 border border-zinc-800 ${color}`}>
+            <Icon size={16} />
+        </div>
+        <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mb-1">{label}</span>
+        <span className={`text-2xl font-mono font-bold ${color}`}>{value}</span>
+        {subValue && <span className="text-[10px] text-zinc-600 font-mono mt-1">{subValue}</span>}
+    </div>
+);
+
+// Moved outside to prevent re-creation on every render
+const ActionCard = ({ title, icon: Icon, color, onClick, desc, delay, badge }: any) => {
+    // Explicit color mapping for Tailwind to ensure styles are applied
+    const colors: Record<string, string> = {
+        green: 'text-green-500 hover:border-green-500/50',
+        blue: 'text-blue-500 hover:border-blue-500/50',
+        purple: 'text-purple-500 hover:border-purple-500/50',
+        red: 'text-red-500 hover:border-red-500/50'
+    };
+    const colorClass = colors[color] || colors.green;
+    const textColor = colorClass.split(' ')[0];
+
+    return (
+        <motion.button 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay }}
+            onClick={onClick}
+            className={`relative group h-32 w-full overflow-hidden border border-zinc-800 bg-zinc-900/20 text-left p-6 transition-all duration-300 hover:bg-zinc-900/60 ${colorClass.split(' ')[1]} rounded-xl hover:shadow-lg`}
+        >
+            <div className={`absolute top-0 right-0 p-6 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-12 ${textColor} opacity-10 group-hover:opacity-20`}>
+                <Icon size={80} strokeWidth={1} />
+            </div>
+
+            <div className="relative z-10 flex flex-col h-full justify-between">
+                <div>
+                    <div className={`${textColor} text-[10px] font-mono font-bold uppercase tracking-widest mb-2 flex items-center gap-2`}>
+                        <Icon size={12} /> {badge || 'SYSTEM_READY'}
+                    </div>
+                    <h3 className="text-2xl font-bold font-mono text-white tracking-tight group-hover:text-glow-sm transition-all">{title}</h3>
+                </div>
+                <p className="text-zinc-500 text-xs font-mono group-hover:text-zinc-400 transition-colors max-w-[80%]">{desc}</p>
+            </div>
+        </motion.button>
+    );
+};
+
 const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onReset }) => {
   const [time, setTime] = useState(new Date());
   
@@ -21,41 +69,6 @@ const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onR
   }, []);
 
   const activeSkills = Object.entries(player.skills).filter(([_, level]) => level > 0);
-
-  const StatBlock = ({ label, value, icon: Icon, color, subValue }: any) => (
-      <div className="bg-zinc-900/40 border border-zinc-800 p-4 flex flex-col relative group overflow-hidden rounded-lg hover:border-zinc-600 transition-colors">
-          <div className={`absolute top-2 right-2 p-1.5 rounded bg-zinc-950 border border-zinc-800 ${color}`}>
-              <Icon size={16} />
-          </div>
-          <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest mb-1">{label}</span>
-          <span className={`text-2xl font-mono font-bold ${color}`}>{value}</span>
-          {subValue && <span className="text-[10px] text-zinc-600 font-mono mt-1">{subValue}</span>}
-      </div>
-  );
-
-  const ActionCard = ({ title, icon: Icon, color, onClick, desc, delay, badge }: any) => (
-      <motion.button 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay }}
-        onClick={onClick}
-        className={`relative group h-32 w-full overflow-hidden border border-zinc-800 bg-zinc-900/20 text-left p-6 transition-all duration-300 hover:bg-zinc-900/60 hover:border-${color}-500/50 rounded-xl hover:shadow-lg`}
-      >
-          <div className={`absolute top-0 right-0 p-6 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-12 text-${color}-500 opacity-10 group-hover:opacity-20`}>
-              <Icon size={80} strokeWidth={1} />
-          </div>
-
-          <div className="relative z-10 flex flex-col h-full justify-between">
-              <div>
-                <div className={`text-${color}-500 text-[10px] font-mono font-bold uppercase tracking-widest mb-2 flex items-center gap-2`}>
-                    <Icon size={12} /> {badge || 'SYSTEM_READY'}
-                </div>
-                <h3 className="text-2xl font-bold font-mono text-white tracking-tight group-hover:text-glow-sm transition-all">{title}</h3>
-              </div>
-              <p className="text-zinc-500 text-xs font-mono group-hover:text-zinc-400 transition-colors max-w-[80%]">{desc}</p>
-          </div>
-      </motion.button>
-  );
 
   return (
     <div className="h-full w-full bg-black text-zinc-200 font-mono flex flex-col relative overflow-hidden selection:bg-green-500/20">
