@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -12,19 +13,34 @@ body {
   overflow: hidden;
 }
 
+/* CRT Scanline Effect Overlay */
+body::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 2000;
+  background-size: 100% 2px, 3px 100%;
+  pointer-events: none;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #18181b; /* zinc-900 */
+  background: #09090b; /* zinc-950 */
 }
 ::-webkit-scrollbar-thumb {
-  background: #3f3f46; /* zinc-700 */
+  background: #27272a; /* zinc-800 */
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #52525b; /* zinc-600 */
+  background: #3f3f46; /* zinc-700 */
 }
 
 /* Utilities */
@@ -37,4 +53,25 @@ body {
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #3f3f46;
   border-radius: 10px;
+}
+
+/* Text Glow Utility */
+.text-glow {
+    text-shadow: 0 0 5px currentColor;
+}
+
+/* CRT Screen Flicker Animation */
+@keyframes flicker {
+  0% { opacity: 0.95; }
+  5% { opacity: 0.9; }
+  10% { opacity: 0.95; }
+  15% { opacity: 1; }
+  20% { opacity: 0.98; }
+  50% { opacity: 0.95; }
+  80% { opacity: 0.9; }
+  100% { opacity: 0.95; }
+}
+
+.crt-flicker {
+    animation: flicker 0.15s infinite;
 }

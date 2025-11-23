@@ -14,6 +14,7 @@ import InventoryModal from './components/InventoryModal';
 import ScamResult from './components/ScamResult';
 import Shop from './components/Shop';
 import SkillTree from './components/SkillTree';
+import ScamSelection from './components/ScamSelection';
 import { Siren, Skull, ArrowLeft, Zap, Volume2, VolumeX } from 'lucide-react';
 
 const STORAGE_KEY = 'SCAM_SIM_SAVE_V1';
@@ -600,30 +601,13 @@ const App: React.FC = () => {
                 <ScamResult result={lastResult} onContinue={() => setView(GameView.DASHBOARD)} />
             )}
 
-            {/* SCAM SELECTION */}
+            {/* SCAM SELECTION (Now using Component) */}
             {view === GameView.SCAM_SELECTION && (
-                <div className="flex items-center justify-center h-full p-4 md:p-8 overflow-y-auto custom-scrollbar">
-                    {loadingScam ? (
-                        <div className="fixed inset-0 z-[60] bg-black flex flex-col items-center justify-center font-mono text-green-500">
-                            <div className="text-2xl animate-pulse">ACQUIRING TARGET...</div>
-                        </div>
-                    ) : (
-                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 max-w-6xl w-full pb-8">
-                            <button onClick={() => findTarget('easy')} className="bg-zinc-900 border border-zinc-800 hover:border-green-500 rounded-2xl p-6 transition-all">
-                                <h3 className="text-2xl font-bold text-white mb-2">The Elderly</h3>
-                                <p className="text-zinc-400 text-sm">$800 - $1,200</p>
-                            </button>
-                            <button onClick={() => findTarget('medium')} disabled={player.scamsCompleted < 2} className="bg-zinc-900 border border-zinc-800 hover:border-yellow-500 rounded-2xl p-6 transition-all disabled:opacity-50">
-                                <h3 className="text-2xl font-bold text-white mb-2">Small Business</h3>
-                                <p className="text-zinc-400 text-sm">$2.5k - $3.5k</p>
-                            </button>
-                            <button onClick={() => findTarget('hard')} disabled={player.scamsCompleted < 5} className="bg-zinc-900 border border-zinc-800 hover:border-red-500 rounded-2xl p-6 transition-all disabled:opacity-50">
-                                <h3 className="text-2xl font-bold text-white mb-2">The Executive</h3>
-                                <p className="text-zinc-400 text-sm">$6k - $12k</p>
-                            </button>
-                         </div>
-                    )}
-                </div>
+                 <ScamSelection 
+                    onSelectDifficulty={findTarget}
+                    loading={loadingScam}
+                    scamsCompleted={player.scamsCompleted}
+                 />
             )}
 
              {view === GameView.SHOP && (
