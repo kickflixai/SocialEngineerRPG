@@ -57,7 +57,7 @@ const ActionButton = ({ title, sub, icon: Icon, onClick, color = "green" }: any)
 );
 
 const Dashboard: React.FC<Props> = ({ player, onChangeView, onOpenInventory, onReset }) => {
-  const activeSkills = Object.entries(player.skills).filter(([_, level]) => level > 0);
+  const activeSkills = Object.entries(player.skills).filter(([_, level]) => (level as number) > 0) as [string, number][];
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {

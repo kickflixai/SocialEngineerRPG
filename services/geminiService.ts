@@ -295,6 +295,14 @@ export const getVictimResponse = async (
             - BRAINWASHED: Obedient. Believes everything.
             IDENTITY RULE: You know your own name (${victim.name}). If asked, confirm it.
             ${hasAuthVoice}
+            
+            OBJECTIVE REPORTING RULES:
+            - "objectiveComplete" must match your text response.
+            - Set to TRUE ONLY if your text response actually PROVIDES the requested info or AGREES to the action.
+            - Set to FALSE if you are asking a question, expressing confusion, refusing, or stalling (even if you want to help but are tech illiterate).
+            - Example: If you say "I don't know how to send a photo", set FALSE.
+            - Example: If you say "Okay, sending it now", set TRUE.
+
             Return JSON: { "text": "response", "objectiveComplete": boolean, "policeTriggered": boolean, "callTerminated": boolean }
         `;
 
@@ -327,12 +335,17 @@ export const arbitrateChat = async (
             Stats: Trust ${currentTrust}, Suspicion ${currentSuspicion}.
             SKILLS: Cold Reading: ${hasColdReading}, Authority Voice: ${hasAuthVoice}.
             ${difficultyInstructions}
+            
             SCORING:
             1. Trust Delta (+/-). Standard gain +4 to +8.
             2. Suspicion Delta (+). If Suspicion increases, Trust MUST decrease.
-            3. CRITICAL OBJECTIVE VALIDATION: Mark TRUE if victim provides requested info (Name, Code, etc) OR agrees to action. IGNORE attitude/rudeness if data is present.
-            4. SUBJECTIVE/DESCRIPTIVE: If objective is "Describe X" and victim describes it (even sarcastically), mark TRUE.
-            5. SCAM LOGIC VALIDATION: Accept standard scam tropes (Escrow, Security Protocol, Refund) as VALID logic. Do not punish "Fake" logic if it fits the scam.
+            3. CRITICAL OBJECTIVE VALIDATION: 
+               - Review the LOG. Has the VICTIM (not the player) ALREADY provided the specific information requested in the Objective?
+               - Or has the VICTIM ALREADY explicitly agreed to the action in the LOG?
+               - If the player just asked for it, but the victim hasn't replied 'yes' or given the data in the LOG yet, mark FALSE.
+               - Mark TRUE only if the data/agreement is PRESENT in the LOG.
+            4. SCAM LOGIC VALIDATION: Accept standard scam tropes (Escrow, Security Protocol, Refund) as VALID logic. Do not punish "Fake" logic if it fits the scam.
+            
             Return JSON: { "trustDelta": number, "suspicionDelta": number, "creativityScore": number, "objectiveComplete": boolean, "internalThought": "string (max 20 words)", "scamStatus": "continue"|"success"|"failed"|"police_called" }
         `;
 
@@ -342,10 +355,13 @@ export const arbitrateChat = async (
         result.trustDelta = Math.round(result.trustDelta || 0);
         result.suspicionDelta = Math.max(0, Math.round(result.suspicionDelta || 0));
         
-        // Fallback Keyword check for completion
+        // Fallback Keyword check for completion (Only for simple trust objectives)
         const objDesc = activeObjective.description.toLowerCase();
-        const keywords = ['trust', 'connection', 'agree'];
-        if (!result.objectiveComplete && keywords.some(k => objDesc.includes(k)) && currentTrust >= 75) {
+        const keywords = ['trust', 'connection', 'agree', 'friend'];
+        // Do not auto-complete data extraction tasks like "Photo", "Code", "Number" via trust alone
+        const requiresData = objDesc.includes("photo") || objDesc.includes("code") || objDesc.includes("number") || objDesc.includes("id");
+        
+        if (!requiresData && !result.objectiveComplete && keywords.some(k => objDesc.includes(k)) && currentTrust >= 75) {
             result.objectiveComplete = true;
         }
         return result;
