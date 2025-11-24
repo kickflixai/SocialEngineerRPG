@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { GameView, PlayerState, ScamState, PlayerAttributes, SkillDefinition, ScamObjective, ShopItem, ScamHistoryItem } from './types';
 import { INITIAL_MONEY, INITIAL_THREAT, MAX_THREAT, SHOP_ITEMS, COUNTRY_DATA, SCAM_SCENARIOS, AI_COSTS } from './constants';
@@ -363,12 +362,31 @@ const App: React.FC = () => {
   const checkAchievements = (outcome: 'success' | 'failed' | 'police', currentScam: ScamState, moneyChange: number) => {
       const unlocked = [...player.achievements];
       const add = (id: string) => { if (!unlocked.includes(id)) unlocked.push(id); };
+      
       if (outcome === 'success') {
           add('first_blood');
-          if (player.money + moneyChange >= 20000) add('high_roller');
+          
+          if ((player.money + moneyChange) >= 20000) add('high_roller');
+          
           if (currentScam.suspicion === 0) add('untouchable'); 
-          if (currentScam.suspicion > 90) add('close_call'); 
-          // ... (Rest of achievements logic remains same based on category string)
+          if (currentScam.suspicion >= 90) add('close_call'); 
+
+          // Scenario Mapping
+          const cat = currentScam.category;
+          if (cat === "Grandson in Trouble") add('ach_grandson');
+          else if (cat === "IRS Tax Audit") add('ach_irs');
+          else if (cat === "Tech Support Virus") add('ach_tech');
+          else if (cat === "Lottery Winner") add('ach_lotto');
+          else if (cat === "Crypto Investment Opportunity") add('ach_crypto');
+          else if (cat === "Romance Scam") add('ach_romance');
+          else if (cat === "Business Email Compromise") add('ach_bec');
+          else if (cat === "Kidnapping Hoax") add('ach_kidnap');
+          else if (cat === "Charity Fraud") add('ach_charity');
+          else if (cat === "Inheritance Advance Fee") add('ach_inherit');
+          else if (cat === "Employment Mule Scam") add('ach_mule');
+          else if (cat === "NFT Art Commission") add('ach_nft');
+          else if (cat === "Apartment Rental") add('ach_rental');
+          else if (cat === "Subscription Refund") add('ach_refund');
       }
       return unlocked;
   };

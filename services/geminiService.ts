@@ -334,7 +334,7 @@ export const arbitrateChat = async (
         const recentHistory = history.slice(-5);
         const historyText = recentHistory.map(m => `[${m.sender.toUpperCase()}]: ${m.text}`).join('\n');
         const isElderly = victim.age >= 60 || victim.difficulty === 'easy';
-        let difficultyInstructions = isElderly ? "*** DIFFICULTY: EASY / ELDERLY *** MAX LENIENCY. Reward politeness." : victim.difficulty === 'medium' ? "*** DIFFICULTY: MEDIUM *** BALANCED. Punish vague answers." : "*** DIFFICULTY: HARD *** STRICT. Punish any inconsistency.";
+        let difficultyInstructions = isElderly ? "*** DIFFICULTY: EASY / ELDERLY *** LENIENT. Only punish insults." : victim.difficulty === 'medium' ? "*** DIFFICULTY: MEDIUM *** SUSPICIOUS. Punish inconsistencies and rushing." : "*** DIFFICULTY: HARD *** PARANOID. High suspicion for ANY non-perfect answer.";
 
         const prompt = `
             Act as 'Game Master'. Target: ${victim.name}. Strategy: ${scamCategory}. Objective: "${activeObjective.description}".
@@ -347,7 +347,10 @@ export const arbitrateChat = async (
             SCORING:
             1. Trust Delta (+/-). Standard gain +4 to +8.
                - BONUS: If player successfully leverages the victim's "FLAVOR" (${victim.flavor}), grant BONUS TRUST (+10).
-            2. Suspicion Delta (+). If Suspicion increases, Trust MUST decrease.
+            2. Suspicion Delta (+). CRITICAL: BE STRICT.
+               - INCREASE SUSPICION (+5 to +15) IF: Player ignores victim's question, repeats themselves, uses broken grammar/typos, rushes the objective, or acts aggressive.
+               - INCREASE SUSPICION (+20 to +40) IF: Player asks for "gift cards", "bank details", "password", or "money" WITHOUT sufficient trust (Trust < 70).
+               - If Suspicion increases, Trust MUST decrease by an equal amount.
             3. CRITICAL OBJECTIVE VALIDATION: 
                - Review the LOG. Has the VICTIM (not the player) ALREADY provided the specific information requested in the Objective?
                - Or has the VICTIM ALREADY explicitly agreed to the specific action in the LOG?
