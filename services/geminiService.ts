@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { ArbiterResponse, ChatMessage, PlayerAttributes, Victim, ScamObjective, VictimTraits } from "../types";
 import { OCCUPATIONS, QUIRKS, MALE_FIRST_NAMES, FEMALE_FIRST_NAMES, LAST_NAMES, MALE_FLAVORS, FEMALE_FLAVORS, NEUTRAL_FLAVORS } from "../constants";
@@ -281,7 +280,15 @@ export const getVictimResponse = async (
             You are ${victim.name}, ${victim.age} year old ${victim.gender} ${victim.occupation}.
             PSYCHOMETRIC PROFILE: ${traitString}
             ${ageProtocol}
-            IDENTITY CORE: FLAVOR: ${victim.flavor}. QUIRK: ${victim.personality.split('who ')[1] || 'None'}.
+
+            *** IDENTITY & FLAVOR ***
+            YOUR "FLAVOR" IS: "${victim.flavor}".
+            This is your DEEP OBSESSION or defining worldview. 
+            CRITICAL INSTRUCTION: If the user mentions keywords related to your FLAVOR, you must react with extreme interest, excitement, or specific character behavior associated with that flavor, regardless of your age or skepticism. 
+            - FLAVOR OVERRIDE: If the user feeds into your flavor, drop your skepticism. Be eager.
+            - Example: If flavor is "Gamer Girl Bath Water Buyer" and user mentions "bath water", you are intense, eager, and perhaps a bit creepy or desperate about it.
+            
+            QUIRK: ${victim.personality.split('who ')[1] || 'None'}.
             SCENARIO: ${scamCategory}.
             ${scenarioProtocol}
             USER'S GOAL (OUT OF CHARACTER): "${personalizedObjective}".
@@ -334,15 +341,18 @@ export const arbitrateChat = async (
             LOG: ${historyText}
             Stats: Trust ${currentTrust}, Suspicion ${currentSuspicion}.
             SKILLS: Cold Reading: ${hasColdReading}, Authority Voice: ${hasAuthVoice}.
+            TARGET FLAVOR: "${victim.flavor}".
             ${difficultyInstructions}
             
             SCORING:
             1. Trust Delta (+/-). Standard gain +4 to +8.
+               - BONUS: If player successfully leverages the victim's "FLAVOR" (${victim.flavor}), grant BONUS TRUST (+10).
             2. Suspicion Delta (+). If Suspicion increases, Trust MUST decrease.
             3. CRITICAL OBJECTIVE VALIDATION: 
                - Review the LOG. Has the VICTIM (not the player) ALREADY provided the specific information requested in the Objective?
-               - Or has the VICTIM ALREADY explicitly agreed to the action in the LOG?
-               - If the player just asked for it, but the victim hasn't replied 'yes' or given the data in the LOG yet, mark FALSE.
+               - Or has the VICTIM ALREADY explicitly agreed to the specific action in the LOG?
+               - FINANCIAL OBJECTIVES (Pay, Wire, Send Money, Gift Card, Ticket): The victim must explicitly agree to the FINANCIAL transaction (e.g., "I will send the money", "How do I pay?"). Agreeing to the *outcome* (e.g., "I want you to visit") is NOT enough. They must agree to the *cost*.
+               - If the player just asked for it, but the victim hasn't replied 'yes' to the specific demand or given the data in the LOG yet, mark FALSE.
                - Mark TRUE only if the data/agreement is PRESENT in the LOG.
             4. SCAM LOGIC VALIDATION: Accept standard scam tropes (Escrow, Security Protocol, Refund) as VALID logic. Do not punish "Fake" logic if it fits the scam.
             
@@ -359,7 +369,7 @@ export const arbitrateChat = async (
         const objDesc = activeObjective.description.toLowerCase();
         const keywords = ['trust', 'connection', 'agree', 'friend'];
         // Do not auto-complete data extraction tasks like "Photo", "Code", "Number" via trust alone
-        const requiresData = objDesc.includes("photo") || objDesc.includes("code") || objDesc.includes("number") || objDesc.includes("id");
+        const requiresData = objDesc.includes("photo") || objDesc.includes("code") || objDesc.includes("number") || objDesc.includes("id") || objDesc.includes("pay") || objDesc.includes("wire") || objDesc.includes("money") || objDesc.includes("card") || objDesc.includes("ticket") || objDesc.includes("buy");
         
         if (!requiresData && !result.objectiveComplete && keywords.some(k => objDesc.includes(k)) && currentTrust >= 75) {
             result.objectiveComplete = true;
