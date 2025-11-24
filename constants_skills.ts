@@ -24,7 +24,7 @@ export const SKILL_TREE_SOCIAL: SkillDefinition[] = [
     {
         id: 'social_2',
         name: 'Cold Reading',
-        description: 'Unlocks "Psych Profile" analysis in the System Log.',
+        description: 'Reveals the Target\'s Weakness and Psych Profile.',
         branch: 'social',
         tier: 2,
         maxLevel: 1,
@@ -101,7 +101,7 @@ export const SKILL_TREE_TECH: SkillDefinition[] = [
     {
         id: 'tech_2',
         name: 'Doxxing Suite',
-        description: 'Instantly reveals one hidden fact about the target.',
+        description: 'Instantly reveals the Target\'s Hidden Secret (Intel).',
         branch: 'tech',
         tier: 2,
         maxLevel: 1,

@@ -43,7 +43,7 @@ export const SCAM_SCENARIOS: Record<string, ScamScenario[]> = {
     { mini1: "Restart router", mini2: "Read IP address", final: "Buy Anti-Hacker sub" }
   ],
   "Lottery Winner": [
-    { mini1: "Confirm DOB", mini2: "Confirm email", final: "Pay Customs Duty" },
+    { mini1: "Confirm Date of Birth", mini2: "Confirm email", final: "Pay Customs Duty" },
     { mini1: "Shout 'I Won!'", mini2: "Choose Lump Sum", final: "Pay Processing Fee" },
     { mini1: "Name desired car", mini2: "Confirm home address", final: "Pay State Tax" }
   ],

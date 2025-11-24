@@ -12,9 +12,10 @@ interface Props {
   onExecute: (hack: HackAbility) => void;
   cooldowns: string | null;
   processing: boolean;
+  playerSkills?: Record<string, number>;
 }
 
-const HackingTerminalModal: React.FC<Props> = ({ isOpen, onClose, abilities, socialCharge, onExecute, cooldowns, processing }) => {
+const HackingTerminalModal: React.FC<Props> = ({ isOpen, onClose, abilities, socialCharge, onExecute, cooldowns, processing, playerSkills = {} }) => {
   if (!isOpen) return null;
 
   // Icon Helper (Duplicated to ensure self-containment)
@@ -93,26 +94,28 @@ const HackingTerminalModal: React.FC<Props> = ({ isOpen, onClose, abilities, soc
             <div className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-[linear-gradient(rgba(0,0,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px]">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {abilities.map(hack => {
+                         const tech4Level = playerSkills['tech_4'] || 0;
+                         const isLockedBySkill = hack.id === 'voice_changer' && tech4Level === 0;
                          const canAfford = socialCharge >= hack.cost;
                          const isOnCooldown = cooldowns === hack.id;
-                         const isLocked = !canAfford;
+                         const isDisabled = !canAfford || isLockedBySkill || processing || isOnCooldown;
 
                          return (
                             <button
                                 key={hack.id}
                                 onClick={() => {
-                                    if (canAfford && !isOnCooldown && !processing) {
+                                    if (!isDisabled) {
                                         onExecute(hack);
                                         onClose();
                                     }
                                 }}
-                                disabled={!canAfford || processing || isOnCooldown}
+                                disabled={isDisabled}
                                 className={`relative group p-4 rounded-xl border flex flex-col gap-3 text-left transition-all overflow-hidden ${
                                     isOnCooldown 
                                     ? 'bg-zinc-900/50 border-green-500/50 cursor-not-allowed'
-                                    : canAfford 
-                                        ? 'bg-zinc-900/80 border-zinc-700 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]' 
-                                        : 'bg-zinc-950 border-zinc-800 opacity-60 grayscale cursor-not-allowed'
+                                    : isDisabled
+                                        ? 'bg-zinc-950 border-zinc-800 opacity-60 grayscale cursor-not-allowed'
+                                        : 'bg-zinc-900/80 border-zinc-700 hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]' 
                                 }`}
                             >
                                 {isOnCooldown && (
@@ -120,25 +123,32 @@ const HackingTerminalModal: React.FC<Props> = ({ isOpen, onClose, abilities, soc
                                         <span className="text-green-500 font-mono font-bold animate-pulse">EXECUTING...</span>
                                     </div>
                                 )}
+                                {isLockedBySkill && (
+                                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/80 backdrop-blur-[1px] flex-col gap-2 border border-zinc-800">
+                                        <Lock size={24} className="text-zinc-500"/>
+                                        <span className="text-zinc-500 font-mono font-bold text-[10px] uppercase">LOCKED</span>
+                                        <span className="text-zinc-600 font-mono text-[9px] uppercase bg-zinc-900 px-2 py-1 rounded">Req: Deepfake Studio</span>
+                                    </div>
+                                )}
                                 
                                 <div className="flex justify-between items-start">
-                                    <div className={`p-2 rounded-lg border ${canAfford ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-zinc-800 border-zinc-700 text-zinc-500'}`}>
+                                    <div className={`p-2 rounded-lg border ${!isDisabled ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-zinc-800 border-zinc-700 text-zinc-500'}`}>
                                         <HackIcon icon={hack.icon} />
                                     </div>
-                                    <span className={`font-mono font-bold text-xs px-2 py-1 rounded border ${canAfford ? 'bg-zinc-950 text-blue-400 border-blue-900/50' : 'bg-zinc-950 text-red-700 border-red-900/30'}`}>
+                                    <span className={`font-mono font-bold text-xs px-2 py-1 rounded border ${!isDisabled ? 'bg-zinc-950 text-blue-400 border-blue-900/50' : 'bg-zinc-950 text-red-700 border-red-900/30'}`}>
                                         {hack.cost} PWR
                                     </span>
                                 </div>
 
                                 <div>
-                                    <h3 className={`font-bold font-mono text-lg mb-1 ${canAfford ? 'text-white group-hover:text-blue-300' : 'text-zinc-500'}`}>{hack.name}</h3>
+                                    <h3 className={`font-bold font-mono text-lg mb-1 ${!isDisabled ? 'text-white group-hover:text-blue-300' : 'text-zinc-500'}`}>{hack.name}</h3>
                                     <p className="text-xs text-zinc-400 leading-relaxed h-10 overflow-hidden">{hack.description}</p>
                                 </div>
                                 
                                 <div className="mt-auto pt-3 border-t border-white/5 flex justify-between items-center text-[10px] font-mono uppercase tracking-wider text-zinc-500">
                                     <span>System Hack</span>
-                                    {isLocked && <span className="flex items-center gap-1 text-red-800"><Lock size={10}/> INSUFFICIENT PWR</span>}
-                                    {canAfford && !isOnCooldown && <span className="text-blue-500 group-hover:underline">{`>>`} DEPLOY</span>}
+                                    {!isLockedBySkill && !canAfford && <span className="flex items-center gap-1 text-red-800"><Lock size={10}/> INSUFFICIENT PWR</span>}
+                                    {!isDisabled && <span className="text-blue-500 group-hover:underline">{`>>`} DEPLOY</span>}
                                 </div>
                             </button>
                          );

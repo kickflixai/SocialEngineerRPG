@@ -13,10 +13,10 @@ interface Props {
 }
 
 const VictimDossier: React.FC<Props> = ({ victim, player, onExecute, loading }) => {
-  // Logic Update: Check for skill levels > 0
-  const hasDoxxing = (player.skills['tech_2'] || 0) > 0; // Tech Tier 2 is Doxxing
-  // Scraper was old logic, assume Tech 2 Doxxing covers both or re-map
-  const hasScraper = (player.skills['tech_2'] || 0) > 0; 
+  // Tech 2 (Doxxing) reveals Hidden Fact (Secret)
+  const hasDoxxing = (player.skills['tech_2'] || 0) > 0; 
+  // Social 2 (Cold Reading) reveals Weakness & Traits
+  const hasProfiler = (player.skills['social_2'] || 0) > 0;
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -63,7 +63,7 @@ const VictimDossier: React.FC<Props> = ({ victim, player, onExecute, loading }) 
                <p className="text-zinc-500 text-sm font-mono">Decrypting subject metadata...</p>
            </div>
 
-           {victim.traits && (
+           {victim.traits && hasProfiler && (
                <div className="mb-6 bg-zinc-950/50 border border-zinc-800 p-4 rounded-xl shrink-0 w-full text-left">
                     <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3 flex items-center justify-center md:justify-start gap-2 text-center md:text-left"><BrainCircuit size={14} className="text-purple-500"/> Psychometrics</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -82,10 +82,10 @@ const VictimDossier: React.FC<Props> = ({ victim, player, onExecute, loading }) 
                    {!hasDoxxing && <div className="mt-2 text-[10px] uppercase text-zinc-600 bg-black/40 inline-block px-2 py-1 rounded">Req: Doxxing Suite (Tech Lvl 2)</div>}
                </div>
 
-                <div className={`p-5 rounded-xl border backdrop-blur-sm transition-all ${hasScraper ? 'bg-green-950/20 border-green-500/30' : 'bg-zinc-950/50 border-zinc-800'}`}>
-                   <div className="flex justify-between items-start mb-3"><h4 className={`text-xs font-bold uppercase flex items-center gap-2 tracking-wider ${hasScraper ? 'text-green-400' : 'text-red-400'}`}>{hasScraper ? <Unlock size={14}/> : <Lock size={14}/>} Exploit Vector</h4></div>
-                   {hasScraper ? <p className="text-green-100 text-sm font-mono">{victim.weakness}</p> : <p className="text-red-900/50 font-mono text-sm select-none tracking-widest">ENCRYPTED // NO ACCESS</p>}
-                   {!hasScraper && <div className="mt-2 text-[10px] uppercase text-zinc-600 bg-black/40 inline-block px-2 py-1 rounded">Req: Doxxing Suite (Tech Lvl 2)</div>}
+                <div className={`p-5 rounded-xl border backdrop-blur-sm transition-all ${hasProfiler ? 'bg-green-950/20 border-green-500/30' : 'bg-zinc-950/50 border-zinc-800'}`}>
+                   <div className="flex justify-between items-start mb-3"><h4 className={`text-xs font-bold uppercase flex items-center gap-2 tracking-wider ${hasProfiler ? 'text-green-400' : 'text-red-400'}`}>{hasProfiler ? <Unlock size={14}/> : <Lock size={14}/>} Exploit Vector</h4></div>
+                   {hasProfiler ? <p className="text-green-100 text-sm font-mono">{victim.weakness}</p> : <p className="text-red-900/50 font-mono text-sm select-none tracking-widest">ENCRYPTED // NO ACCESS</p>}
+                   {!hasProfiler && <div className="mt-2 text-[10px] uppercase text-zinc-600 bg-black/40 inline-block px-2 py-1 rounded">Req: Cold Reading (Social Lvl 2)</div>}
                </div>
            </div>
 

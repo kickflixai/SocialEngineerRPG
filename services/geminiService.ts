@@ -355,8 +355,9 @@ export const arbitrateChat = async (
                - If the player just asked for it, but the victim hasn't replied 'yes' to the specific demand or given the data in the LOG yet, mark FALSE.
                - Mark TRUE only if the data/agreement is PRESENT in the LOG.
             4. SCAM LOGIC VALIDATION: Accept standard scam tropes (Escrow, Security Protocol, Refund) as VALID logic. Do not punish "Fake" logic if it fits the scam.
+            5. CREATIVITY SCORE: Rate the player's message from 1 to 10 based on social engineering quality.
             
-            Return JSON: { "trustDelta": number, "suspicionDelta": number, "creativityScore": number, "objectiveComplete": boolean, "internalThought": "string (max 20 words)", "scamStatus": "continue"|"success"|"failed"|"police_called" }
+            Return JSON: { "trustDelta": number, "suspicionDelta": number, "creativityScore": number (1-10), "objectiveComplete": boolean, "internalThought": "string (max 20 words)", "scamStatus": "continue"|"success"|"failed"|"police_called" }
         `;
 
         const response = await retryOperation<GenerateContentResponse>(() => ai.models.generateContent({ model: 'gemini-flash-lite-latest', contents: prompt, config: { responseMimeType: 'application/json' } }));
@@ -364,6 +365,9 @@ export const arbitrateChat = async (
         
         result.trustDelta = Math.round(result.trustDelta || 0);
         result.suspicionDelta = Math.max(0, Math.round(result.suspicionDelta || 0));
+        
+        // Clamp Creativity Score to safe range (1-10) to prevent calculation overflow in frontend
+        result.creativityScore = Math.max(1, Math.min(10, result.creativityScore || 5));
         
         // Fallback Keyword check for completion (Only for simple trust objectives)
         const objDesc = activeObjective.description.toLowerCase();

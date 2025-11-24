@@ -398,6 +398,7 @@ const ScamInterface: React.FC<Props> = ({ scam, player, onUpdateScam, onScamEnd,
             onExecute={executeHack}
             cooldowns={hackCooldown}
             processing={processing}
+            playerSkills={player.skills}
         />
     </div>
   );

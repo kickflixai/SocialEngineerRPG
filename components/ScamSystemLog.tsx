@@ -13,9 +13,11 @@ interface Props {
 }
 
 const ScamSystemLog: React.FC<Props> = ({ scam, player, mobileTab, processing, lastThought, onOpenHack }) => {
-    // Logic Update: Check for skill levels > 0
-    const hasDoxxing = (player.skills['tech_2'] || 0) > 0; // Tech Tier 2
-    const hasScraper = false; // Old skill, assuming redundant or replaced. Tech 2 covers intel.
+    // Tech 2 (Doxxing) reveals Hidden Secret
+    const hasDoxxing = (player.skills['tech_2'] || 0) > 0; 
+    // Social 2 (Cold Reading) reveals Psych Profile & Weakness
+    const hasProfiler = (player.skills['social_2'] || 0) > 0;
+
     const secretRevealed = hasDoxxing || scam.revealedFacts.includes('secret');
 
     return (
@@ -42,7 +44,7 @@ const ScamSystemLog: React.FC<Props> = ({ scam, player, mobileTab, processing, l
                     </div>
                     <div className="flex justify-between items-center text-[10px]">
                         <span className="text-zinc-500">WEAKNESS:</span>
-                        <span className={`font-mono ${hasScraper ? 'text-green-400' : 'text-red-900'}`}>{hasScraper ? scam.victim.weakness : 'ENCRYPTED'}</span>
+                        <span className={`font-mono ${hasProfiler ? 'text-green-400' : 'text-red-900'}`}>{hasProfiler ? scam.victim.weakness : 'ENCRYPTED'}</span>
                     </div>
                 </div>
             </div>

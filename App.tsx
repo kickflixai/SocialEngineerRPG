@@ -262,6 +262,20 @@ const App: React.FC = () => {
         const trustBonus = countryStats?.modifiers?.trustStartBonus || 0;
         let baseTrust = difficulty === 'easy' ? 40 : difficulty === 'medium' ? 20 : 0;
         
+        let isHighValue = highValueTargetActive;
+        
+        // SKILL CHECK: Insider Trading (Ops 5)
+        if (!isHighValue) {
+            const insiderLevel = player.skills['ops_5'] || 0;
+            if (insiderLevel > 0) {
+                const chance = insiderLevel * 0.05; // 5% per level
+                if (Math.random() < chance) {
+                    isHighValue = true;
+                    // Notify user potentially via a toast or log, for now implicit
+                }
+            }
+        }
+
         setActiveScam({
             victim,
             category: '', 
@@ -272,7 +286,7 @@ const App: React.FC = () => {
             socialCharge: 0,
             status: 'active',
             revealedFacts: [],
-            isHighValue: highValueTargetActive
+            isHighValue: isHighValue
         });
 
         if (highValueTargetActive) {
